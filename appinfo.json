@@ -38,6 +38,11 @@
     "resources": {
         "media": [
             {
+                "file": "images/background_white_on_black_C.png",
+                "name": "IMAGE_BACKGROUND_C",
+                "type": "png"
+            },
+            {
                 "file": "images/background_white_on_black_F.png",
                 "name": "IMAGE_BACKGROUND_F",
                 "type": "png"
@@ -46,11 +51,6 @@
                 "file": "fonts/moon_phases.ttf",
                 "name": "FONT_MOON_PHASES_SUBSET_30",
                 "type": "font"
-            },
-            {
-                "file": "images/background_white_on_black.png",
-                "name": "IMAGE_BACKGROUND_C",
-                "type": "png"
             }
         ]
     },

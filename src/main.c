@@ -975,7 +975,6 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       if (InvertColors != (int)t->value->int32) restart = 1;
       InvertColors = (int)t->value->int32;
       persist_write_int(KEY_SET_INVERT_COLOR, InvertColors);
-      if (restart) window_stack_pop_all(true);
       break;
     case KEY_SET_LIGHT_ON:
       LightOn = (int)t->value->int32;
@@ -1001,7 +1000,6 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       if (degree_f != (int)t->value->int32) restart = 1;
       degree_f = (int)t->value->int32;
       persist_write_int(KEY_SET_DEGREE_F, degree_f);
-      if (restart) window_stack_pop_all(true);
       break;
       
     case KEY_SET_DATE_FORMAT:
@@ -1020,6 +1018,8 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     // Look for next item
     t = dict_read_next(iterator);
   }
+  
+  if (restart) window_stack_pop_all(true); //true means animated = slide out
   
   DisplayData();
 }
