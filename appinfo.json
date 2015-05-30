@@ -8,9 +8,13 @@
         "KEY_LOCATION_LAT": 1,
         "KEY_LOCATION_LON": 2,
         "KEY_LOCATION_NAME": 0,
+        "KEY_SET_DATE_FORMAT": 26,
+        "KEY_SET_DEGREE_F": 25,
         "KEY_SET_DISPLAY_SEC": 21,
         "KEY_SET_INVERT_COLOR": 20,
         "KEY_SET_LIGHT_ON": 22,
+        "KEY_SET_VIBE_DISC": 23,
+        "KEY_SET_VIBE_FULL": 24,
         "KEY_SUN_RISE": 16,
         "KEY_SUN_SET": 17,
         "KEY_TIME_LAST_UPDATE": 11,
@@ -29,10 +33,15 @@
         "configurable"
     ],
     "companyName": "f.gaedeke@gmail.com",
-    "longName": "cfg_watchface_8_4",
+    "longName": "cfg_watchface_8_5",
     "projectType": "native",
     "resources": {
         "media": [
+            {
+                "file": "images/background_white_on_black_F.png",
+                "name": "IMAGE_BACKGROUND_F",
+                "type": "png"
+            },
             {
                 "file": "fonts/moon_phases.ttf",
                 "name": "FONT_MOON_PHASES_SUBSET_30",
@@ -40,19 +49,19 @@
             },
             {
                 "file": "images/background_white_on_black.png",
-                "name": "IMAGE_BACKGROUND",
+                "name": "IMAGE_BACKGROUND_C",
                 "type": "png"
             }
         ]
     },
     "sdkVersion": "3",
-    "shortName": "cfg_watchface_8_4",
+    "shortName": "cfg_watchface_8_5",
     "targetPlatforms": [
         "aplite",
         "basalt"
     ],
     "uuid": "03adc57a-569b-4669-9a80-b505eaea314d",
-    "versionLabel": "8.4",
+    "versionLabel": "8.5",
     "watchapp": {
         "watchface": true
     }

@@ -234,20 +234,48 @@ Pebble.addEventListener("webviewclosed",
     //Send to Pebble, persist there
     var InvertColors = 0;
     if (configuration.invert == "1") InvertColors = 1;
-    console.log("InvertColors = " + InvertColors);
+    console.log("InvertColors    = " + InvertColors);
     var LightOn = configuration.light;
     //if (configuration.light == "1") LightOn = 1;
     //if (configuration.light == "2") LightOn = 2;
-    console.log("LightOn = " + LightOn);
+    console.log("LightOn         = " + LightOn);
     var DisplaySeconds = 0;
     if (configuration.display_sec == "1") DisplaySeconds = 1;
-    console.log("DisplaySeconds = " + DisplaySeconds);
+    console.log("DisplaySeconds  = " + DisplaySeconds);
+    
+    var date_format_str = configuration.date_format; //"%a, %m.%d.%y";
+    console.log(" DEBUG = " + date_format_str);
+    /*if (configuration.date_format == 0){
+      date_format_str = "%a, %d.%m.";
+    } else if (configuration.date_format == 1){
+      date_format_str = "%a, %d/%m";
+    } else if (configuration.date_format == 2){
+      date_format_str = "%a, %m/%d";
+    }*/
+    /*
+    var valuetxtarr = date_format_str.val();
+    console.log(" DEBUG = " + valuetxtarr);
+    date_format_str = valuetxtarr.replace('_', '%');
+    */
+    date_format_str = date_format_str.split('_').join('%');
+    console.log(" DEBUG = " + date_format_str);
+    
+    
+    console.log("vibe_disconnect = " + configuration.vibe_disconnect);
+    console.log("vibe_full       = " + configuration.vibe_full);
+    console.log("degree_f        = " + configuration.degree_f);
+    console.log("date_format     = " + configuration.date_format + "; date_format_str = " + date_format_str);
+    
+    
     Pebble.sendAppMessage(
       {
         "KEY_SET_INVERT_COLOR": InvertColors,
         "KEY_SET_LIGHT_ON": LightOn,
-        "KEY_SET_DISPLAY_SEC": DisplaySeconds
-        
+        "KEY_SET_DISPLAY_SEC": DisplaySeconds,
+        "KEY_SET_VIBE_DISC": configuration.vibe_disconnect,
+        "KEY_SET_VIBE_FULL": configuration.vibe_full,
+        "KEY_SET_DEGREE_F": configuration.degree_f,
+        "KEY_SET_DATE_FORMAT": date_format_str
       },
       function(e) {
         console.log("Settings data transfered successfully.");

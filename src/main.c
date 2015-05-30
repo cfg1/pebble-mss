@@ -4,6 +4,7 @@
 #include "config.h"
 #include "keys.h"
 #include "mooncalc.h"
+#include "math.h"
 
 static Window *s_main_window;
 static Layer *s_image_layer_hour_1;
@@ -23,6 +24,8 @@ static int digit_s_2 = 0;
 static GBitmap *background_image;
 static BitmapLayer *background_layer;
 
+static char *sys_locale;
+
 
 
 static TextLayer *text_sunrise_layer; 
@@ -33,7 +36,7 @@ static TextLayer *connection_layer;
 static TextLayer *Date_Layer;
 static TextLayer *cwLayer; 
 
-static TextLayer *moonLayer;
+//static TextLayer *moonLayer;
 static TextLayer *moonLayer_IMG;
 GFont pFontMoon     = 0;
 
@@ -95,7 +98,11 @@ GColor textcolor_seconds;
 // Settings variables (App Config):
 static int InvertColors = INVERT_COLORS;
 static int LightOn = LIGHT_ON;
-int DisplaySeconds = DISPLAY_SECONDS;
+static int DisplaySeconds = DISPLAY_SECONDS;
+static int vibe_on_disconnect = VIBE_ON_DISC;
+static int vibe_on_charged_full = VIBE_ON_FULL;
+static int degree_f = DEGREE_F;
+static char date_format[15] = DATE_FORMAT;
 
 
 
@@ -103,6 +110,7 @@ static bool initDone; // e.g. for avoiding "no BT" vibration with initial openin
 static bool doUpdateWeather;
 static int LightIsOn = 0; //saves the state of the background light
 static int init_battery_handler = 0;
+static char hour_mode_str[4] = "24H";
 
 
 
@@ -163,21 +171,6 @@ void LoadData(void) {
   
   init_battery_handler = 1;
   
-  /*
-  BatteryChargeState actual_charge = battery_state_service_peek();
-  if (last_charge_state == 0){ //no charging on last exit (otherwise battery handler should do this)
-    if (battery_percent_on_exit+10 < actual_charge.charge_percent){ //if higher battery percent when on last exit
-      last_battery_period_time = time(NULL) - last_battery_charged_time;
-      last_battery_charged_time = time(NULL);
-      last_battery_percent = actual_charge.charge_percent;
-    } else if (actual_charge.is_charging || actual_charge.is_plugged){ //if now plugged
-      last_battery_period_time = time(NULL) - last_battery_charged_time;
-      last_battery_charged_time = time(NULL);
-      last_battery_percent = actual_charge.charge_percent;
-    }
-  }
-  */
-  
   key = KEY_SUN_RISE;
   if (persist_exists(key)) persist_read_string(key, sun_rise, sizeof(sun_rise));
   
@@ -194,6 +187,15 @@ void LoadData(void) {
   
   key = KEY_SET_DISPLAY_SEC;
   if (persist_exists(key)) DisplaySeconds = persist_read_int(key);
+  
+  key = KEY_SET_VIBE_DISC;
+  if (persist_exists(key)) vibe_on_disconnect = persist_read_int(key);
+  
+  key = KEY_SET_VIBE_FULL;
+  if (persist_exists(key)) vibe_on_charged_full = persist_read_int(key);
+  
+  key = KEY_SET_DATE_FORMAT;
+  if (persist_exists(key)) persist_read_string(key, date_format, sizeof(date_format));
   
 }
 
@@ -277,6 +279,7 @@ void DisplayLastUpdated(void) {
   static char last_battery_buffer_1[30];
   static char last_battery_buffer_2[10];
   
+  if (last_battery_charged_time == 0) last_battery_charged_time = now;
   time_t t_diff_bat = now - last_battery_charged_time;
   if (last_battery_charged_time != 0){
     //struct tm *cur_time = localtime(&last_battery_charged_time);
@@ -361,7 +364,10 @@ void DisplayData(void) {
   //static char buffer_10[5];
   //static char buffer_11[5];
   
-  snprintf(buffer_1, sizeof(buffer_1), "%d", weather_TEMP);
+  if (degree_f)
+    snprintf(buffer_1, sizeof(buffer_1), "%d", (int)(weather_TEMP*1.8+32));
+  else
+    snprintf(buffer_1, sizeof(buffer_1), "%d", weather_TEMP);
   text_layer_set_text(weather_layer_1, buffer_1);
   
   /*
@@ -403,10 +409,12 @@ void DisplayData(void) {
   //  snprintf(buffer_9, sizeof(buffer_9), "UTC+%d (%s)", (int)(time_UTC_OFFSET/3600), time_ZONE_NAME);
   //  text_layer_set_text(text_TimeZone_layer, buffer_9);
   //}
+
+  
   if (strlen(time_ZONE_NAME) > 0){
-    snprintf(buffer_9, sizeof(buffer_9), "%s", time_ZONE_NAME);
+    snprintf(buffer_9, sizeof(buffer_9), "%s, %s", hour_mode_str, time_ZONE_NAME);
   } else {
-    snprintf(buffer_9, sizeof(buffer_9), "UTC+%d", (int)(time_UTC_OFFSET/3600));
+    snprintf(buffer_9, sizeof(buffer_9), "%s, UTC+%d", hour_mode_str, (int)(time_UTC_OFFSET/3600));
   }
   text_layer_set_text(text_TimeZone_layer, buffer_9);
   
@@ -450,8 +458,20 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     }
   }
   
-  digit_h_1 = current_time->tm_hour/10;
-  digit_h_2 = current_time->tm_hour%10;
+  if(clock_is_24h_style() == true) {
+    digit_h_1 = current_time->tm_hour/10;
+    digit_h_2 = current_time->tm_hour%10;
+    snprintf(hour_mode_str, sizeof(hour_mode_str), "%s", "24H");
+  } else {
+    int hour12 = current_time->tm_hour;
+    if (hour12 > 12){
+      snprintf(hour_mode_str, sizeof(hour_mode_str), "%s", "PM");
+      hour12-=12;
+    } else snprintf(hour_mode_str, sizeof(hour_mode_str), "%s", "AM");
+    if (hour12 == 0) hour12 = 12;
+    digit_h_1 = hour12/10;
+    digit_h_2 = hour12%10;
+  }
   
   digit_m_1 = current_time->tm_min/10;
   digit_m_2 = current_time->tm_min%10;
@@ -475,22 +495,12 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
   
   static char date_buffer[15];
   if (units_changed & HOUR_UNIT) {
-    // date
-    snprintf(date_buffer, sizeof(date_buffer), "%s, %i%i.%i%i.", 
-             DAY_NAME_LANGUAGE[current_time->tm_wday], 
-             current_time->tm_mday/10, 
-             current_time->tm_mday%10, 
-             (current_time->tm_mon+1)/10,
-             (current_time->tm_mon+1)%10
-            );
+    strftime(date_buffer, sizeof(date_buffer), /*"%a, %d.%m."*/date_format, current_time);
     text_layer_set_text(Date_Layer, date_buffer);
-    
-    // sun info
-    //updateSunsetSunrise();
   }
   
   
-  static char moon_buffer[7];
+  //static char moon_buffer[7];
   static char moon[] = "m";
   if (units_changed & HOUR_UNIT) {
     // -------------------- Moon_phase
@@ -499,19 +509,26 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     int moonphase_number = 0;
     moonphase_number = calc_moonphase_number(location_latitude);
     moon[0] = (unsigned char)(moonphase_char_number(moonphase_number));
-    //DisplayCurrentLunarPhase();
     
     text_layer_set_text(moonLayer_IMG, moon);
     
+    /*
     snprintf(moon_buffer, sizeof(moon_buffer), "(%d)", moonphase_number);
     //text_layer_set_text(moonLayer, moon_buffer);
     text_layer_set_text(moonLayer, " ");
 		//text_layer_set_text(moonLayer, MOONPHASE_NAME_LANGUAGE[moonphase_number]); 
+    */
 		// -------------------- Moon_phase	  
 		  
 		// -------------------- Calendar week  
 	  static char cw_text[] = "XX00";
-		strftime(cw_text, sizeof(cw_text), TRANSLATION_CW, current_time);
+    if (strcmp("fr_FR", sys_locale) == 0) {
+		  strftime(cw_text, sizeof(cw_text), TRANSLATION_CW_FR, current_time);
+    } else if (strcmp("de_DE", sys_locale) == 0) {
+      strftime(cw_text, sizeof(cw_text), TRANSLATION_CW_DE, current_time);
+    } else { //default
+      strftime(cw_text, sizeof(cw_text), TRANSLATION_CW_EN, current_time);
+    }
 		text_layer_set_text(cwLayer, cw_text); 
 		// ------------------- Calendar week 
   }
@@ -543,7 +560,8 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
   
   
   
-  /*if (units_changed & MINUTE_UNIT)*/ DisplayLastUpdated();
+  /*if (units_changed & MINUTE_UNIT)*/ //DisplayLastUpdated();
+  DisplayData();
   
   
   
@@ -574,8 +592,12 @@ static void handle_battery(BatteryChargeState charge_state) {
   if (charge_state.is_plugged){
     if (charge_state.is_charging) last_charge_state = 1; else last_charge_state = 2;
   } else last_charge_state = 0; // = actual charge state
-
-
+  
+  /* (DEBUG)
+  static char moon_buffer[10];
+  snprintf(moon_buffer, sizeof(moon_buffer), "%d -> %d", old_charge_state_int, last_charge_state);
+  text_layer_set_text(moonLayer, moon_buffer);
+  */
 
   if (old_charge_state_int != last_charge_state){
     if (LightOn < 2){
@@ -587,27 +609,40 @@ static void handle_battery(BatteryChargeState charge_state) {
       }
     }
   }
+  
+  time_t tdiff = time(NULL) - last_battery_charged_time;
     
   if ((old_charge_state_int == 0) && (last_charge_state == 1)){ //discharging --> charging
-    last_battery_period_time = time(NULL) - last_battery_charged_time;
+    last_battery_period_time = tdiff;
     last_battery_charged_time = time(NULL);
     last_battery_percent = charge_state.charge_percent;
   } else if ((old_charge_state_int == 0) && (last_charge_state == 0)){ //discharging --> discharging
     if ((init_battery_handler) && (battery_percent_on_exit+10 < charge_state.charge_percent)){ //if higher battery percent as on last exit
-      last_battery_period_time = time(NULL) - last_battery_charged_time;
+      last_battery_period_time = tdiff;
       last_battery_charged_time = time(NULL);
       last_battery_percent = charge_state.charge_percent;
     }
   } else if ((old_charge_state_int == 1) && (last_charge_state == 2)){ //charging --> full
-    last_battery_period_time = time(NULL) - last_battery_charged_time;
+    if (tdiff > 10*60) last_battery_period_time = tdiff; else last_battery_period_time += tdiff; //small values are added to old time (because after battery is full, it charges about 6 min. and gets this event a second time)
     last_battery_charged_time = time(NULL);
     last_battery_percent = charge_state.charge_percent;
+    
+    if (vibe_on_charged_full){
+      // Vibe pattern: ON for 200ms, OFF for 100ms, ON for 400ms:
+      static const uint32_t const segments[] = { 30 };
+      VibePattern pat = {
+        .durations = segments,
+        .num_segments = ARRAY_LENGTH(segments),
+      };
+      vibes_enqueue_custom_pattern(pat);
+    }
+    
   } else if ((old_charge_state_int == 1) && (last_charge_state == 0)){ //charging --> discharging
-    last_battery_period_time = time(NULL) - last_battery_charged_time;
+    last_battery_period_time = tdiff;
     last_battery_charged_time = time(NULL);
     last_battery_percent = charge_state.charge_percent;
   } else if ((old_charge_state_int == 2) && (last_charge_state == 0)){ //full --> discharging
-    //last_battery_period_time = time(NULL) - last_battery_charged_time;
+    //last_battery_period_time = tdiff;
     last_battery_charged_time = time(NULL);
     last_battery_percent = charge_state.charge_percent;
   }
@@ -633,7 +668,15 @@ static void handle_battery(BatteryChargeState charge_state) {
 static void handle_bluetooth(bool connected) {
   if( !connected && initDone)
   {
-  //  vibes_short_pulse();
+    if (vibe_on_disconnect){
+      // Vibe pattern: ON for 200ms, OFF for 100ms, ON for 400ms:
+      static const uint32_t const segments[] = { 40 };
+      VibePattern pat = {
+        .durations = segments,
+        .num_segments = ARRAY_LENGTH(segments),
+      };
+      vibes_enqueue_custom_pattern(pat);
+    }
   }
   text_layer_set_text(connection_layer, connected ? "BT" : "  ");
   if (connected && initDone){
@@ -872,6 +915,10 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   
   // Read first item
   Tuple *t = dict_read_first(iterator);
+  
+  int restart = 0;
+  time_t now = time(NULL);
+  struct tm *tick_time = localtime(&now);
 
   // For all items
   while(t != NULL) {
@@ -925,8 +972,10 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       snprintf(sun_set, sizeof(sun_set), "%s", t->value->cstring);
       break;
     case KEY_SET_INVERT_COLOR:
+      if (InvertColors != (int)t->value->int32) restart = 1;
       InvertColors = (int)t->value->int32;
       persist_write_int(KEY_SET_INVERT_COLOR, InvertColors);
+      if (restart) window_stack_pop_all(true);
       break;
     case KEY_SET_LIGHT_ON:
       LightOn = (int)t->value->int32;
@@ -938,6 +987,31 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       layer_mark_dirty(s_image_layer_second_1);
       layer_mark_dirty(s_image_layer_second_2);
       break;
+      
+    case KEY_SET_VIBE_DISC:
+      vibe_on_disconnect = (int)t->value->int32;
+      persist_write_int(KEY_SET_VIBE_DISC, vibe_on_disconnect);
+      break;
+    case KEY_SET_VIBE_FULL:
+      vibe_on_charged_full = (int)t->value->int32;
+      persist_write_int(KEY_SET_VIBE_FULL, vibe_on_charged_full);
+      break;
+      
+    case KEY_SET_DEGREE_F:
+      if (degree_f != (int)t->value->int32) restart = 1;
+      degree_f = (int)t->value->int32;
+      persist_write_int(KEY_SET_DEGREE_F, degree_f);
+      if (restart) window_stack_pop_all(true);
+      break;
+      
+    case KEY_SET_DATE_FORMAT:
+      snprintf(date_format, sizeof(date_format), "%s", t->value->cstring);
+      APP_LOG(APP_LOG_LEVEL_ERROR, "date_format in watchface = %s", date_format);
+      persist_write_string(KEY_SET_DATE_FORMAT, date_format);
+      handle_second_tick(tick_time, SECOND_UNIT | MINUTE_UNIT | HOUR_UNIT);
+      break;
+      
+    
     default:
       APP_LOG(APP_LOG_LEVEL_ERROR, "Key %d not recognized!", (int)t->key);
       break;
@@ -965,6 +1039,11 @@ static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
 
 
 static void main_window_load(Window *window) {
+  
+  // Use setlocale() to obtain the system locale for translation
+  sys_locale = setlocale(LC_ALL, "");
+  
+  
   Layer *main_window_layer = window_get_root_layer(s_main_window);
   
   initDone = false;
@@ -973,10 +1052,15 @@ static void main_window_load(Window *window) {
   pFontMoon = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_MOON_PHASES_SUBSET_30));
   
   if (persist_exists(KEY_SET_INVERT_COLOR)) InvertColors = persist_read_int(KEY_SET_INVERT_COLOR);
+  if (persist_exists(KEY_SET_DEGREE_F)) degree_f = persist_read_int(KEY_SET_DEGREE_F);
   
   
   // --- Background Image ---
-  background_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND);
+  if (degree_f){
+    background_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND_F);
+  } else {
+    background_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND_C);
+  }
   background_layer = bitmap_layer_create(layer_get_frame(main_window_layer));
   bitmap_layer_set_bitmap(background_layer, background_image);
   if (!InvertColors)
@@ -1097,12 +1181,14 @@ static void main_window_load(Window *window) {
   
   
   // Moonphase Text
-  moonLayer = text_layer_create(GRect(3, 53, 33 /* width */, 30 /* height */)); 
+  /*
+  moonLayer = text_layer_create(GRect(3, 53, 33 , 30)); 
   text_layer_set_text_color(moonLayer, textcolor_moon);
   text_layer_set_background_color(moonLayer, GColorClear );
   text_layer_set_font(moonLayer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
   text_layer_set_text_alignment(moonLayer, GTextAlignmentCenter);
   layer_add_child(main_window_layer, text_layer_get_layer(moonLayer));
+  */
   
   moonLayer_IMG = text_layer_create(GRect(3, 20, 33, 33));
   text_layer_set_text_color(moonLayer_IMG, textcolor_moon);
@@ -1192,7 +1278,7 @@ static void main_window_load(Window *window) {
   */
   
   // Create TimeZone Layer
-  text_TimeZone_layer = text_layer_create(GRect(10, 132, 100, 20)); //TODO
+  text_TimeZone_layer = text_layer_create(GRect(5, 132, 100, 20)); //TODO
   text_layer_set_background_color(text_TimeZone_layer, GColorClear);
   text_layer_set_text_color(text_TimeZone_layer, textcolor_tz);
   text_layer_set_text_alignment(text_TimeZone_layer, GTextAlignmentLeft);
@@ -1266,7 +1352,7 @@ static void main_window_unload(Window *window) {
   text_layer_destroy(Date_Layer);
   text_layer_destroy(cwLayer);
   
-  text_layer_destroy(moonLayer);
+  //text_layer_destroy(moonLayer);
   text_layer_destroy(moonLayer_IMG);
   fonts_unload_custom_font(pFontMoon);
   

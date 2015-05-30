@@ -6,34 +6,19 @@
 #define LONGITUDE  13.406667
 #define TIMEZONE   +1
 
-#define DAY_NAME_LANGUAGE   DAY_NAME_GERMAN // Valid values: DAY_NAME_ENGLISH, DAY_NAME_GERMAN
-#define TRANSLATION_CW "KW%V" 							// Translation for the calendar week (e.g. "CW%V")
+// Translation for the calendar week (e.g. "CW%V")
+#define TRANSLATION_CW_DE "KW%V" 							
+#define TRANSLATION_CW_EN "CW%V" 							
+#define TRANSLATION_CW_FR "S.%V"
 
 //(un-)comment to change initial settings
 #define INVERT_COLORS 0
 #define LIGHT_ON 1
+#define VIBE_ON_DISC 0 //disconnect
+#define VIBE_ON_FULL 0
+#define DEGREE_F     0
+#define DATE_FORMAT  "%a, %d.%m."
 
 #define WEATHER_UPDATE_INTERVAL_MINUTE 15
 
 #define DISPLAY_SECONDS 1
-
-
-const char *DAY_NAME_GERMAN[] = {
-	"SON",
-	"MON",
-	"DIE",
-	"MIT",
-	"DON",
-	"FRE",
-	"SAM"
-};
-
-const char *DAY_NAME_ENGLISH[] = {
-	"SUN",
-	"MON",
-	"TUE",
-	"WED",
-	"THU",
-	"FRE",
-	"SAT"
-};

@@ -22,3 +22,7 @@
 #define KEY_SET_INVERT_COLOR   20 //SET = SETTINGS
 #define KEY_SET_DISPLAY_SEC    21
 #define KEY_SET_LIGHT_ON       22
+#define KEY_SET_VIBE_DISC      23
+#define KEY_SET_VIBE_FULL      24
+#define KEY_SET_DEGREE_F       25
+#define KEY_SET_DATE_FORMAT    26
