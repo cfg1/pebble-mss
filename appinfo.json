@@ -1,0 +1,59 @@
+{
+    "appKeys": {
+        "KEY_BTY_LAST_CHARGED": 13,
+        "KEY_BTY_LAST_PERCENT": 14,
+        "KEY_BTY_LAST_PERIOD": 19,
+        "KEY_BTY_LAST_STATE": 18,
+        "KEY_BTY_PERCENT_EXIT": 15,
+        "KEY_LOCATION_LAT": 1,
+        "KEY_LOCATION_LON": 2,
+        "KEY_LOCATION_NAME": 0,
+        "KEY_SET_DISPLAY_SEC": 21,
+        "KEY_SET_INVERT_COLOR": 20,
+        "KEY_SET_LIGHT_ON": 22,
+        "KEY_SUN_RISE": 16,
+        "KEY_SUN_SET": 17,
+        "KEY_TIME_LAST_UPDATE": 11,
+        "KEY_TIME_UTC_OFFSET": 10,
+        "KEY_TIME_ZONE_NAME": 12,
+        "KEY_WEATHER_CONDITIONS": 8,
+        "KEY_WEATHER_HUMIDITY": 9,
+        "KEY_WEATHER_PRESSURE": 6,
+        "KEY_WEATHER_TEMP": 3,
+        "KEY_WEATHER_TEMP_MAX": 5,
+        "KEY_WEATHER_TEMP_MIN": 4,
+        "KEY_WEATHER_WIND_SPEED": 7
+    },
+    "capabilities": [
+        "location",
+        "configurable"
+    ],
+    "companyName": "f.gaedeke@gmail.com",
+    "longName": "cfg_watchface_8_4",
+    "projectType": "native",
+    "resources": {
+        "media": [
+            {
+                "file": "fonts/moon_phases.ttf",
+                "name": "FONT_MOON_PHASES_SUBSET_30",
+                "type": "font"
+            },
+            {
+                "file": "images/background_white_on_black.png",
+                "name": "IMAGE_BACKGROUND",
+                "type": "png"
+            }
+        ]
+    },
+    "sdkVersion": "3",
+    "shortName": "cfg_watchface_8_4",
+    "targetPlatforms": [
+        "aplite",
+        "basalt"
+    ],
+    "uuid": "03adc57a-569b-4669-9a80-b505eaea314d",
+    "versionLabel": "8.4",
+    "watchapp": {
+        "watchface": true
+    }
+}
