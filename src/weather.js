@@ -70,7 +70,7 @@ function SendToPebble(pos, use_default) {
       var humidity = Math.round(json.main.humidity);
       console.log("Humidity is " + humidity);
       
-      var wind_speed = Math.round(json.wind.speed*3.6);
+      var wind_speed = Math.round(json.wind.speed*100); //in cm/s (convert with *3.6/100 km/h and *2.236/100 mph)
       console.log("Wind Speed is " + wind_speed);
       
       
@@ -187,7 +187,7 @@ function getWeather() {
     timeout: 5000,
     maximumAge: 0
   };
-  navigator.geolocation.getCurrentPosition(
+  navigator.geolocation.getCurrentPosition(    //could also use navigator.geolocation.watchPosition() ?
     locationSuccess,
     locationError,
     options
@@ -213,23 +213,27 @@ Pebble.addEventListener('appmessage',
   }                     
 );
 
+var configuration = {
+  
+};
+
 Pebble.addEventListener("showConfiguration",
   function(e) {
     //Load the remote config page
-    //Pebble.openURL("https://dl.dropboxusercontent.com/u/10824180/pebble%20config%20pages/sdktut9-config.html"); //original link
-    
-    //Pebble.openURL("www.googledrive.com/host/0B3ivuMdwFLKzR2d3Sjg1YUpSU2s");
+    //Pebble.openURL("https://dl.dropboxusercontent.com/u/10824180/pebble%20config%20pages/sdktut9-config.html"); //original link from tutorial
+    //Pebble.openURL("https://www.dropbox.com/s/mzfrbbp8wlvkp4a/pebble_cfg_watchface_config.html"); // not working
     Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_cfg_watchface_config.html");
     
-    //Pebble.openURL("https://www.dropbox.com/s/mzfrbbp8wlvkp4a/pebble_cfg_watchface_config.html"); // not working
+    //TODO: send some usefull values to the settings page (e. g. location, battery staistics etc.) by adding ?xxx to the URL
   }
 );
 
 Pebble.addEventListener("webviewclosed",
   function(e) {
     //Get JSON dictionary
-    var configuration = JSON.parse(decodeURIComponent(e.response));
-    console.log("Configuration window returned: " + JSON.stringify(configuration));
+    configuration = JSON.parse(decodeURIComponent(e.response));
+    console.log("Configuration window returned: " + JSON.stringify(configuration));    
+    
  
     //Send to Pebble, persist there
     var InvertColors = 0;

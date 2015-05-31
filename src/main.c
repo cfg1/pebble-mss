@@ -71,7 +71,7 @@ static int  weather_TEMP        = 0; //in degree C
 static int  weather_TEMP_MIN    = 0; //in degree C
 static int  weather_TEMP_MAX    = 0; //in degree C
 static int  weather_PRESSURE    = 1000; //in hPa
-static int  weather_WIND_SPEED  = 0; // in km/h
+static int  weather_WIND_SPEED  = 0;  //in cm/s (convert with *3.6/100 to km/h and *2.236/100 to mph)
 static char weather_CONDITIONS[32];
 static int  weather_HUMIDITY    = 0; //in %
 static int  time_UTC_OFFSET     = (int)(TIMEZONE*3600); //in seconds
@@ -392,7 +392,18 @@ void DisplayData(void) {
   text_layer_set_text(weather_layer_6, " ");
   */
   
-  snprintf(buffer_7, sizeof(buffer_7), "%d km/h", weather_WIND_SPEED);
+  //weather_WIND_SPEED in cm/s (convert with *3.6/100 km/h and *2.236/100 mph)
+  double conversion_factor = 3.6/100;
+  char unit_str[8] = "%d km/h";
+  if (degree_f){
+    conversion_factor = 2.236/100;
+    strcpy(unit_str, "%d mph");
+  }
+  snprintf(buffer_7, sizeof(buffer_7), unit_str, (int)(weather_WIND_SPEED*conversion_factor));
+  
+  
+    
+    
   //text_layer_set_text(weather_layer_7, buffer_7);
   text_layer_set_text(weather_layer_5, buffer_7);
   
