@@ -475,7 +475,7 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     snprintf(hour_mode_str, sizeof(hour_mode_str), "%s", "24H");
   } else {
     int hour12 = current_time->tm_hour;
-    if (hour12 > 12){
+    if ((hour12 > 11)){
       snprintf(hour_mode_str, sizeof(hour_mode_str), "%s", "PM");
       hour12-=12;
     } else snprintf(hour_mode_str, sizeof(hour_mode_str), "%s", "AM");

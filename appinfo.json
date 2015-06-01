@@ -33,7 +33,7 @@
         "configurable"
     ],
     "companyName": "fg",
-    "longName": "cfg_watchface_8_7",
+    "longName": "cfg_watchface_8_8",
     "projectType": "native",
     "resources": {
         "media": [
@@ -55,13 +55,13 @@
         ]
     },
     "sdkVersion": "3",
-    "shortName": "cfg_watchface_8_7",
+    "shortName": "cfg_watchface_8_8",
     "targetPlatforms": [
         "aplite",
         "basalt"
     ],
     "uuid": "03adc57a-569b-4669-9a80-b505eaea314d",
-    "versionLabel": "8.7",
+    "versionLabel": "8.8",
     "watchapp": {
         "watchface": true
     }
