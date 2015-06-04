@@ -34,22 +34,18 @@ static TextLayer *battery_layer;
 static TextLayer *connection_layer;
 
 static TextLayer *Date_Layer;
-static TextLayer *cwLayer; 
+static TextLayer *cwLayer; //calender week
 
 //static TextLayer *moonLayer;
 static TextLayer *moonLayer_IMG;
 GFont pFontMoon     = 0;
 
-static TextLayer *weather_layer_1; // Temperature
-//static TextLayer *weather_layer_2; //  (Conditions)
-static TextLayer *weather_layer_3; // Location Name
-static TextLayer *weather_layer_4; // Time of last data / time since last update
-static TextLayer *weather_layer_5; // Wind Speed (Temp. Min/Max)
-//static TextLayer *weather_layer_6; // Pressure
-static TextLayer *weather_layer_7; // Conditions (Wind Speed)
-//static TextLayer *weather_layer_8; // Humidity
+static TextLayer *weather_layer_1_temp; // Temperature
+static TextLayer *weather_layer_3_location; // Location Name
+static TextLayer *weather_layer_4_last_update; // Time of last data / time since last update
+static TextLayer *weather_layer_7_string_1;
 
-static TextLayer *text_TimeZone_layer; //UTC-Offset
+static TextLayer *text_TimeZone_layer; //24H/AM/PM and UTC-Offset
 
 
 static TextLayer *runtime_layer_1; //no of days running on battery
@@ -68,12 +64,7 @@ static char location_name[32];
 static int  location_latitude   = (int)(LATITUDE*1E6); //in 1E6
 static int  location_longitude  = (int)(LONGITUDE*1E6); //in 1E6
 static int  weather_TEMP        = 0; //in degree C
-static int  weather_TEMP_MIN    = 0; //in degree C
-static int  weather_TEMP_MAX    = 0; //in degree C
-static int  weather_PRESSURE    = 1000; //in hPa
-static int  weather_WIND_SPEED  = 0;  //in cm/s (convert with *3.6/100 to km/h and *2.236/100 to mph)
-static char weather_CONDITIONS[32];
-static int  weather_HUMIDITY    = 0; //in %
+static char weather_string_1[32];
 static int  time_UTC_OFFSET     = (int)(TIMEZONE*3600); //in seconds
 static char time_ZONE_NAME[10];
 static char sun_rise[10] = "--:--";
@@ -96,6 +87,7 @@ GColor textcolor_seconds;
 
 
 // Settings variables (App Config):
+
 static int InvertColors = INVERT_COLORS;
 static int LightOn = LIGHT_ON;
 static int DisplaySeconds = DISPLAY_SECONDS;
@@ -130,6 +122,7 @@ void LoadData(void) {
   
   key = KEY_WEATHER_TEMP;
   if (persist_exists(key)) weather_TEMP = persist_read_int(key);
+  /*
   key = KEY_WEATHER_TEMP_MIN;
   if (persist_exists(key)) weather_TEMP_MIN = persist_read_int(key);
   key = KEY_WEATHER_TEMP_MAX;
@@ -138,12 +131,15 @@ void LoadData(void) {
   if (persist_exists(key)) weather_PRESSURE = persist_read_int(key);
   key = KEY_WEATHER_WIND_SPEED;
   if (persist_exists(key)) weather_WIND_SPEED = persist_read_int(key);
+  */
   
-  key = KEY_WEATHER_CONDITIONS;
-  if (persist_exists(key)) persist_read_string(key, weather_CONDITIONS, sizeof(weather_CONDITIONS));
+  key = KEY_WEATHER_STRING_1;
+  if (persist_exists(key)) persist_read_string(key, weather_string_1, sizeof(weather_string_1));
   
+  /*
   key = KEY_WEATHER_HUMIDITY;
   if (persist_exists(key)) weather_HUMIDITY = persist_read_int(key);
+  */
   
   key = KEY_TIME_UTC_OFFSET;
   if (persist_exists(key)) time_UTC_OFFSET = persist_read_int(key);
@@ -205,12 +201,16 @@ void SaveData(void) {
   persist_write_int    (KEY_LOCATION_LON,  location_longitude);
   
   persist_write_int    (KEY_WEATHER_TEMP,  weather_TEMP);
+  /*
   persist_write_int    (KEY_WEATHER_TEMP_MIN,  weather_TEMP_MIN);
   persist_write_int    (KEY_WEATHER_TEMP_MAX,  weather_TEMP_MAX);
   persist_write_int    (KEY_WEATHER_PRESSURE,  weather_PRESSURE);
   persist_write_int    (KEY_WEATHER_WIND_SPEED,  weather_WIND_SPEED);
-  persist_write_string (KEY_WEATHER_CONDITIONS, weather_CONDITIONS);
+  */
+  persist_write_string (KEY_WEATHER_STRING_1, weather_string_1);
+  /*
   persist_write_int    (KEY_WEATHER_HUMIDITY,  weather_HUMIDITY);
+  */
   
   persist_write_int    (KEY_TIME_UTC_OFFSET,  time_UTC_OFFSET);
   persist_write_int    (KEY_TIME_LAST_UPDATE,  (int)(phone_last_updated));
@@ -237,18 +237,6 @@ void DisplayLastUpdated(void) {
   time_t now = time(NULL);
   time_t t_diff = now - phone_last_updated;
   
-  /*
-  if (phone_last_updated != 0){
-    if (t_diff > 3600*24) phone_last_updated = 0;
-  }
-  if (phone_last_updated != 0){
-    struct tm *cur_time = localtime(&phone_last_updated);
-    strftime(last_updated_buffer, sizeof(last_updated_buffer), "%R", cur_time);
-    text_layer_set_text(weather_layer_4, last_updated_buffer);
-  } else {
-    text_layer_set_text(weather_layer_4, "--:--");
-  }
-  */
   if (phone_last_updated != 0){
     //t_diff = 800000;
     int days    = t_diff / (24*3600);
@@ -270,9 +258,9 @@ void DisplayLastUpdated(void) {
       else
         snprintf(last_updated_buffer, sizeof(last_updated_buffer), "%d d", days);
     }
-    text_layer_set_text(weather_layer_4, last_updated_buffer);
+    text_layer_set_text(weather_layer_4_last_update, last_updated_buffer);
   } else {
-    text_layer_set_text(weather_layer_4, "--:--");
+    text_layer_set_text(weather_layer_4_last_update, "--:--");
   }
   
   
@@ -358,7 +346,7 @@ void DisplayData(void) {
   //static char buffer_4[5];
   //static char buffer_5[10];
   //static char buffer_6[10];
-  static char buffer_7[10];
+  //static char buffer_7[10];
   //static char buffer_8[10];
   static char buffer_9[20];
   //static char buffer_10[5];
@@ -368,15 +356,16 @@ void DisplayData(void) {
     snprintf(buffer_1, sizeof(buffer_1), "%d", (int)(weather_TEMP*1.8+32));
   else
     snprintf(buffer_1, sizeof(buffer_1), "%d", weather_TEMP);
-  text_layer_set_text(weather_layer_1, buffer_1);
+  text_layer_set_text(weather_layer_1_temp, buffer_1);
   
   /*
   //text_layer_set_text(weather_layer_2, weather_CONDITIONS);
   text_layer_set_text(weather_layer_2, " ");
   */
-  text_layer_set_text(weather_layer_7, weather_CONDITIONS);
+  text_layer_set_text(weather_layer_7_string_1, weather_string_1);
+  //text_layer_set_text(weather_layer_7_string_1, "line 1\nline 2");
   
-  text_layer_set_text(weather_layer_3, location_name);
+  text_layer_set_text(weather_layer_3_location, location_name);
   
   //text_layer_set_text(weather_layer_4, last_updated_buffer);
   
@@ -393,6 +382,7 @@ void DisplayData(void) {
   */
   
   //weather_WIND_SPEED in cm/s (convert with *3.6/100 km/h and *2.236/100 mph)
+  /*
   double conversion_factor = 3.6/100;
   char unit_str[8] = "%d km/h";
   if (degree_f){
@@ -406,6 +396,7 @@ void DisplayData(void) {
     
   //text_layer_set_text(weather_layer_7, buffer_7);
   text_layer_set_text(weather_layer_5, buffer_7);
+  */
   
   /*
   snprintf(buffer_8, sizeof(buffer_8), "%d %%", weather_HUMIDITY);
@@ -952,6 +943,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       weather_TEMP = (int)t->value->int32;
       //APP_LOG(APP_LOG_LEVEL_INFO, "KEY_WEATHER_TEMP finished");
       break;
+    /*
     case KEY_WEATHER_TEMP_MIN:
       weather_TEMP_MIN = (int)t->value->int32;
       break;
@@ -964,12 +956,17 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     case KEY_WEATHER_WIND_SPEED:
       weather_WIND_SPEED = (int)t->value->int32;
       break;
-    case KEY_WEATHER_CONDITIONS:
-      snprintf(weather_CONDITIONS, sizeof(weather_CONDITIONS), "%s", t->value->cstring);
+    */
+    case KEY_WEATHER_STRING_1:
+      snprintf(weather_string_1, sizeof(weather_string_1), "%s", t->value->cstring);
+      text_layer_set_text(weather_layer_7_string_1, weather_string_1);
+      //APP_LOG(APP_LOG_LEVEL_INFO, "weather_string_1 = %s", weather_string_1);
       break;
+    /*
     case KEY_WEATHER_HUMIDITY:
       weather_HUMIDITY = (int)t->value->int32;
       break;
+    */
     case KEY_TIME_UTC_OFFSET:
       time_UTC_OFFSET = -(int)t->value->int32;
       break;
@@ -1011,6 +1008,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       if (degree_f != (int)t->value->int32) restart = 1;
       degree_f = (int)t->value->int32;
       persist_write_int(KEY_SET_DEGREE_F, degree_f);
+      doUpdateWeather = true;
       break;
       
     case KEY_SET_DATE_FORMAT:
@@ -1211,13 +1209,13 @@ static void main_window_load(Window *window) {
   // --- Weather Layers: ---
   
   // Create temperature Layer
-  weather_layer_1 = text_layer_create(GRect(50, 10, 70, 30));
-  text_layer_set_background_color(weather_layer_1, GColorClear);
-  text_layer_set_text_color(weather_layer_1, textcolor);
-  text_layer_set_text_alignment(weather_layer_1, GTextAlignmentRight);
-  text_layer_set_text(weather_layer_1, "---");
-  text_layer_set_font(weather_layer_1, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD)); //FONT_KEY_BITHAM_30_BLACK
-	layer_add_child(main_window_layer, text_layer_get_layer(weather_layer_1));
+  weather_layer_1_temp = text_layer_create(GRect(50, 10, 70, 30));
+  text_layer_set_background_color(weather_layer_1_temp, GColorClear);
+  text_layer_set_text_color(weather_layer_1_temp, textcolor);
+  text_layer_set_text_alignment(weather_layer_1_temp, GTextAlignmentRight);
+  text_layer_set_text(weather_layer_1_temp, "---");
+  text_layer_set_font(weather_layer_1_temp, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD)); //FONT_KEY_BITHAM_30_BLACK
+	layer_add_child(main_window_layer, text_layer_get_layer(weather_layer_1_temp));
   
   /*
   // Create conditions Layer
@@ -1231,23 +1229,24 @@ static void main_window_load(Window *window) {
   */
   
   // Create location name Layer
-  weather_layer_3 = text_layer_create(GRect(3, -1, 104, 17));
-  text_layer_set_background_color(weather_layer_3, GColorClear);
-  text_layer_set_text_color(weather_layer_3, textcolor_location);
-  text_layer_set_text_alignment(weather_layer_3, GTextAlignmentCenter);
-  text_layer_set_text(weather_layer_3, "(Berlin)" /*"Loading Weather ..."*/);
-  text_layer_set_font(weather_layer_3, fonts_get_system_font(FONT_KEY_GOTHIC_14));
-	layer_add_child(main_window_layer, text_layer_get_layer(weather_layer_3));
+  weather_layer_3_location = text_layer_create(GRect(3, -1, 104, 17));
+  text_layer_set_background_color(weather_layer_3_location, GColorClear);
+  text_layer_set_text_color(weather_layer_3_location, textcolor_location);
+  text_layer_set_text_alignment(weather_layer_3_location, GTextAlignmentCenter);
+  text_layer_set_text(weather_layer_3_location, "---" /*"Loading Weather ..."*/);
+  text_layer_set_font(weather_layer_3_location, fonts_get_system_font(FONT_KEY_GOTHIC_14));
+	layer_add_child(main_window_layer, text_layer_get_layer(weather_layer_3_location));
   
   // Create last updated Layer
-  weather_layer_4 = text_layer_create(GRect(104, -1, 40, 17));
-  text_layer_set_background_color(weather_layer_4, GColorClear);
-  text_layer_set_text_color(weather_layer_4, textcolor_last_update);
-  text_layer_set_text_alignment(weather_layer_4, GTextAlignmentRight);
-  text_layer_set_text(weather_layer_4, "---");
-  text_layer_set_font(weather_layer_4, fonts_get_system_font(FONT_KEY_GOTHIC_14));
-	layer_add_child(main_window_layer, text_layer_get_layer(weather_layer_4));
+  weather_layer_4_last_update = text_layer_create(GRect(104, -1, 40, 17));
+  text_layer_set_background_color(weather_layer_4_last_update, GColorClear);
+  text_layer_set_text_color(weather_layer_4_last_update, textcolor_last_update);
+  text_layer_set_text_alignment(weather_layer_4_last_update, GTextAlignmentRight);
+  text_layer_set_text(weather_layer_4_last_update, "---");
+  text_layer_set_font(weather_layer_4_last_update, fonts_get_system_font(FONT_KEY_GOTHIC_14));
+	layer_add_child(main_window_layer, text_layer_get_layer(weather_layer_4_last_update));
   
+  /*
   // Create Temp. Min/Max Layer (--> Wind Speed)
   weather_layer_5 = text_layer_create(GRect(86, 40, 144-86-2, 15));
   text_layer_set_background_color(weather_layer_5, GColorClear);
@@ -1257,7 +1256,6 @@ static void main_window_load(Window *window) {
   text_layer_set_font(weather_layer_5, fonts_get_system_font(FONT_KEY_GOTHIC_14));
 	layer_add_child(main_window_layer, text_layer_get_layer(weather_layer_5));
   
-  /*
   // Create Pressure Layer
   weather_layer_6 = text_layer_create(GRect(38-1, 18+16, 84-38, 15)); //TODO
   text_layer_set_background_color(weather_layer_6, GColorClear);
@@ -1268,14 +1266,14 @@ static void main_window_load(Window *window) {
 	layer_add_child(main_window_layer, text_layer_get_layer(weather_layer_6));
   */
   
-  // Create Wind Speed Layer
-  weather_layer_7 = text_layer_create(GRect(86, 54, 144-86-2, 15)); //TODO
-  text_layer_set_background_color(weather_layer_7, GColorClear);
-  text_layer_set_text_color(weather_layer_7, textcolor_weather);
-  text_layer_set_text_alignment(weather_layer_7, GTextAlignmentRight);
-  text_layer_set_text(weather_layer_7, "--- km/h");
-  text_layer_set_font(weather_layer_7, fonts_get_system_font(FONT_KEY_GOTHIC_14));
-	layer_add_child(main_window_layer, text_layer_get_layer(weather_layer_7));
+  // Create String_1 Layer
+  weather_layer_7_string_1 = text_layer_create(GRect(86, 54-15, 144-86-2, 30)); //TODO
+  text_layer_set_background_color(weather_layer_7_string_1, GColorClear);
+  text_layer_set_text_color(weather_layer_7_string_1, textcolor_weather);
+  text_layer_set_text_alignment(weather_layer_7_string_1, GTextAlignmentCenter);
+  text_layer_set_text(weather_layer_7_string_1, "---\n---");
+  text_layer_set_font(weather_layer_7_string_1, fonts_get_system_font(FONT_KEY_GOTHIC_14));
+	layer_add_child(main_window_layer, text_layer_get_layer(weather_layer_7_string_1));
   
   /*
   // Create Humidity Layer
@@ -1367,13 +1365,20 @@ static void main_window_unload(Window *window) {
   text_layer_destroy(moonLayer_IMG);
   fonts_unload_custom_font(pFontMoon);
   
-  text_layer_destroy(weather_layer_1);
+  /*
+  static TextLayer *weather_layer_1_temp; // Temperature
+  static TextLayer *weather_layer_3_location; // Location Name
+  static TextLayer *weather_layer_4_last_update; // Time of last data / time since last update
+  static TextLayer *weather_layer_7_string_1;
+  */
+  
+  text_layer_destroy(weather_layer_1_temp);
   //text_layer_destroy(weather_layer_2);
-  text_layer_destroy(weather_layer_3);
-  text_layer_destroy(weather_layer_4);
-  text_layer_destroy(weather_layer_5);
+  text_layer_destroy(weather_layer_3_location);
+  text_layer_destroy(weather_layer_4_last_update);
+  //text_layer_destroy(weather_layer_5);
   //text_layer_destroy(weather_layer_6);
-  text_layer_destroy(weather_layer_7);
+  text_layer_destroy(weather_layer_7_string_1);
   //text_layer_destroy(weather_layer_8);
   text_layer_destroy(text_TimeZone_layer);
   

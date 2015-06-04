@@ -20,20 +20,15 @@
         "KEY_TIME_LAST_UPDATE": 11,
         "KEY_TIME_UTC_OFFSET": 10,
         "KEY_TIME_ZONE_NAME": 12,
-        "KEY_WEATHER_CONDITIONS": 8,
-        "KEY_WEATHER_HUMIDITY": 9,
-        "KEY_WEATHER_PRESSURE": 6,
-        "KEY_WEATHER_TEMP": 3,
-        "KEY_WEATHER_TEMP_MAX": 5,
-        "KEY_WEATHER_TEMP_MIN": 4,
-        "KEY_WEATHER_WIND_SPEED": 7
+        "KEY_WEATHER_STRING_1": 8,
+        "KEY_WEATHER_TEMP": 3
     },
     "capabilities": [
         "location",
         "configurable"
     ],
     "companyName": "fg",
-    "longName": "cfg_watchface_8_8",
+    "longName": "cfg_watchface_8_9",
     "projectType": "native",
     "resources": {
         "media": [
@@ -55,13 +50,13 @@
         ]
     },
     "sdkVersion": "3",
-    "shortName": "cfg_watchface_8_8",
+    "shortName": "cfg_watchface_8_9",
     "targetPlatforms": [
         "aplite",
         "basalt"
     ],
     "uuid": "03adc57a-569b-4669-9a80-b505eaea314d",
-    "versionLabel": "8.8",
+    "versionLabel": "8.9",
     "watchapp": {
         "watchface": true
     }

@@ -2,13 +2,10 @@
 #define KEY_LOCATION_NAME       0
 #define KEY_LOCATION_LAT        1
 #define KEY_LOCATION_LON        2
-#define KEY_WEATHER_TEMP        3
-#define KEY_WEATHER_TEMP_MIN    4
-#define KEY_WEATHER_TEMP_MAX    5
-#define KEY_WEATHER_PRESSURE    6
-#define KEY_WEATHER_WIND_SPEED  7
-#define KEY_WEATHER_CONDITIONS  8
-#define KEY_WEATHER_HUMIDITY    9
+#define KEY_WEATHER_TEMP        3 
+//4..7 unused
+#define KEY_WEATHER_STRING_1    8 //in this string, all infos for the text under the temp. will be collected (including \n)
+//9 unused
 #define KEY_TIME_UTC_OFFSET    10
 #define KEY_TIME_LAST_UPDATE   11
 #define KEY_TIME_ZONE_NAME     12
