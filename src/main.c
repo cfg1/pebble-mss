@@ -64,7 +64,8 @@ static char location_name[32];
 static int  location_latitude   = (int)(LATITUDE*1E6); //in 1E6
 static int  location_longitude  = (int)(LONGITUDE*1E6); //in 1E6
 static int  weather_TEMP        = 0; //in degree C
-static char weather_string_1[32];
+static char weather_string_1[32]; //under actual temp.
+static char weather_string_2[32]; //for future usage
 static int  time_UTC_OFFSET     = (int)(TIMEZONE*3600); //in seconds
 static char time_ZONE_NAME[10];
 static char sun_rise[10] = "--:--";
@@ -95,6 +96,7 @@ static int vibe_on_disconnect = VIBE_ON_DISC;
 static int vibe_on_charged_full = VIBE_ON_FULL;
 static int degree_f = DEGREE_F;
 static char date_format[15] = DATE_FORMAT;
+static int WeatherUpdateInterval = WEATHER_UPDATE_INTERVAL_MINUTE;
 
 
 
@@ -133,8 +135,13 @@ void LoadData(void) {
   if (persist_exists(key)) weather_WIND_SPEED = persist_read_int(key);
   */
   
+  key = KEY_WEATHER_UPDATE_INT;
+  if (persist_exists(key)) WeatherUpdateInterval = persist_read_int(key);
+  
   key = KEY_WEATHER_STRING_1;
   if (persist_exists(key)) persist_read_string(key, weather_string_1, sizeof(weather_string_1));
+  key = KEY_WEATHER_STRING_2;
+  if (persist_exists(key)) persist_read_string(key, weather_string_2, sizeof(weather_string_2));
   
   /*
   key = KEY_WEATHER_HUMIDITY;
@@ -201,16 +208,9 @@ void SaveData(void) {
   persist_write_int    (KEY_LOCATION_LON,  location_longitude);
   
   persist_write_int    (KEY_WEATHER_TEMP,  weather_TEMP);
-  /*
-  persist_write_int    (KEY_WEATHER_TEMP_MIN,  weather_TEMP_MIN);
-  persist_write_int    (KEY_WEATHER_TEMP_MAX,  weather_TEMP_MAX);
-  persist_write_int    (KEY_WEATHER_PRESSURE,  weather_PRESSURE);
-  persist_write_int    (KEY_WEATHER_WIND_SPEED,  weather_WIND_SPEED);
-  */
+  persist_write_int    (KEY_WEATHER_UPDATE_INT, WeatherUpdateInterval);
   persist_write_string (KEY_WEATHER_STRING_1, weather_string_1);
-  /*
-  persist_write_int    (KEY_WEATHER_HUMIDITY,  weather_HUMIDITY);
-  */
+  persist_write_string (KEY_WEATHER_STRING_2, weather_string_2);
   
   persist_write_int    (KEY_TIME_UTC_OFFSET,  time_UTC_OFFSET);
   persist_write_int    (KEY_TIME_LAST_UPDATE,  (int)(phone_last_updated));
@@ -230,6 +230,13 @@ void SaveData(void) {
   persist_write_string (KEY_SUN_RISE, sun_rise);
   persist_write_string (KEY_SUN_SET , sun_set);
   
+  persist_write_int(KEY_SET_INVERT_COLOR, InvertColors);
+  persist_write_int(KEY_SET_DISPLAY_SEC, DisplaySeconds);
+  persist_write_int(KEY_SET_VIBE_DISC, vibe_on_disconnect);
+  persist_write_int(KEY_SET_VIBE_FULL, vibe_on_charged_full);
+  persist_write_int(KEY_SET_DEGREE_F, degree_f);
+  persist_write_string(KEY_SET_DATE_FORMAT, date_format);
+  
 }
 
 void DisplayLastUpdated(void) {
@@ -242,10 +249,21 @@ void DisplayLastUpdated(void) {
     int days    = t_diff / (24*3600);
     int hours   = (t_diff % (24*3600)) / 3600;
     int minutes = (t_diff % 3600) / 60;
-    //int seconds = (t_diff % 60);
+    int seconds = (t_diff % 60);
     if (days == 0){
       if (hours == 0){
-        snprintf(last_updated_buffer, sizeof(last_updated_buffer), "%d m", minutes);
+        if (minutes == 0){
+          snprintf(last_updated_buffer, sizeof(last_updated_buffer), "%d s", seconds);
+        } else {
+          snprintf(last_updated_buffer, sizeof(last_updated_buffer), "%d m", minutes);
+          /*
+          if (minutes < 10){
+            snprintf(last_updated_buffer, sizeof(last_updated_buffer), "%d:%02d m", minutes, seconds);
+          } else {
+            snprintf(last_updated_buffer, sizeof(last_updated_buffer), "%d m", minutes);
+          }
+          */
+        }
       } else {
         if (hours < 10)
           snprintf(last_updated_buffer, sizeof(last_updated_buffer), "%d:%02d h", hours, minutes);
@@ -363,54 +381,9 @@ void DisplayData(void) {
   text_layer_set_text(weather_layer_2, " ");
   */
   text_layer_set_text(weather_layer_7_string_1, weather_string_1);
-  //text_layer_set_text(weather_layer_7_string_1, "line 1\nline 2");
+  //text_layer_set_text(runtime_layer_1, weather_string_2); //TODO
   
   text_layer_set_text(weather_layer_3_location, location_name);
-  
-  //text_layer_set_text(weather_layer_4, last_updated_buffer);
-  
-  /*
-  snprintf(buffer_5, sizeof(buffer_5), "%d/%d", weather_TEMP_MIN, weather_TEMP_MAX);
-  //text_layer_set_text(weather_layer_5, buffer_5);
-  //text_layer_set_text(weather_layer_5, " ");
-  */
-  
-  /*
-  snprintf(buffer_6, sizeof(buffer_6), "%d hPa", weather_PRESSURE);
-  //text_layer_set_text(weather_layer_6, buffer_6);
-  text_layer_set_text(weather_layer_6, " ");
-  */
-  
-  //weather_WIND_SPEED in cm/s (convert with *3.6/100 km/h and *2.236/100 mph)
-  /*
-  double conversion_factor = 3.6/100;
-  char unit_str[8] = "%d km/h";
-  if (degree_f){
-    conversion_factor = 2.236/100;
-    strcpy(unit_str, "%d mph");
-  }
-  snprintf(buffer_7, sizeof(buffer_7), unit_str, (int)(weather_WIND_SPEED*conversion_factor));
-  
-  
-    
-    
-  //text_layer_set_text(weather_layer_7, buffer_7);
-  text_layer_set_text(weather_layer_5, buffer_7);
-  */
-  
-  /*
-  snprintf(buffer_8, sizeof(buffer_8), "%d %%", weather_HUMIDITY);
-  //text_layer_set_text(weather_layer_8, buffer_8);
-  text_layer_set_text(weather_layer_8, " ");
-  */
-  
-  //if (time_UTC_OFFSET == 0){
-  //  snprintf(buffer_9, sizeof(buffer_9), "UTC");
-  //  text_layer_set_text(text_TimeZone_layer, buffer_9);
-  //} else {
-  //  snprintf(buffer_9, sizeof(buffer_9), "UTC+%d (%s)", (int)(time_UTC_OFFSET/3600), time_ZONE_NAME);
-  //  text_layer_set_text(text_TimeZone_layer, buffer_9);
-  //}
 
   
   if (strlen(time_ZONE_NAME) > 0){
@@ -422,8 +395,6 @@ void DisplayData(void) {
   
   text_layer_set_text(text_sunrise_layer, sun_rise);
   text_layer_set_text(text_sunset_layer, sun_set);
-  
-  DisplayLastUpdated();
 }
 
 
@@ -437,7 +408,7 @@ void DisplayData(void) {
 
 
 
-// Called once per second
+// Called once per second of DisplaySeconds otherwise once per minute.
 static void handle_second_tick(struct tm* current_time, TimeUnits units_changed) {
   
   if (LightOn == 3){
@@ -540,7 +511,8 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
   
   if (initDone || doUpdateWeather){
     if (units_changed & MINUTE_UNIT) {//MINUTE_UNIT, SECOND_UNIT
-      if ((current_time->tm_min%WEATHER_UPDATE_INTERVAL_MINUTE == 0) || doUpdateWeather) { 
+      //APP_LOG(APP_LOG_LEVEL_INFO, "modulo = %d (tm_min = %d; update_interval = %d)", current_time->tm_min%WeatherUpdateInterval, current_time->tm_min, WeatherUpdateInterval);
+      if ((current_time->tm_min%WeatherUpdateInterval == 0) || doUpdateWeather) { 
         
         doUpdateWeather = false;
         
@@ -563,7 +535,8 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
   
   
   /*if (units_changed & MINUTE_UNIT)*/ //DisplayLastUpdated();
-  DisplayData();
+  //DisplayData();
+  DisplayLastUpdated();
   
   
   
@@ -957,10 +930,19 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       weather_WIND_SPEED = (int)t->value->int32;
       break;
     */
+    case KEY_WEATHER_UPDATE_INT:
+      WeatherUpdateInterval = (int)t->value->int32;
+      //persist_write_int(KEY_WEATHER_UPDATE_INT, WeatherUpdateInterval);
+      break;
     case KEY_WEATHER_STRING_1:
       snprintf(weather_string_1, sizeof(weather_string_1), "%s", t->value->cstring);
       text_layer_set_text(weather_layer_7_string_1, weather_string_1);
       //APP_LOG(APP_LOG_LEVEL_INFO, "weather_string_1 = %s", weather_string_1);
+      break;
+    case KEY_WEATHER_STRING_2:
+      //snprintf(weather_string_2, sizeof(weather_string_2), "%s", t->value->cstring);
+      //text_layer_set_text(weather_layer_xxx_string_2, weather_string_2);
+      //APP_LOG(APP_LOG_LEVEL_INFO, "weather_string_2 = %s", weather_string_2);
       break;
     /*
     case KEY_WEATHER_HUMIDITY:
@@ -982,42 +964,46 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     case KEY_SET_INVERT_COLOR:
       if (InvertColors != (int)t->value->int32) restart = 1;
       InvertColors = (int)t->value->int32;
-      persist_write_int(KEY_SET_INVERT_COLOR, InvertColors);
+      //persist_write_int(KEY_SET_INVERT_COLOR, InvertColors);
       break;
     case KEY_SET_LIGHT_ON:
       LightOn = (int)t->value->int32;
-      persist_write_int(KEY_SET_LIGHT_ON, LightOn);
+      //persist_write_int(KEY_SET_LIGHT_ON, LightOn);
       break;
     case KEY_SET_DISPLAY_SEC:
       DisplaySeconds = (int)t->value->int32;
-      persist_write_int(KEY_SET_DISPLAY_SEC, DisplaySeconds);
+      //persist_write_int(KEY_SET_DISPLAY_SEC, DisplaySeconds);
       layer_mark_dirty(s_image_layer_second_1);
       layer_mark_dirty(s_image_layer_second_2);
+      tick_timer_service_unsubscribe();
+      if (DisplaySeconds)
+        tick_timer_service_subscribe(SECOND_UNIT, &handle_second_tick);
+      else
+        tick_timer_service_subscribe(MINUTE_UNIT, &handle_second_tick);
       break;
       
     case KEY_SET_VIBE_DISC:
       vibe_on_disconnect = (int)t->value->int32;
-      persist_write_int(KEY_SET_VIBE_DISC, vibe_on_disconnect);
+      //persist_write_int(KEY_SET_VIBE_DISC, vibe_on_disconnect);
       break;
     case KEY_SET_VIBE_FULL:
       vibe_on_charged_full = (int)t->value->int32;
-      persist_write_int(KEY_SET_VIBE_FULL, vibe_on_charged_full);
+      //persist_write_int(KEY_SET_VIBE_FULL, vibe_on_charged_full);
       break;
       
     case KEY_SET_DEGREE_F:
       if (degree_f != (int)t->value->int32) restart = 1;
       degree_f = (int)t->value->int32;
-      persist_write_int(KEY_SET_DEGREE_F, degree_f);
+      //persist_write_int(KEY_SET_DEGREE_F, degree_f);
       doUpdateWeather = true;
       break;
       
     case KEY_SET_DATE_FORMAT:
       snprintf(date_format, sizeof(date_format), "%s", t->value->cstring);
-      APP_LOG(APP_LOG_LEVEL_ERROR, "date_format in watchface = %s", date_format);
-      persist_write_string(KEY_SET_DATE_FORMAT, date_format);
+      //APP_LOG(APP_LOG_LEVEL_ERROR, "date_format in watchface = %s", date_format);
+      //persist_write_string(KEY_SET_DATE_FORMAT, date_format);
       handle_second_tick(tick_time, SECOND_UNIT | MINUTE_UNIT | HOUR_UNIT);
       break;
-      
     
     default:
       APP_LOG(APP_LOG_LEVEL_ERROR, "Key %d not recognized!", (int)t->key);
@@ -1027,6 +1013,8 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     // Look for next item
     t = dict_read_next(iterator);
   }
+  
+  SaveData();
   
   if (restart) window_stack_pop_all(true); //true means animated = slide out
   
@@ -1062,6 +1050,7 @@ static void main_window_load(Window *window) {
   
   if (persist_exists(KEY_SET_INVERT_COLOR)) InvertColors = persist_read_int(KEY_SET_INVERT_COLOR);
   if (persist_exists(KEY_SET_DEGREE_F)) degree_f = persist_read_int(KEY_SET_DEGREE_F);
+  LoadData();
   
   
   // --- Background Image ---
@@ -1307,7 +1296,6 @@ static void main_window_load(Window *window) {
   // --- END ---
   
   
-  LoadData();
   DisplayData();
   
   // Avoids a blank screen on watch start.
@@ -1318,7 +1306,10 @@ static void main_window_load(Window *window) {
   handle_bluetooth(bluetooth_connection_service_peek());
   
   // --- Register Event Handlers ---
-  tick_timer_service_subscribe(SECOND_UNIT, &handle_second_tick);
+  if (DisplaySeconds)
+    tick_timer_service_subscribe(SECOND_UNIT, &handle_second_tick);
+  else
+    tick_timer_service_subscribe(MINUTE_UNIT, &handle_second_tick);
   battery_state_service_subscribe(&handle_battery);
   bluetooth_connection_service_subscribe(&handle_bluetooth);
   
