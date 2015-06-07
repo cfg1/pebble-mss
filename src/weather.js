@@ -387,7 +387,10 @@ Pebble.addEventListener("showConfiguration",
     //Pebble.openURL("https://dl.dropboxusercontent.com/u/10824180/pebble%20config%20pages/sdktut9-config.html"); //original link from tutorial
     //Pebble.openURL("https://www.dropbox.com/s/mzfrbbp8wlvkp4a/pebble_cfg_watchface_config.html"); // not working
     //Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_cfg_watchface_config.html");
-    Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_mss_config.html");
+    
+    //Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_mss_config_url_test.html");
+    
+    /* --> */ Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_mss_config.html");
     
     //TODO: send some usefull values to the settings page (e. g. location, battery staistics etc.) by adding ?xxx to the URL
   }
@@ -397,9 +400,10 @@ Pebble.addEventListener("webviewclosed",
   function(e) {
     //Get JSON dictionary
     configuration = JSON.parse(decodeURIComponent(e.response));
+    var configuration_str = JSON.stringify(configuration);
     console.log("Configuration window returned: " + JSON.stringify(configuration, null, 2));
-    
-    if (e.response.charAt(0) == "{" && e.response.slice(-1) == "}" && e.response.length > 5) {
+
+    if (configuration_str.charAt(0) == "{" && configuration_str.slice(-1) == "}" && configuration_str.length > 5) {
     
       window.localStorage.configuration = JSON.stringify(configuration);
       

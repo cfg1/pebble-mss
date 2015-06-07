@@ -1100,7 +1100,7 @@ static void main_window_load(Window *window) {
     textcolor_background  = GColorFromRGB(0, 0, 0);
     GColor textcolor_sun         = GColorFromRGB(255, 255, 0);   //=GColorYellow //OK
     GColor textcolor_con         = GColorFromRGB(0, 170, 255);   //GColorVividCerulean
-    GColor textcolor_bat         = GColorFromRGB(170, 0, 0);     //GColorDarkCandyAppleRed
+    GColor textcolor_bat         = GColorFromRGB(255, 0, 0);     //GColorFromRGB(170, 0, 0);     //GColorDarkCandyAppleRed
     GColor textcolor_date        = GColorFromRGB(0, 170, 170);   //=GColorTiffanyBlue
     GColor textcolor_cal         = GColorFromRGB(0, 170, 170);   //=GColorTiffanyBlue
     GColor textcolor_moon        = GColorFromRGB(255, 255, 255); //OK
