@@ -13,7 +13,7 @@
 
 //(un-)comment to change initial settings
 #define INVERT_COLORS 0
-#define LIGHT_ON 1
+#define LIGHT_ON      1
 #define VIBE_ON_DISC 0 //disconnect
 #define VIBE_ON_FULL 0
 #define DEGREE_F     0

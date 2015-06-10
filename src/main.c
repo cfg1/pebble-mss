@@ -232,6 +232,7 @@ void SaveData(void) {
   
   persist_write_int(KEY_SET_INVERT_COLOR, InvertColors);
   persist_write_int(KEY_SET_DISPLAY_SEC, DisplaySeconds);
+  persist_write_int(KEY_SET_LIGHT_ON, LightOn);
   persist_write_int(KEY_SET_VIBE_DISC, vibe_on_disconnect);
   persist_write_int(KEY_SET_VIBE_FULL, vibe_on_charged_full);
   persist_write_int(KEY_SET_DEGREE_F, degree_f);
@@ -577,10 +578,13 @@ static void handle_battery(BatteryChargeState charge_state) {
   if (old_charge_state_int != last_charge_state){
     if (LightOn < 2){
       if (LightOn == 1){
-        if (charge_state.is_charging)
+        if (charge_state.is_charging){
           light_enable(0);
-        else
+          LightIsOn = 0;
+        } else {
           light_enable(charge_state.is_plugged);
+          if (charge_state.is_plugged) LightIsOn = 1; else LightIsOn = 0;
+        }
       }
     }
   }
@@ -1039,6 +1043,7 @@ static void main_window_load(Window *window) {
   
   // Use setlocale() to obtain the system locale for translation
   sys_locale = setlocale(LC_ALL, "");
+  LightIsOn = 0;
   
   
   Layer *main_window_layer = window_get_root_layer(s_main_window);
