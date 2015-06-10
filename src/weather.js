@@ -331,8 +331,11 @@ function timeConverter(UNIX_timestamp){
 }
 
 function pad(input) {
-    var BASE = "00";
-    return input ? BASE.substr(0, 2 - Math.ceil(input / 10)) + input : BASE;
+    //var BASE = "00";
+    //return input ? BASE.substr(0, 2 - Math.ceil(input / 10)) + input : BASE;
+  if (input < 10){
+    return ('0' + input);
+  } else return input;
 }
 
 
@@ -368,6 +371,9 @@ Pebble.addEventListener('ready',
   function(e) {
     console.log("PebbleKit JS ready!");
 
+    //var i;
+    //for (i=0; i<12; i++) console.log(pad(i));
+    
     // Get the initial weather
     getWeather();
   }
