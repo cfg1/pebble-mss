@@ -320,7 +320,7 @@ void DisplayLastUpdated(void) {
   } else {
     strcpy(battery_buffer_2, " ");
   }
-  if (last_charge_state == 2){
+  if (last_charge_state == 1){
     snprintf(battery_buffer_1, sizeof(battery_buffer_1), "*%d%%\n%s", actual_battery_percent, battery_buffer_2);
   } else {
     snprintf(battery_buffer_1, sizeof(battery_buffer_1), "%d%%\n%s", actual_battery_percent, battery_buffer_2);
