@@ -12,7 +12,7 @@
 #define TRANSLATION_CW_FR "S.%V"
 
 //(un-)comment to change initial settings
-#define INVERT_COLORS 0
+#define INVERT_COLORS 2 //2 means colors on Basalt, and white on black on Aplite
 #define LIGHT_ON      1
 #define VIBE_ON_DISC 0 //disconnect
 #define VIBE_ON_FULL 0
@@ -22,3 +22,6 @@
 #define WEATHER_UPDATE_INTERVAL_MINUTE 15
 
 #define DISPLAY_SECONDS 1
+  
+// uncomment this to show all colors of the temperature
+//#define ITERATE_TEMP

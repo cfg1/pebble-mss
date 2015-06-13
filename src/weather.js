@@ -23,9 +23,12 @@ var configuration = {
   speed_unit: 0,
   default_loc: "Berlin",
   autodetect_loc: 1,
-  weatherLine1: 1,
+  weatherLine1: 5,
   weatherLine2: 2,
-  weatherUpdateInt: 15
+  weatherLine3: 1,
+  weatherLine4: 0,
+  weatherUpdateInt: 15,
+  lang_id: "en"
 };
 
 var ForecastDataJSON;
@@ -67,15 +70,15 @@ function SendToPebble(pos, use_default) {
     console.log("pos_lat = " + pos_lat);
     console.log("pos_lon = " + pos_lon);
     url = "http://api.openweathermap.org/data/2.5/weather?lat=" +
-        pos_lat + "&lon=" + pos_lon;
+        pos_lat + "&lon=" + pos_lon + "&lang=" + configuration.lang_id;
     url_forecast = "http://api.openweathermap.org/data/2.5/forecast?lat=" +
-        pos_lat + "&lon=" + pos_lon;
+        pos_lat + "&lon=" + pos_lon + "&lang=" + configuration.lang_id;
   } else {
     console.log("conf.def_loc = " + configuration.default_loc);
     var city_name_req = configuration.default_loc;
     // Construct URL
-    url = "http://api.openweathermap.org/data/2.5/weather?q=" + city_name_req;
-    url_forecast = "http://api.openweathermap.org/data/2.5/forecast?q=" + city_name_req;
+    url = "http://api.openweathermap.org/data/2.5/weather?q=" + city_name_req + "&lang=" + configuration.lang_id;
+    url_forecast = "http://api.openweathermap.org/data/2.5/forecast?q=" + city_name_req + "&lang=" + configuration.lang_id;
   }
   
   console.log("Weather URL = " + url);
@@ -85,10 +88,25 @@ function SendToPebble(pos, use_default) {
   
   xhrRequest(url_forecast, 'GET', 
     function(responseText) {
-      ForecastDataJSON = JSON.parse(responseText);
+      var ForecastDataJSON_error = 0;
+      try {
+        ForecastDataJSON = JSON.parse(responseText);
+        console.log("successfully parsed retruned text of weather forecast.");
+      } catch (e){
+        ForecastDataJSON_error = 1;
+        console.log("could not parse retruned text of weather forecast: " + e);
+      }
+        
       xhrRequest(url, 'GET', 
         function(responseText) {
-          WeatherDataJSON = JSON.parse(responseText);
+          var WeatherDataJSON_error = 0;
+          try {
+            WeatherDataJSON = JSON.parse(responseText);
+            console.log("successfully parsed retruned text of weather data.");
+          } catch (e){
+            WeatherDataJSON_error = 1;
+            console.log("could not parse retruned text of weather data: " + e);
+          }
           
           
           //---------------------------------------------------------------------------------------------------
@@ -103,7 +121,7 @@ function SendToPebble(pos, use_default) {
               
         
           // Conditions
-          var conditions = WeatherDataJSON.weather[0].main;
+          var conditions = WeatherDataJSON.weather[0].description;
           console.log("Conditions are " + conditions);
               
               
@@ -156,17 +174,24 @@ function SendToPebble(pos, use_default) {
             TempMin: 10000, // in Kelvin
             TempMax:     0  // in Kelvin
           };
-          var i;
-          for (i = 0; i < Math.min(ForecastDataJSON.cnt, 8); i++) { // 8 entries means 24 hours for 3 hour forecast
-            console.log("forecast_list[" + i + "].dt_text = "+ForecastDataJSON.list[i].dt_txt+"; T = " + (ForecastDataJSON.list[i].main.temp - 273.15) + " C");
-            Forecast.TempMin = Math.min(ForecastDataJSON.list[i].main.temp, Forecast.TempMin);
-            Forecast.TempMax = Math.max(ForecastDataJSON.list[i].main.temp, Forecast.TempMax);
+          if (!ForecastDataJSON_error){
+            var i;
+            for (i = 0; i < Math.min(ForecastDataJSON.cnt, 8); i++) { // 8 entries means 24 hours for 3 hour forecast
+              console.log("forecast_list[" + i + "].dt_text = "+ForecastDataJSON.list[i].dt_txt+"; T = " + (ForecastDataJSON.list[i].main.temp - 273.15) + " C");
+              Forecast.TempMin = Math.min(ForecastDataJSON.list[i].main.temp, Forecast.TempMin);
+              Forecast.TempMax = Math.max(ForecastDataJSON.list[i].main.temp, Forecast.TempMax);
+            }
           }
           console.log("ForecastTempMin = "+Forecast.TempMin);
           console.log("ForecastTempMax = "+Forecast.TempMax);
+          
+          
               
           var weather_Line_1 = "";
           var weather_Line_2 = "";
+          var weather_Line_3 = "";
+          var weather_Line_4 = "";
+          
           
           switch (configuration.weatherLine1){
             case 1:
@@ -189,10 +214,14 @@ function SendToPebble(pos, use_default) {
                   weather_Line_1 = Math.round((Forecast.TempMax-273.15)*1.8+32) + "°/" + Math.round((Forecast.TempMin-273.15)*1.8+32) + "°F";
                 } else {
                   weather_Line_1 = Math.round((Forecast.TempMax-273.15)) + "°/" + Math.round((Forecast.TempMin-273.15)) + "°C";
+                  //weather_Line_1 = Math.round((Forecast.TempMax-273.15)) + "/" + Math.round((Forecast.TempMin-273.15)) + "C";
                 }
               }
               break;
           }
+          console.log("weather_Line_1 = " + (weather_Line_1.replace('°', ' ')).replace('°', ' '));
+          
+          
           
           switch (configuration.weatherLine2){
             case 1:
@@ -219,12 +248,75 @@ function SendToPebble(pos, use_default) {
               }
               break;
           }
+          console.log("weather_Line_2 = " + (weather_Line_2.replace('°', ' ')).replace('°', ' '));
+          
+          
+          
+          switch (configuration.weatherLine3){
+            case 1:
+              weather_Line_3 = conditions;
+              break;
+            case 2:
+              weather_Line_3 = wind_speed + " " + wind_speed_unit;
+              break;
+            case 3:
+              weather_Line_3 = humidity + " %";
+              break;
+            case 4:
+              weather_Line_3 = pressure + " hPa";
+              break;
+            case 5:
+              if ((Forecast.TempMin == 10000) || (Forecast.TempMax === 0)){
+                weather_Line_3 = " --/-- ";
+              } else {
+                if (configuration.degree_f){
+                  weather_Line_3 = Math.round((Forecast.TempMax-273.15)*1.8+32) + "°/" + Math.round((Forecast.TempMin-273.15)*1.8+32) + "°F";
+                } else {
+                  weather_Line_3 = Math.round((Forecast.TempMax-273.15)) + "°/" + Math.round((Forecast.TempMin-273.15)) + "°C";
+                }
+              }
+              break;
+          }
+          console.log("weather_Line_3 = " + (weather_Line_3.replace('°', ' ')).replace('°', ' '));
+          
+          
+          
+          switch (configuration.weatherLine4){
+            case 1:
+              weather_Line_4 = conditions;
+              break;
+            case 2:
+              weather_Line_4 = wind_speed + " " + wind_speed_unit;
+              break;
+            case 3:
+              weather_Line_4 = humidity + " %";
+              break;
+            case 4:
+              weather_Line_4 = pressure + " hPa";
+              break;
+            case 5:
+              if ((Forecast.TempMin == 10000) || (Forecast.TempMax === 0)){
+                weather_Line_4 = " --/-- ";
+              } else {
+                if (configuration.degree_f){
+                  weather_Line_4 = Math.round((Forecast.TempMax-273.15)*1.8+32) + "°/" + Math.round((Forecast.TempMin-273.15)*1.8+32) + "°F";
+                } else {
+                  weather_Line_4 = Math.round((Forecast.TempMax-273.15)) + "°/" + Math.round((Forecast.TempMin-273.15)) + "°C";
+                }
+              }
+              break;
+          }
+          console.log("weather_Line_4 = " + (weather_Line_4.replace('°', ' ')).replace('°', ' '));
+          
+          
           
         
           var weather_string_1 = weather_Line_1 + "\n" + weather_Line_2;
-          console.log("weather_string_1 is: \n" + weather_string_1+'\n');
-          var weather_string_2 = weather_Line_1 + "\n" + weather_Line_2; //TODO: what should be on this string?
-          console.log("weather_string_2 is: \n" + weather_string_1+'\n');
+          console.log("weather_string_1 is: \n" + (weather_string_1.replace('°', ' ')).replace('°', ' ') +'\n');
+          var weather_string_2 = weather_Line_3 + " / " + weather_Line_4; //TODO: what should be on this string?
+          if (configuration.weatherLine3 === 0) weather_string_2 = weather_Line_4;
+          if (configuration.weatherLine4 === 0) weather_string_2 = weather_Line_3;
+          console.log("weather_string_2 is: \n" + (weather_string_2.replace('°', ' ')).replace('°', ' ') +'\n');
         
         
           // Assemble dictionary using our keys
@@ -259,49 +351,7 @@ function SendToPebble(pos, use_default) {
       );
     }
   );
-  
-  
-  
-  //var WeatherData = getWeatherDataJSON(url);
-  //var ForecastData = getWeatherDataJSON(url_forecast);
-  //var WeatherDataJSON = JSON.parse(WeatherData);
-  //var ForecastDataJSON = JSON.parse(ForecastData);
-
-  // Send request to OpenWeatherMap
-
-  
-  
-  
-  // ------------ TESTS: --------------
-  // Construct URL
-  /*
-  url = "http://api.openweathermap.org/data/2.5/forecast?q=Berlin";
-  
-  xhrRequest(url, 'GET', 
-    function(responseText) {
-      // responseText contains a JSON object with weather info
-      var json = JSON.parse(responseText);
-      
-      console.log("Liste hat " + json.cnt + " Elemente");
-      for (i = 0; i < json.cnt; i++) {
-        console.log("list[" + i + "].dt_text = "+json.list[i].dt_txt+"; T = " + (json.list[i].main.temp - 273.15) + " C");
-      }
-    }
-  );
-  */
 }
-
-/*
-function getWeatherDataJSON(url){
-  var returnText = "";
-  xhrRequest(url, 'GET', 
-    function(responseText) {
-      returnText = responseText;
-    }
-  );
-  return returnText;
-}
-*/
 
 function getTimeZone() {
     return /\((.*)\)/.exec(new Date().toString())[1];
@@ -390,13 +440,8 @@ Pebble.addEventListener('appmessage',
 Pebble.addEventListener("showConfiguration",
   function(e) {
     //Load the remote config page
-    //Pebble.openURL("https://dl.dropboxusercontent.com/u/10824180/pebble%20config%20pages/sdktut9-config.html"); //original link from tutorial
-    //Pebble.openURL("https://www.dropbox.com/s/mzfrbbp8wlvkp4a/pebble_cfg_watchface_config.html"); // not working
-    //Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_cfg_watchface_config.html");
     
-    //Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_mss_config_url_test.html");
-    
-    /* --> */ Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_mss_config.html");
+    /* --> */ Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_mss_config_v10.0.html");
     
     //TODO: send some usefull values to the settings page (e. g. location, battery staistics etc.) by adding ?xxx to the URL
   }
@@ -415,12 +460,9 @@ Pebble.addEventListener("webviewclosed",
       
    
       //Send to Pebble, persist there
-      var InvertColors = 0;
-      if (configuration.invert == "1") InvertColors = 1;
+      var InvertColors = configuration.invert;
       console.log("InvertColors    = " + InvertColors);
       var LightOn = configuration.light;
-      //if (configuration.light == "1") LightOn = 1;
-      //if (configuration.light == "2") LightOn = 2;
       console.log("LightOn         = " + LightOn);
       var DisplaySeconds = 0;
       if (configuration.display_sec == "1") DisplaySeconds = 1;
