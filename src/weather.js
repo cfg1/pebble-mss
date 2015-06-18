@@ -21,6 +21,7 @@ var configuration = {
   vibe_full: 0,
   degree_f: 0,
   speed_unit: 0,
+  pressure_unit: 0,
   default_loc: "Berlin",
   autodetect_loc: 1,
   weatherLine1: 5,
@@ -126,7 +127,18 @@ function SendToPebble(pos, use_default) {
               
               
           var pressure = Math.round(WeatherDataJSON.main.pressure);
-          console.log("Pressure is " + pressure);
+          var pressure_unit = "hPa";
+          switch (configuration.pressure_unit){
+            case 1: 
+              pressure = Math.round(pressure/1.333);
+              pressure_unit = "mmHg";
+              break;
+            case 2:
+              pressure = Math.round(pressure/33.86389*100)/100;
+              pressure_unit = "inHg";
+              break;
+          }
+          console.log("Pressure is " + pressure + " " + pressure_unit);
               
           var humidity = Math.round(WeatherDataJSON.main.humidity);
           console.log("Humidity is " + humidity);
@@ -204,7 +216,7 @@ function SendToPebble(pos, use_default) {
               weather_Line_1 = humidity + " %";
               break;
             case 4:
-              weather_Line_1 = pressure + " hPa";
+              weather_Line_1 = pressure + " " + pressure_unit;
               break;
             case 5:
               if ((Forecast.TempMin == 10000) || (Forecast.TempMax === 0)){
@@ -234,7 +246,7 @@ function SendToPebble(pos, use_default) {
               weather_Line_2 = humidity + " %";
               break;
             case 4:
-              weather_Line_2 = pressure + " hPa";
+              weather_Line_2 = pressure + " " + pressure_unit;
               break;
             case 5:
               if ((Forecast.TempMin == 10000) || (Forecast.TempMax === 0)){
@@ -263,7 +275,7 @@ function SendToPebble(pos, use_default) {
               weather_Line_3 = humidity + " %";
               break;
             case 4:
-              weather_Line_3 = pressure + " hPa";
+              weather_Line_3 = pressure + " " + pressure_unit;
               break;
             case 5:
               if ((Forecast.TempMin == 10000) || (Forecast.TempMax === 0)){
@@ -292,7 +304,7 @@ function SendToPebble(pos, use_default) {
               weather_Line_4 = humidity + " %";
               break;
             case 4:
-              weather_Line_4 = pressure + " hPa";
+              weather_Line_4 = pressure + " " + pressure_unit;
               break;
             case 5:
               if ((Forecast.TempMin == 10000) || (Forecast.TempMax === 0)){
@@ -441,7 +453,7 @@ Pebble.addEventListener("showConfiguration",
   function(e) {
     //Load the remote config page
     
-    /* --> */ Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_mss_config_v10.0.html");
+    /* --> */ Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_mss_config_v10.1.html");
     
     //TODO: send some usefull values to the settings page (e. g. location, battery staistics etc.) by adding ?xxx to the URL
   }
