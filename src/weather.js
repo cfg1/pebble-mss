@@ -1,16 +1,5 @@
 
 
-
-
-//[HANDY] pebble-app.js:?: cfg_watchface_8_8__0.0/pebble-js-app.js:264 Configuration window returned: 
-//{"invert":0,
-//"light":1,
-//"display_sec":1,
-//"date_format":"_d._m._Y",
-//"date_format_index":3,"degree_f":0,"speed_unit":1,"vibe_disconnect":1,"vibe_full":0,
-//"default_loc":"London",
-//"autodetect_loc":0}
-
 var configuration = {
   invert: 0,
   light: 1,
@@ -452,8 +441,8 @@ Pebble.addEventListener('appmessage',
 Pebble.addEventListener("showConfiguration",
   function(e) {
     //Load the remote config page
-    
-    /* --> */ Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_mss_config_v10.1.html");
+    var batteryStatsString = "haha";
+    /* --> */ Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_mss_config_v11.0.html?batteryStats=" + batteryStatsString);
     
     //TODO: send some usefull values to the settings page (e. g. location, battery staistics etc.) by adding ?xxx to the URL
   }

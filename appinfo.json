@@ -35,9 +35,9 @@
     "resources": {
         "media": [
             {
-                "file": "images/background_image_color.png",
-                "name": "IMAGE_BACKGROUND_COLOR_PROFILE_1",
-                "type": "png"
+                "file": "fonts/moon_phases.ttf",
+                "name": "FONT_MOON_PHASES_SUBSET_30",
+                "type": "font"
             },
             {
                 "file": "images/background_image.png",
@@ -45,9 +45,9 @@
                 "type": "png"
             },
             {
-                "file": "fonts/moon_phases.ttf",
-                "name": "FONT_MOON_PHASES_SUBSET_30",
-                "type": "font"
+                "file": "images/background_image_color.png",
+                "name": "IMAGE_BACKGROUND_COLOR_PROFILE_1",
+                "type": "png"
             }
         ]
     },
