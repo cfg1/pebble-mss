@@ -64,6 +64,7 @@ static time_t last_battery_period_time = 0; // last duration of charging/dischar
 #else
   static EffectLayer *s_battery_layer_fill; //fill battery with an InverterLayer by an effect_invert_color (my own effect added to effect_layer type)
   //InverterLayer is recreated by including EffektLayer, but it uses the wrong inverting effect.
+  static Layer *s_battery_layer_paint_bat;
 #endif
 
 
@@ -87,6 +88,7 @@ GColor textcolor_background;
   GColor textcolor_sun;
   GColor textcolor_con;
   GColor textcolor_bat;
+  uint8_t textcolor_bat_uint8;
   GColor textcolor_date;
   GColor textcolor_cal;
   GColor textcolor_moon;
@@ -661,6 +663,25 @@ static void handle_battery(BatteryChargeState charge_state) {
   #else
     layer_set_frame(effect_layer_get_layer(s_battery_layer_fill), GRect(41, 21, (int)38*actual_battery_percent/100, 11));
     layer_set_hidden(effect_layer_get_layer(s_battery_layer_fill), false);
+    if (InvertColors == 2){
+      if (actual_battery_percent > 80){
+        textcolor_bat_uint8 = 0b11001100; //green (GColorGreen)
+      } else if (actual_battery_percent >= 50){
+        textcolor_bat_uint8 = 0b11001000; //dark green (GColorIslamicGreen)
+      } else if (actual_battery_percent > 30){
+        textcolor_bat_uint8 = 0b11111000; //light orange (GColorChromeYellow)
+      } else if (actual_battery_percent > 10){
+        textcolor_bat_uint8 = 0b11110100; //dark orange (GColorOrange)
+      } else {
+        textcolor_bat_uint8 = 0b11110000; //red (GColorRed)
+      }
+    } else {
+      textcolor_bat_uint8 = 0b11111111; //white
+    }
+    GlobalInverterColor = textcolor_bat_uint8 & 0b00111111;
+    textcolor_bat       = (GColor8){.argb = textcolor_bat_uint8};
+    text_layer_set_text_color(battery_runtime_layer, textcolor_bat);
+    layer_mark_dirty(s_battery_layer_paint_bat);
   #endif
     
     
@@ -916,6 +937,7 @@ static void layer_update_callback_second_2(Layer *layer, GContext* ctx) {
   }
 }
 
+/*
 static void layer_update_callback_battery(Layer *layer, GContext* ctx) {
   //clear layer content:
   graphics_context_set_fill_color(ctx, textcolor_background);
@@ -925,9 +947,23 @@ static void layer_update_callback_battery(Layer *layer, GContext* ctx) {
   graphics_context_set_stroke_color(ctx, textcolor_seconds);
   graphics_draw_rect(ctx, GRect(0, 0, 43, 15));
 }
-static void layer_update_callback_battery_fill(Layer *layer, GContext* ctx) {
+*/
+
+#ifdef PBL_COLOR
+static void layer_update_callback_paint_bat(Layer *layer, GContext* ctx) {
+  graphics_context_set_fill_color(ctx, GColorClear);
+  graphics_context_set_stroke_color(ctx, textcolor_bat);
+  graphics_draw_line(ctx, GPoint( 0, 0), GPoint(41, 0));
+  graphics_draw_line(ctx, GPoint( 0,14), GPoint(41,14));
+  graphics_draw_line(ctx, GPoint( 0, 0), GPoint( 0,14));
   
+  graphics_draw_line(ctx, GPoint(41, 0), GPoint(41, 4));
+  graphics_draw_line(ctx, GPoint(41,10), GPoint(41,14));
+  graphics_draw_line(ctx, GPoint(43, 4), GPoint(43,10));
+  graphics_draw_line(ctx, GPoint(41, 4), GPoint(43, 4));
+  graphics_draw_line(ctx, GPoint(41,10), GPoint(43,10));
 }
+#endif
 
 
 
@@ -1126,7 +1162,9 @@ static void main_window_load(Window *window) {
       textcolor_background  = GColorFromRGB(0, 0, 0);
       textcolor_sun         = GColorFromRGB(255, 255, 0);   //=GColorYellow //OK
       textcolor_con         = GColorFromRGB(0, 170, 255);   //GColorVividCerulean
-      textcolor_bat         = GColorFromRGB(255, 0, 0);     //GColorFromRGB(170, 0, 0);     //GColorDarkCandyAppleRed
+      textcolor_bat_uint8   = 0b11110000; //red
+      textcolor_bat         = (GColor8){.argb = textcolor_bat_uint8};
+      //APP_LOG(APP_LOG_LEVEL_INFO, "textcolor_bat = %d", (int)textcolor_bat); //this does not work
       textcolor_date        = GColorFromRGB(0, 170, 170);   //=GColorTiffanyBlue
       textcolor_cal         = GColorFromRGB(0, 170, 170);   //=GColorTiffanyBlue
       textcolor_moon        = GColorFromRGB(255, 255, 255); //OK
@@ -1216,14 +1254,18 @@ static void main_window_load(Window *window) {
     layer_add_child(main_window_layer, inverter_layer_get_layer(s_battery_layer_fill));
   #else //else use effect layer on basalt
     s_battery_layer_fill = effect_layer_create(GRect(41, 21, 38, 11));
-    //textcolor_bat.argb
+    GlobalInverterColor = textcolor_bat_uint8 & 0b00111111;
     if (InvertColors == 2){
-      effect_layer_add_effect(s_battery_layer_fill, effect_invert_color, (void *)0b00110000);
+      effect_layer_add_effect(s_battery_layer_fill, effect_invert_color, (void *)0b00000000); //use global inverter color
     } else {
       effect_layer_add_effect(s_battery_layer_fill, effect_invert_color, (void *)0b00111111);
     }
     layer_set_hidden(effect_layer_get_layer(s_battery_layer_fill), true);
     layer_add_child(main_window_layer, effect_layer_get_layer(s_battery_layer_fill));
+    
+    s_battery_layer_paint_bat = layer_create(GRect(39, 19, 82-39+1, 33-19+1));
+    layer_set_update_proc(s_battery_layer_paint_bat, layer_update_callback_paint_bat);
+    layer_add_child(main_window_layer, s_battery_layer_paint_bat);
   #endif
   
   
@@ -1373,6 +1415,7 @@ static void main_window_unload(Window *window) {
     inverter_layer_destroy(s_battery_layer_fill);
   #else
     effect_layer_destroy(s_battery_layer_fill);
+    layer_destroy(s_battery_layer_paint_bat);
   #endif
   
   

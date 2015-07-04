@@ -155,6 +155,7 @@ void effect_invert_color(GContext* ctx,  GRect position, void* param) {
   int bytes_per_row = gbitmap_get_bytes_per_row(fb);
 
   uint8_t InverterColor = (uintptr_t)param;
+  if (InverterColor == 0) InverterColor = GlobalInverterColor;
   
   for (int y = 0; y < position.size.h; y++)
      for (int x = 0; x < position.size.w; x++)

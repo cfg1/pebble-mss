@@ -30,14 +30,14 @@
         "configurable"
     ],
     "companyName": "fg",
-    "longName": "M7S_watchface_10_1",
+    "longName": "M7S_watchface_10_2",
     "projectType": "native",
     "resources": {
         "media": [
             {
-                "file": "fonts/moon_phases.ttf",
-                "name": "FONT_MOON_PHASES_SUBSET_30",
-                "type": "font"
+                "file": "images/background_image_color.png",
+                "name": "IMAGE_BACKGROUND_COLOR_PROFILE_1",
+                "type": "png"
             },
             {
                 "file": "images/background_image.png",
@@ -45,20 +45,20 @@
                 "type": "png"
             },
             {
-                "file": "images/background_image_color.png",
-                "name": "IMAGE_BACKGROUND_COLOR_PROFILE_1",
-                "type": "png"
+                "file": "fonts/moon_phases.ttf",
+                "name": "FONT_MOON_PHASES_SUBSET_30",
+                "type": "font"
             }
         ]
     },
     "sdkVersion": "3",
-    "shortName": "M7S_watchface_10_1",
+    "shortName": "M7S_watchface_10_2",
     "targetPlatforms": [
         "aplite",
         "basalt"
     ],
     "uuid": "03adc57a-569b-4669-9a80-b505eaea314d",
-    "versionLabel": "10.1",
+    "versionLabel": "10.2",
     "watchapp": {
         "watchface": true
     }

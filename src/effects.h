@@ -11,7 +11,7 @@ typedef struct {
   GFont     font; // font used for text mask;
   GTextOverflowMode text_overflow; // overflow used for text mask;
   GTextAlignment  text_align; // alignment used for text masks
-} EffectMask;  
+} EffectMask;
 
 // structure for FPS effect
 typedef struct {
@@ -39,6 +39,7 @@ effect_cb effect_invert;
 // inverter effect with a given color for the bright color (switch between black / color).
 // Added by FG
 effect_cb effect_invert_color;
+uint8_t GlobalInverterColor; //this color is used if effect was added with parameter of 0. In this way, the color can be changed later.
 
 // vertical mirror effect.
 // Added by Yuriy Galanter
