@@ -107,7 +107,7 @@ static int DisplaySeconds = DISPLAY_SECONDS;
 static int vibe_on_disconnect = VIBE_ON_DISC;
 static int vibe_on_charged_full = VIBE_ON_FULL;
 static int degree_f = DEGREE_F;
-static char date_format[15] = DATE_FORMAT;
+static char date_format[20] = DATE_FORMAT;
 static int WeatherUpdateInterval = WEATHER_UPDATE_INTERVAL_MINUTE;
 
 
@@ -470,10 +470,29 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
   }
   
   
-  static char date_buffer[15];
+  static char date_buffer[20];
   if (units_changed & HOUR_UNIT) {
     strftime(date_buffer, sizeof(date_buffer), /*"%a, %d.%m."*/date_format, current_time);
     text_layer_set_text(Date_Layer, date_buffer);
+    //determine if calendar week should be disabled because of too wide date:
+    GSize textsize = graphics_text_layout_get_content_size(date_buffer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(5, 63, 134, 30), GTextOverflowModeWordWrap, GTextAlignmentLeft);
+    //
+    if (textsize.w > 100){
+      text_layer_set_text_alignment(Date_Layer, GTextAlignmentCenter);
+      layer_set_hidden(text_layer_get_layer(cwLayer), true);
+    } else {
+      text_layer_set_text_alignment(Date_Layer, GTextAlignmentLeft);
+      layer_set_hidden(text_layer_get_layer(cwLayer), false);
+    }
+    
+    /*  
+      // Date text
+      Date_Layer = text_layer_create(GRect(5, 63, 130, 30));
+      text_layer_set_text_color(Date_Layer, textcolor_date);
+      text_layer_set_background_color(Date_Layer, GColorClear );
+      text_layer_set_font(Date_Layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+      layer_add_child(main_window_layer, text_layer_get_layer(Date_Layer));
+    */
   }
   
   
@@ -1210,7 +1229,7 @@ static void main_window_load(Window *window) {
   
   
   // Date text
-  Date_Layer = text_layer_create(GRect(5, 63, 130 /* width */, 30 /* height */));
+  Date_Layer = text_layer_create(GRect(5, 63, 134 /* width */, 30 /* height */));
   text_layer_set_text_color(Date_Layer, textcolor_date);
   text_layer_set_background_color(Date_Layer, GColorClear );
   text_layer_set_font(Date_Layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
