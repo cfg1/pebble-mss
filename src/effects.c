@@ -147,21 +147,27 @@ void effect_invert(GContext* ctx,  GRect position, void* param) {
           
 }
 
-// inverter effect (black -> given color -> black -> ...).
+// inverter effect (black (or given color) -> given color -> black -> ...).
 void effect_invert_color(GContext* ctx,  GRect position, void* param) {
   //capturing framebuffer bitmap
   GBitmap *fb = graphics_capture_frame_buffer(ctx);
   uint8_t *bitmap_data =  gbitmap_get_data(fb);
   int bytes_per_row = gbitmap_get_bytes_per_row(fb);
 
+  #ifdef PBL_COLOR
   uint8_t InverterColor = (uintptr_t)param;
-  if (InverterColor == 0) InverterColor = GlobalInverterColor;
+  uint8_t BkgColor = 0;
+  if (InverterColor == 0){
+    InverterColor = GlobalInverterColor;
+    BkgColor = GlobalBkgColor;
+  }
+  #endif
   
   for (int y = 0; y < position.size.h; y++)
      for (int x = 0; x < position.size.w; x++)
         #ifdef PBL_COLOR // on Basalt simple doing NOT on entire returned byte/pixel
-          if (get_pixel(bitmap_data, bytes_per_row, y + position.origin.y, x + position.origin.x) & 0b00111111){
-            set_pixel(bitmap_data, bytes_per_row, y + position.origin.y, x + position.origin.x, 0);
+          if ((get_pixel(bitmap_data, bytes_per_row, y + position.origin.y, x + position.origin.x) & 0b00111111) != BkgColor){
+            set_pixel(bitmap_data, bytes_per_row, y + position.origin.y, x + position.origin.x, BkgColor);
           } else {
             set_pixel(bitmap_data, bytes_per_row, y + position.origin.y, x + position.origin.x, InverterColor);
           }

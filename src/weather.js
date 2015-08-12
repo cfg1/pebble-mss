@@ -1,35 +1,222 @@
+/*
+var options = {
+  "invert": invertSelect.selectedIndex,
+  "light": light_select.selectedIndex,
+  "display_sec": dsSelect.selectedIndex,
+  "date_format": dfSelect.options[dfSelect.selectedIndex].value, //not working with %
+  "date_format_index": dfSelect.selectedIndex, //only used for internal storage in browser
+  "time_zone_info": timeZoneSelect.selectedIndex,
+  "vibe_disconnect": vdSelect.selectedIndex,
+  "vibe_full": vfSelect.selectedIndex,
+  "vibe_hour": vhSelect.selectedIndex,
+
+  "default_loc": defaultlocEdit.value,
+  "autodetect_loc": autodetlocSelect.selectedIndex,
+  "lang_id": owmlangEdit.value,
+  "show_update_time": updateTimeSelect.selectedIndex,
+  "weatherLine1": weatherLine1Select.selectedIndex,
+  "weatherLine2": weatherLine2Select.selectedIndex,
+  "weatherLine3": weatherLine3Select.selectedIndex,
+  "weatherLine4": weatherLine4Select.selectedIndex,
+  "weatherUpdateInt": parseInt(updIntSelect.value),
+
+  "degree_f": tuSelect.selectedIndex,
+  "speed_unit": suSelect.selectedIndex,
+  "pressure_unit": puSelect.selectedIndex
+};
+*/
 
 
+var CLOUDPEBBLE = 1;
 
+var CLIMACON = {
+  'cloud'            : '!',
+  'cloud_day'        : '"',
+  'cloud_night'      : '#',
+  'rain'             : '$',
+  'rain_day'         : '%',
+  'rain_night'       : '&',
+  'showers'          : "'",
+  'showers_day'      : '(',
+  'showers_night'    : ')',
+  'downpour'         : '*',
+  'downpour_day'     : '+',
+  'downpour_night'   : ',',
+  'drizzle'          : '-',
+  'drizzle_day'      : '.',
+  'drizzle_night'    : '/',
+  'sleet'            : '0',
+  'sleet_day'        : '1',
+  'sleet_night'      : '2',
+  'hail'             : '3',
+  'hail_day'         : '4',
+  'hail_night'       : '5',
+  'flurries'         : '6',
+  'flurries_day'     : '7',
+  'flurries_night'   : '8',
+  'snow'             : '9',
+  'snow_day'         : ':',
+  'snow_night'       : ';',
+  'fog'              : '<',
+  'fog_day'          : '=',
+  'fog_night'        : '>',
+  'haze'             : '?',
+  'haze_day'         : '@',
+  'haze_night'       : 'A',
+  'wind'             : 'B',
+  'wind_cloud'       : 'C',
+  'wind_cloud_day'   : 'D',
+  'wind_cloud_night' : 'E',
+  'lightning'        : 'F',
+  'lightning_day'    : 'G',
+  'lightning_night'  : 'H',
+// ---
+  'sun'              : 'I',
+   'set'             : 'J',
+   'rise'            : 'K',
+   'low'             : 'L',
+   'lower'           : 'M',
+  'moon'             : 'N',
+   'new'             : 'O',
+   'wax_cresc'       : 'P',
+   'wax_quart'       : 'Q',
+   'wax_gib'         : 'R',
+   'full'            : 'S',
+   'wane_cresc'      : 'T',
+   'wane_quart'      : 'U',
+   'wane_gib'        : 'V',
+  'snowflake'        : 'W',
+  'tornado'          : 'X',
+  'thermometer'      : 'Y',
+   'temp_low'        : 'Z',
+   'temp_med-low'    : '[',
+   'temp_med-high'   : "\\",
+   'temp_high'       : ']',
+   'temp_full'       : '^',
+  'celsius'          : '`',
+  'fahrenheit'       : '_',
+  'compass'          : 'a',
+   'north'           : 'b',
+   'east'            : 'c',
+   'south'           : 'd',
+   'west'            : 'e',
+  'umbrella'         : 'f',
+  'sunglasses'       : 'g',
+  'cloud_refresh'    : 'h',
+  'cloud_up'         : 'i',
+  'cloud_down'       : 'j'
+};
 
-//[HANDY] pebble-app.js:?: cfg_watchface_8_8__0.0/pebble-js-app.js:264 Configuration window returned: 
-//{"invert":0,
-//"light":1,
-//"display_sec":1,
-//"date_format":"_d._m._Y",
-//"date_format_index":3,"degree_f":0,"speed_unit":1,"vibe_disconnect":1,"vibe_full":0,
-//"default_loc":"London",
-//"autodetect_loc":0}
+var OWMclimacon= {
+// Thunderstorm
+  200 : CLIMACON['lightning'], // thunderstorm with light rain
+  201 : CLIMACON['lightning'], // thunderstorm with rain
+  202 : CLIMACON['lightning'], // thunderstorm with heavy rain
+  210 : CLIMACON['lightning'], // light thunderstorm
+  211 : CLIMACON['lightning'], // thunderstorm
+  212 : CLIMACON['lightning'], // heavy thunderstorm
+  221 : CLIMACON['lightning'], // ragged thunderstorm
+  230 : CLIMACON['lightning'], // thunderstorm with light drizzle
+  231 : CLIMACON['lightning'], // thunderstorm with drizzle
+  232 : CLIMACON['lightning'], // thunderstorm with heavy drizzle
+// Drizzle
+  300 : CLIMACON['drizzle'], // light intensity drizzle
+  301 : CLIMACON['drizzle'], // drizzle
+  302 : CLIMACON['drizzle'], // heavy intensity drizzle
+  310 : CLIMACON['drizzle'], // light intensity drizzle rain
+  311 : CLIMACON['drizzle'], // drizzle rain
+  312 : CLIMACON['drizzle'], // heavy intensity drizzle rain
+  313 : CLIMACON['showers'], // shower rain and drizzle
+  314 : CLIMACON['showers'], // heavy shower rain and drizzle
+  321 : CLIMACON['showers'], // shower drizzle
+// Rain
+  500 : CLIMACON['rain'], // light rain
+  501 : CLIMACON['rain'], // moderate rain
+  502 : CLIMACON['downpour'], // heavy intensity rain
+  503 : CLIMACON['downpour'], // very heavy rain
+  504 : CLIMACON['downpour'], // extreme rain
+  511 : CLIMACON['downpour'], // freezing rain
+  520 : CLIMACON['showers'], // light intensity shower rain
+  521 : CLIMACON['showers'], // shower rain
+  522 : CLIMACON['showers'], // heavy intensity shower rain
+  531 : CLIMACON['showers'], // ragged shower rain
+// Snow
+  600 : CLIMACON['snow'], // light snow
+  601 : CLIMACON['snow'], // snow
+  602 : CLIMACON['snow'], // heavy snow
+  611 : CLIMACON['sleet'], // sleet
+  612 : CLIMACON['sleet'], // shower sleet
+  615 : CLIMACON['snow'], // light rain and snow
+  616 : CLIMACON['snow'], // rain and snow
+  620 : CLIMACON['snow'], // light shower snow
+  621 : CLIMACON['snow'], // shower snow
+  622 : CLIMACON['snow'], // heavy shower snow
+// Atmosphere
+  701 : CLIMACON['haze'], // mist
+  711 : CLIMACON['haze'], // smoke
+  721 : CLIMACON['haze'], // haze
+  731 : CLIMACON['haze'], // Sand/Dust Whirls
+  741 : CLIMACON['fog'], // Fog
+  751 : CLIMACON['haze'], // sand
+  761 : CLIMACON['haze'], // dust
+  762 : CLIMACON['haze'], // VOLCANIC ASH
+  771 : CLIMACON['wind'], // SQUALLS
+  781 : CLIMACON['tornado'], // TORNADO
+// Clouds
+  800 : CLIMACON['sun'], // sky is clear
+  801 : CLIMACON['cloud_day'], // few clouds
+  802 : CLIMACON['cloud_day'], // scattered clouds
+  803 : CLIMACON['cloud_day'], // broken clouds
+  804 : CLIMACON['cloud'], // overcast clouds
+// Extreme
+  900 : CLIMACON['tornado'], // tornado
+  901 : CLIMACON['tornado'], // tropical storm
+  902 : CLIMACON['tornado'], // hurricane
+  903 : CLIMACON['temp_low'], // cold
+  904 : CLIMACON['temp_high'], // hot
+  905 : CLIMACON['wind'], // windy
+  906 : CLIMACON['hail'], // hail 
+// Additional
+  950 : CLIMACON['set'], // Setting
+  951 : CLIMACON['sun'], // Calm
+  952 : CLIMACON['sun'], // Light breeze
+  953 : CLIMACON['sun'], // Gentle Breeze
+  954 : CLIMACON['sun'], // Moderate breeze
+  955 : CLIMACON['sun'], // Fresh Breeze
+  956 : CLIMACON['wind'], // Strong breeze
+  957 : CLIMACON['wind'], // High wind, near gale
+  958 : CLIMACON['wind'], // Gale
+  959 : CLIMACON['wind'], // Severe Gale
+  960 : CLIMACON['lightning'], // Storm
+  961 : CLIMACON['lightning'], // Violent Storm
+  962 : CLIMACON['tornado'], // Hurricane 
+};
 
 var configuration = {
   invert: 0,
   light: 1,
   display_sec: 1,
-  date_format: "%a, %d.%m.",
-  date_format_index: 1,
-  vibe_disconnect: 0,
+  date_format: "%a, %d.%m.%Y",
+  date_format_index: 2,
+  time_zone_info: 2,
+  
+  vibe_disconnect: 1,
   vibe_full: 0,
-  degree_f: 0,
-  speed_unit: 0,
-  pressure_unit: 0,
+  vibe_hour: 0,
+  
   default_loc: "Berlin",
   autodetect_loc: 1,
+  lang_id: "en",
+  show_update_time: 0,
   weatherLine1: 5,
   weatherLine2: 2,
-  weatherLine3: 1,
-  weatherLine4: 0,
-  weatherUpdateInt: 15,
-  lang_id: "en"
+  weatherLine3: 3,
+  weatherLine4: 4,
+  weatherUpdateInt: 20,
+  
+  degree_f: 0,
+  speed_unit: 0,
+  pressure_unit: 0
 };
 
 var ForecastDataJSON;
@@ -65,7 +252,7 @@ function SendToPebble(pos, use_default) {
   // Construct URL
   console.log("conf.auto_loc = " + configuration.autodetect_loc);
   if ((use_default === 0) && (configuration.autodetect_loc)){
-    var multiplier = 100;
+    var multiplier = 10000;
     var pos_lat = Math.round(multiplier*pos.coords.latitude)/multiplier;
     var pos_lon = Math.round(multiplier*pos.coords.longitude)/multiplier;
     console.log("pos_lat = " + pos_lat);
@@ -124,6 +311,9 @@ function SendToPebble(pos, use_default) {
           // Conditions
           var conditions = WeatherDataJSON.weather[0].description;
           console.log("Conditions are " + conditions);
+          
+          var conditions_icon = OWMclimacon[WeatherDataJSON.weather[0].id].charCodeAt(0);
+          console.log("Conditions icon is " + conditions_icon);
               
               
           var pressure = Math.round(WeatherDataJSON.main.pressure);
@@ -171,7 +361,7 @@ function SendToPebble(pos, use_default) {
           // Location:
           var location_name = WeatherDataJSON.name;
           if (use_default){
-            location_name = location_name + "*";
+            location_name = "*" + location_name + "*";
           }
           console.log("City name is " + location_name);
           console.log("LATITUDE  is " + pos.coords.latitude);
@@ -330,7 +520,11 @@ function SendToPebble(pos, use_default) {
           if (configuration.weatherLine4 === 0) weather_string_2 = weather_Line_3;
           console.log("weather_string_2 is: \n" + (weather_string_2.replace('°', ' ')).replace('°', ' ') +'\n');
         
-        
+          if (CLOUDPEBBLE) {
+            weather_string_1 = (weather_string_1.replace('°', '__')).replace('°', '__');
+            weather_string_2 = (weather_string_2.replace('°', '__')).replace('°', '__');
+          }
+          
           // Assemble dictionary using our keys
           var dictionary = {
             "KEY_LOCATION_NAME": location_name,
@@ -339,6 +533,7 @@ function SendToPebble(pos, use_default) {
             "KEY_WEATHER_TEMP": temperature,
             "KEY_WEATHER_STRING_1": weather_string_1,
             "KEY_WEATHER_STRING_2": weather_string_2,
+            "KEY_WEATHER_ICON": conditions_icon,
             "KEY_TIME_UTC_OFFSET": utc_offset,
             "KEY_TIME_ZONE_NAME": getTimeZone(),
             "KEY_SUN_RISE": sunrise,
@@ -346,6 +541,8 @@ function SendToPebble(pos, use_default) {
           };
         
           // Send to Pebble
+          
+          console.log("Sending Weather Info to Pebble ...");
           Pebble.sendAppMessage(dictionary,
                                 function(e) {
                                   console.log("Weather info sent to Pebble successfully!");
@@ -354,6 +551,31 @@ function SendToPebble(pos, use_default) {
                                   console.log("Error sending weather info to Pebble!");
                                 }
                                );
+          
+          //var dictionary2 = {
+            /*"KEY_LOCATION_NAME": location_name,
+            "KEY_LOCATION_LAT": Math.round(pos.coords.latitude*1000000),
+            "KEY_LOCATION_LON": Math.round(pos.coords.longitude*1000000),
+            "KEY_WEATHER_TEMP": temperature,
+            */ //"KEY_WEATHER_STRING_1": weather_string_1,
+          //  "KEY_WEATHER_STRING_2": weather_string_2
+          /*,
+            "KEY_TIME_UTC_OFFSET": utc_offset,
+            "KEY_TIME_ZONE_NAME": getTimeZone(),
+            "KEY_SUN_RISE": sunrise,
+            "KEY_SUN_SET": sunset*/
+          //};
+          /*
+          console.log("Sending Weather Info to Pebble (2) ...");
+          Pebble.sendAppMessage(dictionary2,
+                                function(e) {
+                                  console.log("Weather info sent to Pebble successfully!");
+                                },
+                                function(e) {
+                                  console.log("Error sending weather info to Pebble!");
+                                }
+                               );
+            */                   
           var date = new Date();
           console.log("Time is " + date);
           
@@ -404,6 +626,7 @@ function pad(input) {
 
 function getWeather() {
   
+  
   if (window.localStorage.getItem("configuration")){
     console.log("read config start");
     configuration = JSON.parse(window.localStorage.configuration);
@@ -413,6 +636,8 @@ function getWeather() {
   } else {
     console.log("error reading config from localStorage");
   }
+  
+  //console.log("reading config from localStorage REMOVED!!!");
   
   console.log("getWeather Begin");
   var options = {
@@ -437,7 +662,7 @@ Pebble.addEventListener('ready',
     //for (i=0; i<12; i++) console.log(pad(i));
     
     // Get the initial weather
-    getWeather();
+    //getWeather();
   }
 );
 
@@ -453,7 +678,7 @@ Pebble.addEventListener("showConfiguration",
   function(e) {
     //Load the remote config page
     
-    /* --> */ Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_mss_config_v10.1.html");
+    /* --> */ Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_mss_config_v12.0.html");
     
     //TODO: send some usefull values to the settings page (e. g. location, battery staistics etc.) by adding ?xxx to the URL
   }
@@ -473,36 +698,16 @@ Pebble.addEventListener("webviewclosed",
    
       //Send to Pebble, persist there
       var InvertColors = configuration.invert;
-      console.log("InvertColors    = " + InvertColors);
+      console.log("DEBUG: InvertColors    = " + InvertColors);
       var LightOn = configuration.light;
-      console.log("LightOn         = " + LightOn);
+      console.log("DEBUG: LightOn         = " + LightOn);
       var DisplaySeconds = 0;
       if (configuration.display_sec == "1") DisplaySeconds = 1;
-      console.log("DisplaySeconds  = " + DisplaySeconds);
+      console.log("DEBUG: DisplaySeconds  = " + DisplaySeconds);
       
-      var date_format_str = configuration.date_format; //"%a, %m.%d.%y";
-      console.log(" DEBUG = " + date_format_str);
-      /*if (configuration.date_format == 0){
-        date_format_str = "%a, %d.%m.";
-      } else if (configuration.date_format == 1){
-        date_format_str = "%a, %d/%m";
-      } else if (configuration.date_format == 2){
-        date_format_str = "%a, %m/%d";
-      }*/
-      /*
-      var valuetxtarr = date_format_str.val();
-      console.log(" DEBUG = " + valuetxtarr);
-      date_format_str = valuetxtarr.replace('_', '%');
-      */
+      var date_format_str = configuration.date_format; //"%a, %m.%d.%Y";
       date_format_str = date_format_str.split('_').join('%');
-      console.log(" DEBUG = " + date_format_str);
-      
-      
-      console.log("vibe_disconnect = " + configuration.vibe_disconnect);
-      console.log("vibe_full       = " + configuration.vibe_full);
-      console.log("degree_f        = " + configuration.degree_f);
-      console.log("date_format     = " + configuration.date_format + "; date_format_str = " + date_format_str);
-      
+      console.log("DEBUG: date_format     = " + configuration.date_format + "; date_format_str = " + date_format_str);
       
       Pebble.sendAppMessage(
         {
@@ -511,9 +716,12 @@ Pebble.addEventListener("webviewclosed",
           "KEY_SET_DISPLAY_SEC": DisplaySeconds,
           "KEY_SET_VIBE_DISC": configuration.vibe_disconnect,
           "KEY_SET_VIBE_FULL": configuration.vibe_full,
+          "KEY_SET_VIBE_HOUR": configuration.vibe_hour,
           "KEY_SET_DEGREE_F": configuration.degree_f,
           "KEY_SET_DATE_FORMAT": date_format_str,
-          "KEY_WEATHER_UPDATE_INT": configuration.weatherUpdateInt
+          "KEY_WEATHER_UPDATE_INT": configuration.weatherUpdateInt,
+          "KEY_SET_TZ_FORMAT": configuration.time_zone_info,
+          "KEY_SET_UPDATE_TIME": configuration.show_update_time
         },
         function(e) {
           console.log("Settings data transfered successfully.");

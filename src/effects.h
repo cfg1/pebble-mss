@@ -40,6 +40,7 @@ effect_cb effect_invert;
 // Added by FG
 effect_cb effect_invert_color;
 uint8_t GlobalInverterColor; //this color is used if effect was added with parameter of 0. In this way, the color can be changed later.
+uint8_t GlobalBkgColor;
 
 // vertical mirror effect.
 // Added by Yuriy Galanter

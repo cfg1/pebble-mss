@@ -3,7 +3,9 @@
 #define KEY_LOCATION_LAT        1
 #define KEY_LOCATION_LON        2
 #define KEY_WEATHER_TEMP        3 
-//4..6 unused
+#define KEY_WEATHER_ICON        4
+//5 unused
+#define KEY_WEATHER_DATA_TIME   6 //Update time of server in Unix local time
 #define KEY_WEATHER_UPDATE_INT  7 //Update Interval in minutes
 #define KEY_WEATHER_STRING_1    8 //in this string, all infos for the text under the temp. will be collected. (including \n)
 #define KEY_WEATHER_STRING_2    9 //in this string, all infos for the text under the moon and battery will be collected.
@@ -24,3 +26,28 @@
 #define KEY_SET_VIBE_FULL      24
 #define KEY_SET_DEGREE_F       25
 #define KEY_SET_DATE_FORMAT    26
+#define KEY_SET_TZ_FORMAT      27
+#define KEY_SET_VIBE_HOUR      28
+#define KEY_SET_UPDATE_TIME    29
+#define KEY_SET_LANG_ID        30
+
+#define KEY_SET_LABEL_INDEX_1  31
+#define KEY_SET_LABEL_INDEX_2  32
+#define KEY_SET_LABEL_INDEX_3  33
+#define KEY_SET_LABEL_INDEX_4  34
+#define KEY_SET_LABEL_INDEX_5  35 //is used
+#define KEY_SET_LABEL_INDEX_6  36
+#define KEY_SET_LABEL_INDEX_7  37
+#define KEY_SET_LABEL_INDEX_8  38 //is used
+
+#define KEY_WEATHER_AVWX_STRING_1  101
+#define KEY_WEATHER_AVWX_STRING_2  102
+#define KEY_WEATHER_AVWX_STRING_3  103
+#define KEY_WEATHER_AVWX_STRING_4  104
+#define KEY_WEATHER_AVWX_STRING_5  105
+#define KEY_WEATHER_AVWX_STRING_6  106
+#define KEY_WEATHER_AVWX_STRING_7  107
+#define KEY_WEATHER_AVWX_STRING_8  108
+#define KEY_WEATHER_AVWX_STRING_9  109
+  
+#define KEY_DETECT_FIRST_START     200

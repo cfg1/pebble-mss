@@ -16,10 +16,11 @@
 #define LIGHT_ON      1
 #define VIBE_ON_DISC 0 //disconnect
 #define VIBE_ON_FULL 0
+#define VIBE_ON_HOUR 0
 #define DEGREE_F     0
 #define DATE_FORMAT  "%a, %d.%m."
 
-#define WEATHER_UPDATE_INTERVAL_MINUTE 15
+#define WEATHER_UPDATE_INTERVAL_MINUTE 30
 
 #define DISPLAY_SECONDS 1
   
