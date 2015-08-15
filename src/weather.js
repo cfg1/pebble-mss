@@ -208,6 +208,7 @@ var configuration = {
   autodetect_loc: 1,
   lang_id: "en",
   show_update_time: 0,
+  moon_phase: 0,
   weatherLine1: 5,
   weatherLine2: 2,
   weatherLine3: 3,
@@ -350,13 +351,19 @@ function SendToPebble(pos, use_default) {
           if (configuration.speed_unit == 1) wind_speed_unit = "mph";
           console.log("Wind Speed is " + wind_speed + " " + wind_speed_unit);
               
-              
-          console.log("sunrise unix = "+WeatherDataJSON.sys.sunrise);
-          console.log("sunset  unix = "+WeatherDataJSON.sys.sunset);
-          var sunrise = timeConverter(Math.round(WeatherDataJSON.sys.sunrise));
-          var sunset  = timeConverter(Math.round(WeatherDataJSON.sys.sunset));
+          var sunrise_unix = WeatherDataJSON.sys.sunrise;
+          var sunset_unix  = WeatherDataJSON.sys.sunset;
+          console.log("sunrise unix = "+sunrise_unix);
+          console.log("sunset  unix = "+sunset_unix);
+          var sunrise = timeConverter(Math.round(sunrise_unix));
+          var sunset  = timeConverter(Math.round(sunset_unix));
           console.log("sunrise = " + sunrise);
           console.log("sunset =  " + sunset);
+          //sunrise_unix = sunrise_unix - utc_offset;
+          //sunset_unix  = sunset_unix  - utc_offset;
+          
+          var time_of_last_data = Number(WeatherDataJSON.dt);
+          console.log("time_of_last_data = "+time_of_last_data);
         
           // Location:
           var location_name = WeatherDataJSON.name;
@@ -537,7 +544,10 @@ function SendToPebble(pos, use_default) {
             "KEY_TIME_UTC_OFFSET": utc_offset,
             "KEY_TIME_ZONE_NAME": getTimeZone(),
             "KEY_SUN_RISE": sunrise,
-            "KEY_SUN_SET": sunset
+            "KEY_SUN_SET": sunset,
+            "KEY_SUN_RISE_UNIX": sunrise_unix,
+            "KEY_SUN_SET_UNIX": sunset_unix, //both converted to local time zone
+            "KEY_WEATHER_DATA_TIME": time_of_last_data
           };
         
           // Send to Pebble
@@ -578,6 +588,9 @@ function SendToPebble(pos, use_default) {
             */                   
           var date = new Date();
           console.log("Time is " + date);
+          
+          ForecastDataJSON = {};
+          WeatherDataJSON  = {};
           
           
           //---------------------------------------------------------------------------------------------------
@@ -678,7 +691,7 @@ Pebble.addEventListener("showConfiguration",
   function(e) {
     //Load the remote config page
     
-    /* --> */ Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_mss_config_v12.0.html");
+    /* --> */ Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_m7s_config_v12.1.html");
     
     //TODO: send some usefull values to the settings page (e. g. location, battery staistics etc.) by adding ?xxx to the URL
   }
@@ -721,7 +734,8 @@ Pebble.addEventListener("webviewclosed",
           "KEY_SET_DATE_FORMAT": date_format_str,
           "KEY_WEATHER_UPDATE_INT": configuration.weatherUpdateInt,
           "KEY_SET_TZ_FORMAT": configuration.time_zone_info,
-          "KEY_SET_UPDATE_TIME": configuration.show_update_time
+          "KEY_SET_UPDATE_TIME": configuration.show_update_time,
+          "KEY_SET_MOON_PHASE": configuration.moon_phase
         },
         function(e) {
           console.log("Settings data transfered successfully.");

@@ -84,6 +84,8 @@ static int  time_UTC_OFFSET     = (int)(TIMEZONE*3600); //in seconds
 static char time_ZONE_NAME[10];
 static char sun_rise[10] = "--:--";
 static char sun_set[10] = "--:--";
+static time_t sun_rise_unix_loc = 0;
+static time_t sun_set_unix_loc  = 0;
 
 //Colors:
 GColor textcolor_background;
@@ -92,6 +94,8 @@ GColor textcolor_background;
   GColor textcolor_con;
   GColor textcolor_bat;
   uint8_t textcolor_bat_uint8;
+  GColor bkgrcolor_bat;
+  uint8_t bkgrcolor_bat_uint8;
   GColor textcolor_date;
   GColor textcolor_cal;
   GColor textcolor_moon;
@@ -121,6 +125,7 @@ static int TimeZoneFormat = 1;
   static char OWM_lang_id[7] = "en";
 #endif
 static int AppFirstStart = 1;
+static int MoonPhase = 0;
 
 
 
@@ -247,6 +252,9 @@ void LoadData(void) {
   key = KEY_TIME_ZONE_NAME;
   if (persist_exists(key)) persist_read_string(key, time_ZONE_NAME, sizeof(time_ZONE_NAME));
   
+  key = KEY_SET_MOON_PHASE;
+  if (persist_exists(key)) MoonPhase = persist_read_int(key);
+  
   
   
   key = KEY_BTY_LAST_PERCENT;
@@ -269,6 +277,12 @@ void LoadData(void) {
   
   key = KEY_SUN_SET;
   if (persist_exists(key)) persist_read_string(key, sun_set, sizeof(sun_set));
+  
+  key = KEY_SUN_RISE_UNIX;
+  if (persist_exists(key)) sun_rise_unix_loc = (time_t)(persist_read_int(key));
+  
+  key = KEY_SUN_SET_UNIX;
+  if (persist_exists(key)) sun_set_unix_loc = (time_t)(persist_read_int(key));
   
   
   
@@ -327,6 +341,7 @@ void SaveData(void) {
   persist_write_int    (KEY_TIME_LAST_UPDATE,  (int)(phone_last_updated));
   persist_write_int    (KEY_WEATHER_DATA_TIME, (int)station_data_last_updated);
   persist_write_string (KEY_TIME_ZONE_NAME, time_ZONE_NAME);
+  persist_write_int    (KEY_SET_MOON_PHASE, MoonPhase);
   
   
   
@@ -341,6 +356,8 @@ void SaveData(void) {
   
   persist_write_string (KEY_SUN_RISE, sun_rise);
   persist_write_string (KEY_SUN_SET , sun_set);
+  persist_write_int    (KEY_SUN_RISE_UNIX,  (int)sun_rise_unix_loc);
+  persist_write_int    (KEY_SUN_SET_UNIX,  (int)sun_set_unix_loc);
   
   persist_write_int(KEY_SET_INVERT_COLOR, InvertColors);
   persist_write_int(KEY_SET_DISPLAY_SEC, DisplaySeconds);
@@ -399,7 +416,8 @@ void DisplayLastUpdated(void) {
 //NEW VERSION COPIED FROM METAR:
 void DisplayLastUpdated(void) {
   static char last_updated_buffer[10];
-  time_t now = time(NULL);
+  time_t now = time(NULL); // now is in UTC on SDK >= 3
+  
   if (ShowTimeSinceStationData){
     time_since_last_data = now - station_data_last_updated;
     //APP_LOG(APP_LOG_LEVEL_INFO, "X: \n(1) = %d\nnow = %d\n(3) = %d\ntime_UTC_OFFSET = %d", 
@@ -436,7 +454,7 @@ void DisplayLastUpdated(void) {
   } else {
     text_layer_set_text(weather_layer_4_last_update, "--:--");
     #ifdef PBL_COLOR
-      text_layer_set_text_color(weather_layer_4_last_update, textcolor_last_update);
+      text_layer_set_text_color(weather_layer_4_last_update, GColorRed);
     #endif
   }
   
@@ -485,22 +503,22 @@ void DisplayData(void) {
     
     if (weather_TEMP >= 40){
       textcolor_weather = GColorRed;  // >= 40°C
-    } else if (weather_TEMP >= 30){
-      textcolor_weather = GColorOrange; // 30-39°C
+    } else if (weather_TEMP >= 28){
+      textcolor_weather = GColorOrange; // 28-39°C
     } else if (weather_TEMP >= 26){
-      textcolor_weather = GColorChromeYellow;  // 26-29°C
+      textcolor_weather = GColorChromeYellow;  // 26-27°C
     } else if (weather_TEMP >= 23){
-      textcolor_weather = GColorSpringBud;      // 23-25°C
+      textcolor_weather = GColorChromeYellow;      // 23-25°C
     } else if (weather_TEMP >= 20){
       textcolor_weather = GColorGreen;          // 20-22°C
     } else if (weather_TEMP >= 18){
-      textcolor_weather = GColorMediumAquamarine; // 18-19°C
+      textcolor_weather = GColorMalachite; // 18-19°C
     } else if (weather_TEMP >= 15){
       textcolor_weather = GColorIslamicGreen;   // 15-17°C
     } else if (weather_TEMP >= 10){
       textcolor_weather = GColorJaegerGreen;    // 10-14°C
     } else if (weather_TEMP >= 6){
-      textcolor_weather = GColorTiffanyBlue;    // 6-9°C
+      textcolor_weather = GColorDarkGray;    // 6-9°C
     } else if (weather_TEMP >= 2){
       textcolor_weather = GColorElectricBlue;           // 2-5°C
     } else if (weather_TEMP >= -1){
@@ -525,9 +543,26 @@ void DisplayData(void) {
   text_layer_set_text(weather_layer_7_string_2, weather_string_2);
   text_layer_set_text(weather_layer_3_location, location_name);
   
-  text_layer_set_text(text_sunrise_layer, sun_rise);
-  text_layer_set_text(text_sunset_layer, sun_set);
-  
+  //#ifdef PBL_SDK_3
+    if (clock_is_24h_style()){
+      text_layer_set_text(text_sunrise_layer, sun_rise);
+      text_layer_set_text(text_sunset_layer, sun_set);
+    } else {
+      struct tm* sun_time = localtime(&sun_rise_unix_loc);
+      static char sun_rise_text[10];
+      static char sun_set_text[10];
+      strftime(sun_rise_text, sizeof(sun_rise_text), "%I:%M", sun_time);
+      text_layer_set_text(text_sunrise_layer, sun_rise_text);
+      sun_time = localtime(&sun_set_unix_loc);
+      strftime(sun_set_text, sizeof(sun_set_text), "%I:%M", sun_time);
+      text_layer_set_text(text_sunset_layer, sun_set_text);
+    }
+  /*
+  #else
+    text_layer_set_text(text_sunrise_layer, sun_rise);
+    text_layer_set_text(text_sunset_layer, sun_set);
+  #endif
+  */
   
   DisplayLastUpdated(); 
 }
@@ -545,19 +580,19 @@ static GColor get_weather_icon_color(int nr){
   switch (nr){
     case 33: return GColorVividCerulean; //Cloud
     case 34: return GColorIcterine;
-    case 35: return GColorDukeBlue;
-    case 36: return GColorLiberty;
+    case 35: return GColorPictonBlue;
+    case 36: return GColorBabyBlueEyes;
     case 37: return GColorChromeYellow;
-    case 38: return GColorOxfordBlue;
+    case 38: return GColorBlueMoon;
     case 39: return GColorCobaltBlue;
     case 40: return GColorChromeYellow;
-    case 41: return GColorOxfordBlue;
-    case 42: return GColorDukeBlue;
+    case 41: return GColorBlueMoon;
+    case 42: return GColorPictonBlue;
     case 43: return GColorOrange;
-    case 44: return GColorOxfordBlue;
+    case 44: return GColorBlueMoon;
     case 45: return GColorCadetBlue;
     case 46: return GColorRajah;
-    case 47: return GColorBlue;
+    case 47: return GColorBlueMoon;
     case 48: return GColorElectricBlue;
     case 49: return GColorPastelYellow;
     case 50: return GColorCadetBlue;
@@ -572,10 +607,10 @@ static GColor get_weather_icon_color(int nr){
     case 59: return GColorCyan;
     case 60: return GColorLightGray; //fog
     case 61: return GColorPastelYellow;
-    case 62: return GColorMidnightGreen;
+    case 62: return GColorCadetBlue;
     case 63: return GColorLightGray; //haze (Dunst)
     case 64: return GColorChromeYellow;
-    case 65: return GColorMidnightGreen;
+    case 65: return GColorCadetBlue;
     case 66: return GColorCeleste; //wind
     case 67: return GColorWhite;
     case 68: return GColorWhite;
@@ -598,7 +633,7 @@ static GColor get_weather_icon_color(int nr){
     case 85: return GColorWhite;
     case 86: return GColorWhite;
     case 87: return GColorWhite;
-    case 88: return GColorDarkCandyAppleRed; //tornado
+    case 88: return GColorOrange; //tornado
     case 89: return GColorWhite;
     case 90: return GColorBabyBlueEyes; // temp_low
     case 91: return GColorWhite;
@@ -629,6 +664,9 @@ static GColor get_weather_icon_color(int nr){
 // Called once per second of DisplaySeconds otherwise once per minute.
 static void handle_second_tick(struct tm* current_time, TimeUnits units_changed) {
   
+  static struct tm current_time_copy;
+  current_time_copy = *current_time;
+  
   //units_changed = SECOND_UNIT | MINUTE_UNIT | HOUR_UNIT;
   
   if (LightOn == 3){
@@ -652,11 +690,11 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
   }
   
   if(clock_is_24h_style() == true) {
-    digit_h_1 = current_time->tm_hour/10;
-    digit_h_2 = current_time->tm_hour%10;
+    digit_h_1 = current_time_copy.tm_hour/10;
+    digit_h_2 = current_time_copy.tm_hour%10;
     snprintf(hour_mode_str, sizeof(hour_mode_str), "%s", "24H");
   } else {
-    int hour12 = current_time->tm_hour;
+    int hour12 = current_time_copy.tm_hour;
     if ((hour12 > 11)){
       snprintf(hour_mode_str, sizeof(hour_mode_str), "%s", "PM");
       hour12-=12;
@@ -667,11 +705,11 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
   }
   
   
-  digit_m_1 = current_time->tm_min/10;
-  digit_m_2 = current_time->tm_min%10;
+  digit_m_1 = current_time_copy.tm_min/10;
+  digit_m_2 = current_time_copy.tm_min%10;
   
-  digit_s_1 = current_time->tm_sec/10;
-  digit_s_2 = current_time->tm_sec%10;
+  digit_s_1 = current_time_copy.tm_sec/10;
+  digit_s_2 = current_time_copy.tm_sec%10;
   
   
   static int digit_s_1_old = 10;
@@ -681,8 +719,8 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     layer_mark_dirty(s_image_layer_hour_1);
     layer_mark_dirty(s_image_layer_hour_2);
     
-    if (vibe_hour_old < 0) vibe_hour_old = current_time->tm_hour;
-    if (vibe_on_hour && (vibe_hour_old != current_time->tm_hour)){
+    if (vibe_hour_old < 0) vibe_hour_old = current_time_copy.tm_hour;
+    if (vibe_on_hour && (vibe_hour_old != current_time_copy.tm_hour)){
       // Vibe pattern: ON for 200ms, OFF for 100ms, ON for 400ms:
       static const uint32_t const segments[] = { 100 };
       VibePattern pat = {
@@ -691,7 +729,7 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
       };
       vibes_enqueue_custom_pattern(pat);
       
-      vibe_hour_old = current_time->tm_hour;
+      vibe_hour_old = current_time_copy.tm_hour;
     }
   }
   if (units_changed & MINUTE_UNIT){
@@ -710,7 +748,7 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
   
   static char date_buffer[20];
   if (units_changed & HOUR_UNIT) {
-    strftime(date_buffer, sizeof(date_buffer), /*"%a, %d.%m."*/date_format, current_time);
+    strftime(date_buffer, sizeof(date_buffer), /*"%a, %d.%m."*/date_format, &current_time_copy);
     text_layer_set_text(Date_Layer, date_buffer);
   }
   
@@ -722,28 +760,72 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     GColor weather_icon_color = GColorWhite;
   #endif
   
-  if ((current_time->tm_hour > 6) && (current_time->tm_hour < 20) ) NightMode = 0; else NightMode = 1;
-  //NightMode = 0;
-  
-  if ((WeatherUpdateReceived) || (units_changed & HOUR_UNIT)){
-    WeatherUpdateReceived = 0;
+  //#ifdef PBL_SDK_3
     
-    if (!NightMode){
-      //static int wi_counter = 33;
-      text_layer_set_font(moonLayer_IMG, pFontClimacons);
-      layer_set_frame(text_layer_get_layer(moonLayer_IMG), GRect(3, 15, 33, 33));
+    //sun_set_unix_loc = 1439406657+3600*2;
+    //APP_LOG(APP_LOG_LEVEL_INFO, "sun_rise_unix_loc = %d", (int)sun_rise_unix_loc);
+    //APP_LOG(APP_LOG_LEVEL_INFO, "sun_set_unix_loc = %d", (int)sun_set_unix_loc);
+    struct tm* sun_rise_time = localtime(&sun_rise_unix_loc);
+    struct tm  sun_rise_copy = *sun_rise_time;
+    struct tm* sun_set_time  = localtime(&sun_set_unix_loc);
+    struct tm  sun_set_copy  = *sun_set_time;
+    NightMode = 0;
+    /*
+    APP_LOG(APP_LOG_LEVEL_INFO, "sun_rise_time->tm_hour = %d", sun_rise_copy.tm_hour);
+    APP_LOG(APP_LOG_LEVEL_INFO, "sun_rise_time->tm_min = %d", sun_rise_copy.tm_min);
+    APP_LOG(APP_LOG_LEVEL_INFO, "sun_set_time->tm_hour = %d", sun_set_copy.tm_hour);
+    APP_LOG(APP_LOG_LEVEL_INFO, "sun_set_time->tm_min = %d", sun_set_copy.tm_min);
+    APP_LOG(APP_LOG_LEVEL_INFO, "current_time_copy.tm_hour = %d", current_time_copy.tm_hour);
+    APP_LOG(APP_LOG_LEVEL_INFO, "current_time_copy.tm_min = %d", current_time_copy.tm_min);
+    */
+    if (sun_rise_copy.tm_hour > current_time_copy.tm_hour) NightMode = 1;
+    if ((sun_rise_copy.tm_hour == current_time_copy.tm_hour) && (sun_rise_copy.tm_min > current_time_copy.tm_min)) NightMode = 1;
+    if (sun_set_copy.tm_hour < current_time_copy.tm_hour) NightMode = 1;
+    if ((sun_set_copy.tm_hour == current_time_copy.tm_hour) && (sun_set_copy.tm_min <= current_time_copy.tm_min)) NightMode = 1;
+  /*
+    //if ((current_time_copy.tm_hour > 6) && (current_time_copy.tm_hour < 20) ) NightMode = 0; else NightMode = 1;
+  #else
+    if ((current_time_copy.tm_hour > 6) && (current_time_copy.tm_hour < 20) ) NightMode = 0; else NightMode = 1;
+  #endif
+  */
+  if (MoonPhase) NightMode = 1; //moon is set to allways displayed
+    
+  //APP_LOG(APP_LOG_LEVEL_INFO, "NightMode = %d", NightMode);
+  
+  #ifndef ITERATE_TEMP
+    if ((WeatherUpdateReceived) || (units_changed & HOUR_UNIT)){
+      WeatherUpdateReceived = 0;
       
-      //wi_counter++; if (wi_counter>106) wi_counter = 33;
-      //wi_counter = WeatherIcon;
-      weather_icon[0] = (unsigned char)WeatherIcon;//wi_counter;
-      text_layer_set_text(moonLayer_IMG, weather_icon);
-      
-      #ifdef PBL_COLOR
-        weather_icon_color = get_weather_icon_color((int)weather_icon[0]);
-        text_layer_set_text_color(moonLayer_IMG, weather_icon_color);
-      #endif
+      if (!NightMode){
+        //static int wi_counter = 33;
+        text_layer_set_font(moonLayer_IMG, pFontClimacons);
+        layer_set_frame(text_layer_get_layer(moonLayer_IMG), GRect(3, 15, 33, 33));
+        
+        //wi_counter++; if (wi_counter>106) wi_counter = 33;
+        //wi_counter = WeatherIcon;
+        weather_icon[0] = (unsigned char)WeatherIcon;//wi_counter;
+        text_layer_set_text(moonLayer_IMG, weather_icon);
+        
+        #ifdef PBL_COLOR
+          weather_icon_color = get_weather_icon_color((int)weather_icon[0]);
+          text_layer_set_text_color(moonLayer_IMG, weather_icon_color);
+        #endif
+      }
     }
-  }
+  #else
+    text_layer_set_font(moonLayer_IMG, pFontClimacons);
+    layer_set_frame(text_layer_get_layer(moonLayer_IMG), GRect(3, 15, 33, 33));
+  
+    static int wi_counter = 33;
+    wi_counter++; if (wi_counter>106) wi_counter = 33;
+    weather_icon[0] = (unsigned char)wi_counter;
+    text_layer_set_text(moonLayer_IMG, weather_icon);
+    
+    #ifdef PBL_COLOR
+      weather_icon_color = get_weather_icon_color((int)weather_icon[0]);
+      text_layer_set_text_color(moonLayer_IMG, weather_icon_color);
+    #endif
+  #endif
   
   if (units_changed & HOUR_UNIT) {
     // -------------------- Moon_phase
@@ -758,7 +840,7 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
       layer_set_frame(text_layer_get_layer(moonLayer_IMG), GRect(3, 21, 33, 33));
       text_layer_set_text(moonLayer_IMG, moon);
       #ifdef PBL_COLOR
-        weather_icon_color = GColorWhite;
+        weather_icon_color = textcolor_moon;
         text_layer_set_text_color(moonLayer_IMG, weather_icon_color);
       #endif
     }
@@ -774,11 +856,11 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
 		// -------------------- Calendar week  
 	  static char cw_text[] = "XX00";
     if (strcmp("fr_FR", sys_locale) == 0) {
-		  strftime(cw_text, sizeof(cw_text), TRANSLATION_CW_FR, current_time);
+		  strftime(cw_text, sizeof(cw_text), TRANSLATION_CW_FR, &current_time_copy);
     } else if (strcmp("de_DE", sys_locale) == 0) {
-      strftime(cw_text, sizeof(cw_text), TRANSLATION_CW_DE, current_time);
+      strftime(cw_text, sizeof(cw_text), TRANSLATION_CW_DE, &current_time_copy);
     } else { //default
-      strftime(cw_text, sizeof(cw_text), TRANSLATION_CW_EN, current_time);
+      strftime(cw_text, sizeof(cw_text), TRANSLATION_CW_EN, &current_time_copy);
     }
 		text_layer_set_text(cwLayer, cw_text); 
 		// ------------------- Calendar week 
@@ -794,7 +876,7 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
       if(clock_is_24h_style() == true) {
         strftime(buffer_9, sizeof(buffer_9), "%R UTC", utc_time);
       } else {
-        strftime(buffer_9, sizeof(buffer_9), "%I%M UTC", utc_time);
+        strftime(buffer_9, sizeof(buffer_9), "%I:%M UTC", utc_time);
       }
     }
   } else if (units_changed & HOUR_UNIT){
@@ -949,24 +1031,43 @@ static void handle_battery(BatteryChargeState charge_state) {
   #else
     layer_set_frame(effect_layer_get_layer(s_battery_layer_fill), GRect(41, 21, (int)38*actual_battery_percent/100, 11));
     layer_set_hidden(effect_layer_get_layer(s_battery_layer_fill), false);
-    if (InvertColors >= 2){
+    #ifdef PBL_COLOR
+      uint8_t variable_color = 0;
       if (actual_battery_percent > 80){
-        textcolor_bat_uint8 = 0b11001100; //green (GColorGreen)
-      } else if (actual_battery_percent >= 50){
-        textcolor_bat_uint8 = 0b11001000; //dark green (GColorIslamicGreen)
+        variable_color = 0b11000100; // 90 % - 100 %
+      } else if (actual_battery_percent > 40){
+        variable_color = 0b11000100; // 50 % -  80 % 
       } else if (actual_battery_percent > 30){
-        textcolor_bat_uint8 = 0b11111000; //light orange (GColorChromeYellow)
-      } else if (actual_battery_percent > 10){
-        textcolor_bat_uint8 = 0b11110100; //dark orange (GColorOrange)
+        variable_color = 0b11111000; // 40 %          light orange (GColorChromeYellow)
+      } else if (actual_battery_percent > 20){
+        variable_color = 0b11110100; // 30 %          dark orange (GColorOrange)
       } else {
-        textcolor_bat_uint8 = 0b11110000; //red (GColorRed)
+        variable_color = 0b11110000; //  0 % -  20 %  red (GColorRed)
       }
-    } else {
-      textcolor_bat_uint8 = 0b11111111; //white
-    }
-    GlobalInverterColor = textcolor_bat_uint8 & 0b00111111;
-    textcolor_bat       = (GColor8){.argb = textcolor_bat_uint8};
-    text_layer_set_text_color(battery_runtime_layer, textcolor_bat);
+  
+      if (InvertColors == 2) if (variable_color == 0b11000100){
+        variable_color = 0b11001100;  //light green for black background
+      }
+      
+      if (InvertColors == 2){
+        textcolor_bat_uint8 = variable_color;
+        bkgrcolor_bat_uint8 = 0b00000000; //black
+      } else if (InvertColors == 3) {
+        textcolor_bat_uint8 = 0b11111111;
+        bkgrcolor_bat_uint8 = variable_color;
+      } else {
+        textcolor_bat_uint8 = 0b11111111; //white
+        bkgrcolor_bat_uint8 = 0b00000000; //black
+      }
+  
+  
+  
+      GlobalInverterColor = textcolor_bat_uint8 & 0b00111111;
+      GlobalBkgColor      = bkgrcolor_bat_uint8 & 0b00111111;
+      textcolor_bat       = (GColor8){.argb = textcolor_bat_uint8};
+      bkgrcolor_bat       = (GColor8){.argb = bkgrcolor_bat_uint8};
+      text_layer_set_text_color(battery_runtime_layer, textcolor_bat);
+    #endif
     layer_mark_dirty(s_battery_layer_paint_bat);
   #endif
     
@@ -1229,17 +1330,23 @@ static void layer_update_callback_second_2(Layer *layer, GContext* ctx) {
 
 #ifdef PBL_COLOR
 static void layer_update_callback_paint_bat(Layer *layer, GContext* ctx) {
+  if (InvertColors == 3){
+    graphics_context_set_fill_color(ctx, bkgrcolor_bat);
+    graphics_context_set_stroke_color(ctx, bkgrcolor_bat);
+    GRect layer_bounds = layer_get_bounds(s_battery_layer_paint_bat);
+    graphics_fill_rect(ctx, layer_bounds, 0, 0);
+  }
   graphics_context_set_fill_color(ctx, GColorClear);
   graphics_context_set_stroke_color(ctx, textcolor_bat);
-  graphics_draw_line(ctx, GPoint( 0, 0), GPoint(41, 0));
-  graphics_draw_line(ctx, GPoint( 0,14), GPoint(41,14));
-  graphics_draw_line(ctx, GPoint( 0, 0), GPoint( 0,14));
+  graphics_draw_line(ctx, GPoint( 0+1, 0+2), GPoint(41+1, 0+2));
+  graphics_draw_line(ctx, GPoint( 0+1,14+2), GPoint(41+1,14+2));
+  graphics_draw_line(ctx, GPoint( 0+1, 0+2), GPoint( 0+1,14+2));
   
-  graphics_draw_line(ctx, GPoint(41, 0), GPoint(41, 4));
-  graphics_draw_line(ctx, GPoint(41,10), GPoint(41,14));
-  graphics_draw_line(ctx, GPoint(43, 4), GPoint(43,10));
-  graphics_draw_line(ctx, GPoint(41, 4), GPoint(43, 4));
-  graphics_draw_line(ctx, GPoint(41,10), GPoint(43,10));
+  graphics_draw_line(ctx, GPoint(41+1, 0+2), GPoint(41+1, 4+2));
+  graphics_draw_line(ctx, GPoint(41+1,10+2), GPoint(41+1,14+2));
+  graphics_draw_line(ctx, GPoint(43+1, 4+2), GPoint(43+1,10+2));
+  graphics_draw_line(ctx, GPoint(41+1, 4+2), GPoint(43+1, 4+2));
+  graphics_draw_line(ctx, GPoint(41+1,10+2), GPoint(43+1,10+2));
 }
 #endif
   
@@ -1279,6 +1386,11 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       
     case KEY_WEATHER_DATA_TIME:
       station_data_last_updated = (int)t->value->int32;
+      //APP_LOG(APP_LOG_LEVEL_INFO, "received station_data_last_updated = %d", (int)station_data_last_updated);
+      if (!clock_is_timezone_set()){ //convert to the time zone offset of time(NULL)
+        station_data_last_updated = station_data_last_updated + time_UTC_OFFSET; //convert to local time only on APLITE
+        //APP_LOG(APP_LOG_LEVEL_INFO, "corrected station_data_last_updated = %d", (int)station_data_last_updated);
+      }
       break;
       
     case KEY_LOCATION_NAME:
@@ -1293,7 +1405,9 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       location_longitude = (int)t->value->int32;
       break;
     case KEY_WEATHER_TEMP:
-      weather_TEMP = (int)t->value->int32;
+      #ifndef ITERATE_TEMP
+        weather_TEMP = (int)t->value->int32;
+      #endif
       break;
     case KEY_WEATHER_ICON:
       WeatherIcon = (int)t->value->int32;
@@ -1322,15 +1436,38 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       snprintf(time_ZONE_NAME, sizeof(time_ZONE_NAME), "%s", t->value->cstring);
       Settings_received = true;
       break;
+    case KEY_SET_MOON_PHASE:
+      MoonPhase = (int)t->value->int32;
+      break;
     case KEY_SUN_RISE:
       snprintf(sun_rise, sizeof(sun_rise), "%s", t->value->cstring);
       break;
     case KEY_SUN_SET:
       snprintf(sun_set, sizeof(sun_set), "%s", t->value->cstring);
       break;
+    case KEY_SUN_RISE_UNIX:
+      sun_rise_unix_loc = (time_t)t->value->int32;
+      if (!clock_is_timezone_set()){ //convert to the time zone offset of time(NULL)
+        sun_rise_unix_loc += time_UTC_OFFSET;
+      }
+      break;
+    case KEY_SUN_SET_UNIX:
+      sun_set_unix_loc = (time_t)t->value->int32;
+      if (!clock_is_timezone_set()){ //convert to the time zone offset of time(NULL)
+        sun_set_unix_loc += time_UTC_OFFSET;
+      }
+      break;
     case KEY_SET_INVERT_COLOR:
       if ((int32_t)InvertColors != (int)t->value->int32) restart = 1;
+      #ifndef PBL_COLOR
+        if ((InvertColors == 0) && ((int)t->value->int32) > 1) restart = 0;
+      #endif
       InvertColors = (int)t->value->int32;
+      #ifndef PBL_COLOR
+        //reset all color schemes on aplite platform
+        if (InvertColors > 1) InvertColors = 0;
+      #endif
+      doUpdateWeather = true; //must be done when a configuration was received //TODO: save this and check on startup to avoid not updating after color scheme selection.
       break;
     case KEY_SET_LIGHT_ON:
       LightOn = (int)t->value->int32;
@@ -1471,6 +1608,7 @@ static void main_window_load(Window *window) {
   
   
   // --- Background Image ---
+  // --- Background Image ---
   #ifdef PBL_COLOR
     if (InvertColors >= 2){
       switch (InvertColors){
@@ -1478,13 +1616,7 @@ static void main_window_load(Window *window) {
           background_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND_COLOR_PROFILE_1);
           break;
         case 3:
-          background_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND_COLOR_PROFILE_2);
-          break;
-        case 4:
-          background_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND_COLOR_PROFILE_3);
-          break;
-        case 5:
-          background_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND_COLOR_PROFILE_4);
+          background_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND_COLOR_PROFILE_5);
           break;
         default:
           background_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND_COLOR_PROFILE_1);
@@ -1536,25 +1668,33 @@ static void main_window_load(Window *window) {
   
   #ifdef PBL_COLOR
     if (InvertColors >= 2){
-      if (InvertColors == 2){
-        textcolor_background  = GColorFromRGB(0, 0, 0);
-      } else {
-        textcolor_background  = GColorFromRGB(255, 255, 255);
-      }
+      textcolor_background  = GColorFromRGB(0, 0, 0);
       textcolor_sun         = GColorFromRGB(255, 255, 0);   //=GColorYellow //OK
-      textcolor_con         = GColorFromRGB(0, 170, 255);   //GColorVividCerulean
+      textcolor_con         = GColorFromRGB(0, 170, 255);   //GColorVividCerulean //connection
       textcolor_bat_uint8   = 0b11110000; //red
       textcolor_bat         = (GColor8){.argb = textcolor_bat_uint8};
       //APP_LOG(APP_LOG_LEVEL_INFO, "textcolor_bat = %d", (int)textcolor_bat); //this does not work
       textcolor_date        = GColorFromRGB(0, 170, 170);   //=GColorTiffanyBlue
-      textcolor_cal         = GColorFromRGB(0, 170, 170);   //=GColorTiffanyBlue
+      textcolor_cal         = GColorFromRGB(0, 170, 170);   //=GColorTiffanyBlue  //calendar
       textcolor_moon        = GColorFromRGB(255, 255, 255); //OK
       textcolor_weather     = GColorFromRGB(0, 255, 170);   //GColorMediumSpringGreen
       textcolor_location    = GColorFromRGB(255, 170, 0);   //=GColorChromeYellow //OK
-      textcolor_last_update = GColorFromRGB(150, 150, 200); //OK
-      textcolor_tz          = GColorFromRGB(100, 100, 100); //OK
+      textcolor_last_update = GColorFromRGB(170, 170, 255); //OK
+      textcolor_tz          = GColorFromRGB(85, 85, 85); //OK
       textcolor_clock       = GColorFromRGB(0, 255, 0);
       textcolor_seconds     = GColorFromRGB(0, 170, 170);
+      
+      //override some colors for some profiles:
+      if (InvertColors == 3){
+        textcolor_background  = GColorFromHEX(0xFFFF55);  //backgound of time and seconds (not of battery. battery is done a little bit down.)
+        textcolor_date        = GColorMidnightGreen; //GColorFromRGB(0, 170, 170);   //=GColorTiffanyBlue
+        textcolor_cal         = GColorFromRGB(0, 170, 170);   //=GColorTiffanyBlue
+        textcolor_weather     = GColorFromRGB(0, 0, 0); //GColorFromRGB(0, 255, 170);   //GColorMediumSpringGreen
+        textcolor_location    = GColorFromRGB(170, 85, 0);   //=GColorChromeYellow //OK
+        textcolor_last_update = GColorIndigo;
+        textcolor_clock       = GColorFromRGB(0, 0, 85);
+        textcolor_seconds     = GColorFromRGB(0, 170, 170);
+      }
     } else {
       //if (InvertColors == 1){
       //  textcolor = GColorBlack;
@@ -1618,6 +1758,18 @@ static void main_window_load(Window *window) {
   text_layer_set_text(connection_layer, "----");
   layer_add_child(main_window_layer, text_layer_get_layer(connection_layer));
 
+  #ifdef PBL_SDK_3
+    GlobalInverterColor = textcolor_bat_uint8 & 0b00111111;
+    if (InvertColors == 3){
+      GlobalBkgColor = 0b00000000;
+    }
+    
+    //s_battery_layer_paint_bat = layer_create(GRect(39, 19, 82-39+1, 33-19+1));
+    s_battery_layer_paint_bat = layer_create(GRect(38, 17, 84-38+1, 49-17+1));
+    layer_set_update_proc(s_battery_layer_paint_bat, layer_update_callback_paint_bat);
+    layer_add_child(main_window_layer, s_battery_layer_paint_bat);
+  #endif
+  
   // Battery state / runtime:
   battery_runtime_layer = text_layer_create(GRect(40, 15+2, 45, 15+20));
   text_layer_set_text_color(battery_runtime_layer, textcolor_bat);
@@ -1627,7 +1779,6 @@ static void main_window_load(Window *window) {
   text_layer_set_text(battery_runtime_layer, "100%\n0:00 d");
   layer_add_child(main_window_layer, text_layer_get_layer(battery_runtime_layer));
   
-  
   #ifndef PBL_SDK_3 //only on SDK 2.x
     //fill battery with an InverterLayer
     s_battery_layer_fill = inverter_layer_create(GRect(41, 21, 38, 11));
@@ -1635,17 +1786,6 @@ static void main_window_load(Window *window) {
     layer_add_child(main_window_layer, inverter_layer_get_layer(s_battery_layer_fill));
   #else //else use effect layer on basalt
     s_battery_layer_fill = effect_layer_create(GRect(41, 21, 38, 11));
-    GlobalInverterColor = textcolor_bat_uint8 & 0b00111111;
-    switch (InvertColors){
-      case 3:
-      case 4:
-      case 5:
-        GlobalBkgColor = 0b00111111;
-        break;
-      default: 
-        GlobalBkgColor = 0b00000000;
-        break;
-    }
     if (InvertColors >= 2){
       effect_layer_add_effect(s_battery_layer_fill, effect_invert_color, (void *)0b00000000); //use global inverter color
     } else {
@@ -1653,10 +1793,6 @@ static void main_window_load(Window *window) {
     }
     layer_set_hidden(effect_layer_get_layer(s_battery_layer_fill), true);
     layer_add_child(main_window_layer, effect_layer_get_layer(s_battery_layer_fill));
-    
-    s_battery_layer_paint_bat = layer_create(GRect(39, 19, 82-39+1, 33-19+1));
-    layer_set_update_proc(s_battery_layer_paint_bat, layer_update_callback_paint_bat);
-    layer_add_child(main_window_layer, s_battery_layer_paint_bat);
   #endif
   
   

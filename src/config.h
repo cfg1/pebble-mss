@@ -12,7 +12,11 @@
 #define TRANSLATION_CW_FR "S.%V"
 
 //(un-)comment to change initial settings
-#define INVERT_COLORS 2 //2 means colors on Basalt, and white on black on Aplite
+#ifdef PBL_COLOR
+  #define INVERT_COLORS 3 //2 means colors on Basalt, and white on black on Aplite
+#else
+  #define INVERT_COLORS 0
+#endif
 #define LIGHT_ON      1
 #define VIBE_ON_DISC 0 //disconnect
 #define VIBE_ON_FULL 0

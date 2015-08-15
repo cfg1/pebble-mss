@@ -127,7 +127,7 @@ void set_line(uint8_t *bitmap_data, int bytes_per_row, int y, int x, int y2, int
 
   
 
-// inverter effect.
+// inverter effect. Changed by FG on 2015-08-14: On PBL_COLOR, only switch BW. Leave other colors as they are.
 void effect_invert(GContext* ctx,  GRect position, void* param) {
   //capturing framebuffer bitmap
   GBitmap *fb = graphics_capture_frame_buffer(ctx);
@@ -138,7 +138,12 @@ void effect_invert(GContext* ctx,  GRect position, void* param) {
   for (int y = 0; y < position.size.h; y++)
      for (int x = 0; x < position.size.w; x++)
         #ifdef PBL_COLOR // on Basalt simple doing NOT on entire returned byte/pixel
-          set_pixel(bitmap_data, bytes_per_row, y + position.origin.y, x + position.origin.x, ~get_pixel(bitmap_data, bytes_per_row, y + position.origin.y, x + position.origin.x));
+          //set_pixel(bitmap_data, bytes_per_row, y + position.origin.y, x + position.origin.x, ~get_pixel(bitmap_data, bytes_per_row, y + position.origin.y, x + position.origin.x));
+          if ((get_pixel(bitmap_data, bytes_per_row, y + position.origin.y, x + position.origin.x) & 0b00111111)){
+            set_pixel(bitmap_data, bytes_per_row, y + position.origin.y, x + position.origin.x, 0);
+          } else {
+            set_pixel(bitmap_data, bytes_per_row, y + position.origin.y, x + position.origin.x, 0b00111111);
+          }
         #else // on Aplite since only 1 and 0 is returning, doing "not" by 1 - pixel
           set_pixel(bitmap_data, bytes_per_row, y + position.origin.y, x + position.origin.x, 1 - get_pixel(bitmap_data, bytes_per_row, y + position.origin.y, x + position.origin.x));
         #endif

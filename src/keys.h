@@ -4,7 +4,7 @@
 #define KEY_LOCATION_LON        2
 #define KEY_WEATHER_TEMP        3 
 #define KEY_WEATHER_ICON        4
-//5 unused
+#define KEY_SET_MOON_PHASE      5
 #define KEY_WEATHER_DATA_TIME   6 //Update time of server in Unix local time
 #define KEY_WEATHER_UPDATE_INT  7 //Update Interval in minutes
 #define KEY_WEATHER_STRING_1    8 //in this string, all infos for the text under the temp. will be collected. (including \n)
@@ -39,6 +39,9 @@
 #define KEY_SET_LABEL_INDEX_6  36
 #define KEY_SET_LABEL_INDEX_7  37
 #define KEY_SET_LABEL_INDEX_8  38 //is used
+  
+#define KEY_SUN_RISE_UNIX      40
+#define KEY_SUN_SET_UNIX       41
 
 #define KEY_WEATHER_AVWX_STRING_1  101
 #define KEY_WEATHER_AVWX_STRING_2  102
@@ -51,3 +54,4 @@
 #define KEY_WEATHER_AVWX_STRING_9  109
   
 #define KEY_DETECT_FIRST_START     200
+
