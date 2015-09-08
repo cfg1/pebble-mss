@@ -689,24 +689,27 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     }
   }
   
-  if(clock_is_24h_style() == true) {
-    digit_h_1 = current_time_copy.tm_hour/10;
-    digit_h_2 = current_time_copy.tm_hour%10;
-    snprintf(hour_mode_str, sizeof(hour_mode_str), "%s", "24H");
-  } else {
-    int hour12 = current_time_copy.tm_hour;
-    if ((hour12 > 11)){
-      snprintf(hour_mode_str, sizeof(hour_mode_str), "%s", "PM");
-      hour12-=12;
-    } else snprintf(hour_mode_str, sizeof(hour_mode_str), "%s", "AM");
-    if (hour12 == 0) hour12 = 12;
-    digit_h_1 = hour12/10;
-    digit_h_2 = hour12%10;
+  if (units_changed & HOUR_UNIT){
+    if(clock_is_24h_style() == true) {
+      digit_h_1 = current_time_copy.tm_hour/10;
+      digit_h_2 = current_time_copy.tm_hour%10;
+      snprintf(hour_mode_str, sizeof(hour_mode_str), "%s", "24H");
+    } else {
+      int hour12 = current_time_copy.tm_hour;
+      if ((hour12 > 11)){
+        snprintf(hour_mode_str, sizeof(hour_mode_str), "%s", "PM");
+        hour12-=12;
+      } else snprintf(hour_mode_str, sizeof(hour_mode_str), "%s", "AM");
+      if (hour12 == 0) hour12 = 12;
+      digit_h_1 = hour12/10;
+      digit_h_2 = hour12%10;
+    }
   }
   
-  
-  digit_m_1 = current_time_copy.tm_min/10;
-  digit_m_2 = current_time_copy.tm_min%10;
+  if (units_changed & MINUTE_UNIT){
+    digit_m_1 = current_time_copy.tm_min/10;
+    digit_m_2 = current_time_copy.tm_min%10;
+  }
   
   digit_s_1 = current_time_copy.tm_sec/10;
   digit_s_2 = current_time_copy.tm_sec%10;
@@ -759,7 +762,10 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
   #ifdef PBL_COLOR
     GColor weather_icon_color = GColorWhite;
   #endif
+  static int NightModeOld = -1;
   
+  //calculate NightMode:
+  if (units_changed & MINUTE_UNIT){
   //#ifdef PBL_SDK_3
     
     //sun_set_unix_loc = 1439406657+3600*2;
@@ -788,12 +794,13 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     if ((current_time_copy.tm_hour > 6) && (current_time_copy.tm_hour < 20) ) NightMode = 0; else NightMode = 1;
   #endif
   */
+  }
   if (MoonPhase) NightMode = 1; //moon is set to allways displayed
     
   //APP_LOG(APP_LOG_LEVEL_INFO, "NightMode = %d", NightMode);
   
   #ifndef ITERATE_TEMP
-    if ((WeatherUpdateReceived) || (units_changed & HOUR_UNIT)){
+    if ((WeatherUpdateReceived) || (units_changed & HOUR_UNIT) || (NightMode != NightModeOld)){
       WeatherUpdateReceived = 0;
       
       if (!NightMode){
@@ -827,7 +834,7 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     #endif
   #endif
   
-  if (units_changed & HOUR_UNIT) {
+  if (NightMode) if ((units_changed & HOUR_UNIT) || (NightMode != NightModeOld)) {
     // -------------------- Moon_phase
 		//static int moonphase_number = 0;
     //moonphase_number += 1;
@@ -835,15 +842,15 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     moonphase_number = calc_moonphase_number(location_latitude);
     moon[0] = (unsigned char)(moonphase_char_number(moonphase_number));
     
-    if (NightMode){
-      text_layer_set_font(moonLayer_IMG, pFontMoon);
-      layer_set_frame(text_layer_get_layer(moonLayer_IMG), GRect(3, 21, 33, 33));
-      text_layer_set_text(moonLayer_IMG, moon);
-      #ifdef PBL_COLOR
-        weather_icon_color = textcolor_moon;
-        text_layer_set_text_color(moonLayer_IMG, weather_icon_color);
-      #endif
-    }
+    
+    text_layer_set_font(moonLayer_IMG, pFontMoon);
+    layer_set_frame(text_layer_get_layer(moonLayer_IMG), GRect(3, 21, 33, 33));
+    text_layer_set_text(moonLayer_IMG, moon);
+    #ifdef PBL_COLOR
+      weather_icon_color = textcolor_moon;
+      text_layer_set_text_color(moonLayer_IMG, weather_icon_color);
+    #endif
+    
     
     /*
     snprintf(moon_buffer, sizeof(moon_buffer), "(%d)", moonphase_number);
@@ -852,7 +859,11 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
 		//text_layer_set_text(moonLayer, MOONPHASE_NAME_LANGUAGE[moonphase_number]); 
     */
 		// -------------------- Moon_phase	  
-		  
+  }
+  NightModeOld = NightMode;
+  
+  
+	if (units_changed & HOUR_UNIT){
 		// -------------------- Calendar week  
 	  static char cw_text[] = "XX00";
     if (strcmp("fr_FR", sys_locale) == 0) {
@@ -865,7 +876,6 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
 		text_layer_set_text(cwLayer, cw_text); 
 		// ------------------- Calendar week 
   }
-  
   
   
   static char buffer_9[20];
@@ -894,7 +904,7 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
       }
     }
   }
-  text_layer_set_text(text_TimeZone_layer, buffer_9);
+  if (units_changed & MINUTE_UNIT) text_layer_set_text(text_TimeZone_layer, buffer_9);
   
   
   
