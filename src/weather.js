@@ -691,7 +691,7 @@ Pebble.addEventListener("showConfiguration",
   function(e) {
     //Load the remote config page
     
-    /* --> */ Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_m7s_config_v12.1.html");
+    /* --> */ Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_m7s_config_v12.4.html");
     
     //TODO: send some usefull values to the settings page (e. g. location, battery staistics etc.) by adding ?xxx to the URL
   }
@@ -714,8 +714,7 @@ Pebble.addEventListener("webviewclosed",
       console.log("DEBUG: InvertColors    = " + InvertColors);
       var LightOn = configuration.light;
       console.log("DEBUG: LightOn         = " + LightOn);
-      var DisplaySeconds = 0;
-      if (configuration.display_sec == "1") DisplaySeconds = 1;
+      var DisplaySeconds = configuration.display_sec;
       console.log("DEBUG: DisplaySeconds  = " + DisplaySeconds);
       
       var date_format_str = configuration.date_format; //"%a, %m.%d.%Y";

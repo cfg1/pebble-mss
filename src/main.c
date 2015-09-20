@@ -112,7 +112,8 @@ GColor textcolor_seconds;
 
 static int InvertColors = INVERT_COLORS;
 static int LightOn = LIGHT_ON;
-static int DisplaySeconds = DISPLAY_SECONDS;
+static int DisplaySeconds = DISPLAY_SECONDS; //=2 means the seconds are only on after shaking
+static int DisplaySecondsTimeout = 5; //in seconds
 static int vibe_on_disconnect = VIBE_ON_DISC;
 static int vibe_on_charged_full = VIBE_ON_FULL;
 static int vibe_on_hour         = VIBE_ON_HOUR;
@@ -142,6 +143,9 @@ static time_t time_since_last_data = 0;
 static time_t t_diff_bat = 0;
 static int NightMode = 0;
 static int WeatherUpdateReceived = 0;
+
+static int SecOnShakingOn = 1;
+static int SecondsTimeoutCounter = 0;
 
 
 
@@ -945,6 +949,28 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     DisplayLastUpdated(); 
   }
   
+  if (DisplaySeconds >= 2){
+    if (SecOnShakingOn){
+      SecondsTimeoutCounter++;
+      //APP_LOG(APP_LOG_LEVEL_INFO, "SecondsTimeoutCounter = %d", SecondsTimeoutCounter);
+      switch (DisplaySeconds){
+        case 2: DisplaySecondsTimeout = 5; break;
+        case 3: DisplaySecondsTimeout = 15; break;
+        case 4: DisplaySecondsTimeout = 30; break;
+        case 5: DisplaySecondsTimeout = 60; break;
+        default: DisplaySecondsTimeout = 15; break;
+      }
+      if (SecondsTimeoutCounter > DisplaySecondsTimeout+1){
+        SecOnShakingOn = 0;
+        layer_mark_dirty(s_image_layer_second_1);
+        layer_mark_dirty(s_image_layer_second_2);
+        tick_timer_service_unsubscribe();
+        tick_timer_service_subscribe(MINUTE_UNIT, &handle_second_tick);
+        //APP_LOG(APP_LOG_LEVEL_INFO, "SecOnShakingOn = 0;");
+      }
+    }
+  }
+  
   
 } // ---- end handle_second_tick() ----
 
@@ -1255,6 +1281,14 @@ static void layer_update_callback_second_1(Layer *layer, GContext* ctx) {
   graphics_context_set_fill_color(ctx, textcolor_background);
   graphics_fill_rect(ctx, GRect(0, 0, 10, 15), 0, GCornerNone);
   graphics_context_set_stroke_color(ctx, textcolor_seconds);
+  if (!DisplaySeconds){
+    return;
+  }
+  //APP_LOG(APP_LOG_LEVEL_INFO, "Seconds_1_Update");
+  if (DisplaySeconds >= 2) if (!SecOnShakingOn){
+    seven_segment_15_paint_segment_4(ctx);
+    return;
+  }
   switch (digit_s_1){
     case 1: 
     seven_segment_paint_1(ctx, 15);
@@ -1291,14 +1325,19 @@ static void layer_update_callback_second_1(Layer *layer, GContext* ctx) {
     default:
     break;
   }
-  if (!DisplaySeconds){
-    seven_segment_clear(ctx, 15);
-  }
 }
 static void layer_update_callback_second_2(Layer *layer, GContext* ctx) {
   graphics_context_set_fill_color(ctx, textcolor_background);
   graphics_fill_rect(ctx, GRect(0, 0, 10, 15), 0, GCornerNone);
   graphics_context_set_stroke_color(ctx, textcolor_seconds);
+  if (!DisplaySeconds){
+    return;
+  }
+  //APP_LOG(APP_LOG_LEVEL_INFO, "Seconds_2_Update");
+  if (DisplaySeconds >= 2) if (!SecOnShakingOn){
+    seven_segment_15_paint_segment_4(ctx);
+    return;
+  }
   switch (digit_s_2){
     case 1: 
     seven_segment_paint_1(ctx, 15);
@@ -1332,9 +1371,6 @@ static void layer_update_callback_second_2(Layer *layer, GContext* ctx) {
     break;
     default:
     break;
-  }
-  if (!DisplaySeconds){
-    seven_segment_clear(ctx, 15);
   }
 }
 
@@ -1484,10 +1520,15 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       break;
     case KEY_SET_DISPLAY_SEC:
       DisplaySeconds = (int)t->value->int32;
+      //APP_LOG(APP_LOG_LEVEL_INFO, "DisplaySeconds = %d", DisplaySeconds);
       set_cwLayer_size();
       layer_mark_dirty(s_image_layer_second_1);
       layer_mark_dirty(s_image_layer_second_2);
       tick_timer_service_unsubscribe();
+      if (DisplaySeconds >= 2){
+        SecOnShakingOn = 1;
+        SecondsTimeoutCounter = 0;
+      }
       if (DisplaySeconds)
         tick_timer_service_subscribe(SECOND_UNIT, &handle_second_tick);
       else
@@ -1588,6 +1629,14 @@ static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResul
 
 static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
   //APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
+}
+
+static void tap_handler(AccelAxisType axis, int32_t direction) {
+  if (DisplaySeconds < 2) return;
+  SecOnShakingOn = 1;
+  SecondsTimeoutCounter = 0;
+  tick_timer_service_unsubscribe();
+  tick_timer_service_subscribe(SECOND_UNIT, &handle_second_tick);
 }
 
 
@@ -1920,12 +1969,17 @@ static void main_window_load(Window *window) {
   handle_bluetooth(bluetooth_connection_service_peek());
   
   // --- Register Event Handlers ---
+  if (DisplaySeconds >= 2){
+    SecOnShakingOn = 1;
+    SecondsTimeoutCounter = 0;
+  }
   if (DisplaySeconds)
     tick_timer_service_subscribe(SECOND_UNIT, &handle_second_tick);
   else
     tick_timer_service_subscribe(MINUTE_UNIT, &handle_second_tick);
   battery_state_service_subscribe(&handle_battery);
   bluetooth_connection_service_subscribe(&handle_bluetooth);
+  accel_tap_service_subscribe(tap_handler);
   
   // Register callbacks
   app_message_register_inbox_received(inbox_received_callback);
