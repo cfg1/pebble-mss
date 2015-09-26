@@ -1074,7 +1074,7 @@ static void handle_battery(BatteryChargeState charge_state) {
       } else if (actual_battery_percent > 40){
         variable_color = 0b11000100; // 50 % -  80 % 
       } else if (actual_battery_percent > 30){
-        variable_color = 0b11111000; // 40 %          light orange (GColorChromeYellow)
+        variable_color = 0b11000100; // 40 %          before setting 40 % to the color of 50-80%: light orange (GColorChromeYellow) 0b11111000
       } else if (actual_battery_percent > 20){
         variable_color = 0b11110100; // 30 %          dark orange (GColorOrange)
       } else {
@@ -1636,6 +1636,9 @@ static void tap_handler(AccelAxisType axis, int32_t direction) {
   SecOnShakingOn = 1;
   SecondsTimeoutCounter = 0;
   tick_timer_service_unsubscribe();
+  time_t now = time(NULL);
+  struct tm *tick_time = localtime(&now);
+  handle_second_tick(tick_time, SECOND_UNIT | MINUTE_UNIT | HOUR_UNIT);
   tick_timer_service_subscribe(SECOND_UNIT, &handle_second_tick);
 }
 
@@ -1746,7 +1749,7 @@ static void main_window_load(Window *window) {
       //override some colors for some profiles:
       if (InvertColors == 3){
         textcolor_background  = GColorFromHEX(0xFFFF55);  //backgound of time and seconds (not of battery. battery is done a little bit down.)
-        textcolor_date        = GColorMidnightGreen; //GColorFromRGB(0, 170, 170);   //=GColorTiffanyBlue
+        textcolor_date        = GColorFromRGB(170, 0, 85); //= GColorJazzberryJam; // GColorMidnightGreen; //GColorFromRGB(0, 170, 170);   //=GColorTiffanyBlue
         textcolor_cal         = GColorFromRGB(0, 170, 170);   //=GColorTiffanyBlue
         textcolor_weather     = GColorFromRGB(0, 0, 0); //GColorFromRGB(0, 255, 170);   //GColorMediumSpringGreen
         textcolor_location    = GColorFromRGB(170, 85, 0);   //=GColorChromeYellow //OK
