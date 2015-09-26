@@ -35,6 +35,7 @@
         "KEY_TIME_LAST_UPDATE": 11,
         "KEY_TIME_UTC_OFFSET": 10,
         "KEY_TIME_ZONE_NAME": 12,
+        "KEY_WARN_LOCATION": 50,
         "KEY_WEATHER_AVWX_STRING_1": 101,
         "KEY_WEATHER_AVWX_STRING_2": 102,
         "KEY_WEATHER_AVWX_STRING_3": 103,
@@ -56,28 +57,13 @@
         "configurable"
     ],
     "companyName": "fg",
-    "longName": "M7S_watchface_12_4",
+    "longName": "M7S_watchface_12_5",
     "projectType": "native",
     "resources": {
         "media": [
             {
-                "file": "images/background_image_color_5.png",
-                "name": "IMAGE_BACKGROUND_COLOR_PROFILE_5",
-                "type": "png"
-            },
-            {
-                "file": "images/background_image_color_4.png",
-                "name": "IMAGE_BACKGROUND_COLOR_PROFILE_4",
-                "type": "png"
-            },
-            {
-                "file": "images/background_image_color_3.png",
-                "name": "IMAGE_BACKGROUND_COLOR_PROFILE_3",
-                "type": "png"
-            },
-            {
-                "file": "images/background_image_color_2.png",
-                "name": "IMAGE_BACKGROUND_COLOR_PROFILE_2",
+                "file": "images/background_image.png",
+                "name": "IMAGE_BACKGROUND",
                 "type": "png"
             },
             {
@@ -99,27 +85,17 @@
                 "file": "fonts/moon_phases.ttf",
                 "name": "FONT_MOON_PHASES_SUBSET_30",
                 "type": "font"
-            },
-            {
-                "file": "images/background_image.png",
-                "name": "IMAGE_BACKGROUND_BW",
-                "type": "png"
-            },
-            {
-                "file": "images/background_image_color.png",
-                "name": "IMAGE_BACKGROUND_COLOR_PROFILE_1",
-                "type": "png"
             }
         ]
     },
     "sdkVersion": "3",
-    "shortName": "M7S_watchface_12_4",
+    "shortName": "M7S_watchface_12_5",
     "targetPlatforms": [
         "aplite",
         "basalt"
     ],
     "uuid": "03adc57a-569b-4669-9a80-b505eaea314d",
-    "versionLabel": "12.4",
+    "versionLabel": "12.5",
     "watchapp": {
         "watchface": true
     }

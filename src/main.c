@@ -26,9 +26,7 @@ static int digit_s_2 = 0;
 
 static GBitmap *background_image;
 static BitmapLayer *background_layer;
-#ifdef PBL_SDK_3
-  static InverterLayer *invert_all_layer;
-#endif
+static Layer *background_paint_layer;
 
 static char *sys_locale;
 
@@ -60,8 +58,11 @@ static time_t last_battery_charged_time = 0; //absolute time of last event
 static int last_charge_state = 0; //last state of charging on exit (0: discharging; 1: plugged & charging; 2: plugged & full)
 static time_t last_battery_period_time = 0; // last duration of charging/discharging period
 
-#ifndef PBL_SDK_3 //only on SDK 2.x
+#ifdef PBL_SDK_2 //only on SDK 2.x
   static InverterLayer *s_battery_layer_fill; //fill battery with an InverterLayer
+  //static InverterLayer *s_warning_color_location;
+  //static InverterLayer *s_warning_color_last_updated;
+  static InverterLayer *s_warning_color_battery;
 #else
   static EffectLayer *s_battery_layer_fill; //fill battery with an InverterLayer by an effect_invert_color (my own effect added to effect_layer type)
   //InverterLayer is recreated by including EffektLayer, but it uses the wrong inverting effect.
@@ -88,7 +89,9 @@ static time_t sun_rise_unix_loc = 0;
 static time_t sun_set_unix_loc  = 0;
 
 //Colors:
-GColor textcolor_background;
+GColor textcolor_clock;
+GColor textcolor_seconds;
+GColor background_color_clock;
 #ifdef PBL_COLOR
   GColor textcolor_sun;
   GColor textcolor_con;
@@ -103,14 +106,21 @@ GColor textcolor_background;
   GColor textcolor_location;
   GColor textcolor_last_update;
   GColor textcolor_tz;
+
+  GColor background_color_lines;
+  GColor background_color_date;
+  GColor background_color_weather;
+  GColor background_color_moon; //and weather_icon
+  GColor background_color_location;
+  GColor background_color_last_update;
+  GColor background_color_status;
 #endif
-GColor textcolor_clock;
-GColor textcolor_seconds;
+
 
 
 // Settings variables (App Config):
 
-static int InvertColors = INVERT_COLORS;
+static int ColorProfile = INVERT_COLORS;
 static int LightOn = LIGHT_ON;
 static int DisplaySeconds = DISPLAY_SECONDS; //=2 means the seconds are only on after shaking
 static int DisplaySecondsTimeout = 5; //in seconds
@@ -147,9 +157,13 @@ static int WeatherUpdateReceived = 0;
 static int SecOnShakingOn = 1;
 static int SecondsTimeoutCounter = 0;
 
+static int warning_color_last_update = 0;
+static int warning_color_location = 0;
+
 
 
 static void set_cwLayer_size(void);
+static void apply_color_profile(void);
 
 
 void print_time(char *s, int size_s, time_t time_diff, int mode){
@@ -291,7 +305,7 @@ void LoadData(void) {
   
   
   key = KEY_SET_INVERT_COLOR;
-  if (persist_exists(key)) InvertColors = persist_read_int(key);
+  if (persist_exists(key)) ColorProfile = persist_read_int(key);
   
   key = KEY_SET_DEGREE_F;
   if (persist_exists(key)) degree_f = persist_read_int(key);
@@ -325,6 +339,8 @@ void LoadData(void) {
     if (persist_exists(key)) persist_read_string(key, OWM_lang_id, sizeof(OWM_lang_id));
   #endif
   
+  key = KEY_WARN_LOCATION;
+  if (persist_exists(key)) warning_color_location = persist_read_int(key);
   
   key = KEY_DETECT_FIRST_START;
   if (persist_exists(key)) AppFirstStart = persist_read_int(key); else AppFirstStart = 1;
@@ -363,7 +379,7 @@ void SaveData(void) {
   persist_write_int    (KEY_SUN_RISE_UNIX,  (int)sun_rise_unix_loc);
   persist_write_int    (KEY_SUN_SET_UNIX,  (int)sun_set_unix_loc);
   
-  persist_write_int(KEY_SET_INVERT_COLOR, InvertColors);
+  persist_write_int(KEY_SET_INVERT_COLOR, ColorProfile);
   persist_write_int(KEY_SET_DISPLAY_SEC, DisplaySeconds);
   persist_write_int(KEY_SET_LIGHT_ON, LightOn);
   persist_write_int(KEY_SET_VIBE_DISC, vibe_on_disconnect);
@@ -375,6 +391,8 @@ void SaveData(void) {
   #ifdef PBL_SDK_3
     persist_write_string (KEY_SET_LANG_ID, OWM_lang_id);
   #endif
+    
+  persist_write_int(KEY_WARN_LOCATION, warning_color_location);
   
   persist_write_int(KEY_SET_DEGREE_F, degree_f);
   
@@ -422,6 +440,8 @@ void DisplayLastUpdated(void) {
   static char last_updated_buffer[10];
   time_t now = time(NULL); // now is in UTC on SDK >= 3
   
+  int warning_color_last_update_old = warning_color_last_update;
+  
   if (ShowTimeSinceStationData){
     time_since_last_data = now - station_data_last_updated;
     //APP_LOG(APP_LOG_LEVEL_INFO, "X: \n(1) = %d\nnow = %d\n(3) = %d\ntime_UTC_OFFSET = %d", 
@@ -444,22 +464,26 @@ void DisplayLastUpdated(void) {
     }
     //print_time(last_updated_buffer, sizeof(last_updated_buffer), time_since_last_update, 1);
     text_layer_set_text(weather_layer_4_last_update, last_updated_buffer);
-    #ifdef PBL_COLOR
+    //#ifdef PBL_COLOR
       if (ShowTimeSinceStationData){
         if (time_since_last_data >= 2*3600){ // >= 2h
-          text_layer_set_text_color(weather_layer_4_last_update, GColorRed);
-        } else text_layer_set_text_color(weather_layer_4_last_update, textcolor_last_update);
+          warning_color_last_update = 1;
+        } else warning_color_last_update = 0;
       } else {
-        if (time_since_last_update > WeatherUpdateInterval){
-          text_layer_set_text_color(weather_layer_4_last_update, GColorRed);
-        } else text_layer_set_text_color(weather_layer_4_last_update, textcolor_last_update);
+        if (time_since_last_update > (WeatherUpdateInterval*60)){
+          warning_color_last_update = 1;
+        } else warning_color_last_update = 0;
       }
-    #endif
+    //#endif
   } else {
     text_layer_set_text(weather_layer_4_last_update, "--:--");
-    #ifdef PBL_COLOR
-      text_layer_set_text_color(weather_layer_4_last_update, GColorRed);
-    #endif
+    //#ifdef PBL_COLOR
+      warning_color_last_update = 1;
+    //#endif
+  }
+  
+  if (warning_color_last_update != warning_color_last_update_old){
+    apply_color_profile();
   }
   
   //display battery stats:
@@ -503,7 +527,7 @@ void DisplayData(void) {
   text_layer_set_text(weather_layer_1_temp, buffer_1);
   
   #ifdef PBL_COLOR
-  if (InvertColors > 1){
+  if (ColorProfile > 1){
     
     if (weather_TEMP >= 40){
       textcolor_weather = GColorRed;  // >= 40°C
@@ -578,7 +602,8 @@ void DisplayData(void) {
 
 #ifdef PBL_COLOR
 static GColor get_weather_icon_color(int nr){
-  if (InvertColors < 2) return GColorWhite;
+  if (ColorProfile == 0) return GColorWhite;
+  if (ColorProfile == 1) return GColorWhite;
   if (nr < 33) return GColorWhite;
   if (nr > 106) return GColorWhite;
   switch (nr){
@@ -810,7 +835,7 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
       if (!NightMode){
         //static int wi_counter = 33;
         text_layer_set_font(moonLayer_IMG, pFontClimacons);
-        layer_set_frame(text_layer_get_layer(moonLayer_IMG), GRect(3, 15, 33, 33));
+        layer_set_frame(text_layer_get_layer(moonLayer_IMG), GRect(51, 15, 33, 33));
         
         //wi_counter++; if (wi_counter>106) wi_counter = 33;
         //wi_counter = WeatherIcon;
@@ -825,7 +850,7 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     }
   #else
     text_layer_set_font(moonLayer_IMG, pFontClimacons);
-    layer_set_frame(text_layer_get_layer(moonLayer_IMG), GRect(3, 15, 33, 33));
+    layer_set_frame(text_layer_get_layer(moonLayer_IMG), GRect(51, 15, 33, 33));
   
     static int wi_counter = 33;
     wi_counter++; if (wi_counter>106) wi_counter = 33;
@@ -848,7 +873,7 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     
     
     text_layer_set_font(moonLayer_IMG, pFontMoon);
-    layer_set_frame(text_layer_get_layer(moonLayer_IMG), GRect(3, 21, 33, 33));
+    layer_set_frame(text_layer_get_layer(moonLayer_IMG), GRect(51, 21, 33, 33));
     text_layer_set_text(moonLayer_IMG, moon);
     #ifdef PBL_COLOR
       weather_icon_color = textcolor_moon;
@@ -1060,12 +1085,13 @@ static void handle_battery(BatteryChargeState charge_state) {
   actual_battery_percent = charge_state.charge_percent;
   
   
-  #ifndef PBL_SDK_3 //only on SDK 2.x
+  #ifdef PBL_SDK_2 //only on SDK 2.x
     //GRect(41, 21, 38, 11): size of InverterLayer
-    layer_set_frame(inverter_layer_get_layer(s_battery_layer_fill), GRect(41, 21, (int)38*actual_battery_percent/100, 11));
+    layer_set_frame(inverter_layer_get_layer(s_battery_layer_fill), GRect(3, 21, (int)38*actual_battery_percent/100, 11));
     layer_set_hidden(inverter_layer_get_layer(s_battery_layer_fill), false);
+    layer_set_hidden(inverter_layer_get_layer(s_warning_color_battery), actual_battery_percent>20);
   #else
-    layer_set_frame(effect_layer_get_layer(s_battery_layer_fill), GRect(41, 21, (int)38*actual_battery_percent/100, 11));
+    layer_set_frame(effect_layer_get_layer(s_battery_layer_fill), GRect(3, 21, (int)38*actual_battery_percent/100, 11));
     layer_set_hidden(effect_layer_get_layer(s_battery_layer_fill), false);
     #ifdef PBL_COLOR
       uint8_t variable_color = 0;
@@ -1080,20 +1106,25 @@ static void handle_battery(BatteryChargeState charge_state) {
       } else {
         variable_color = 0b11110000; //  0 % -  20 %  red (GColorRed)
       }
-  
-      if (InvertColors == 2) if (variable_color == 0b11000100){
-        variable_color = 0b11001100;  //light green for black background
-      }
       
-      if (InvertColors == 2){
+  
+      if (ColorProfile == 0) {
+        textcolor_bat_uint8 = 0b11111111; //white
+        bkgrcolor_bat_uint8 = 0b11000000; //black
+      } else if (ColorProfile == 1) {
+        textcolor_bat_uint8 = 0b11000000; //black
+        bkgrcolor_bat_uint8 = 0b11111111; //white
+      } else if (ColorProfile == 2){
         textcolor_bat_uint8 = variable_color;
-        bkgrcolor_bat_uint8 = 0b00000000; //black
-      } else if (InvertColors == 3) {
+        bkgrcolor_bat_uint8 = 0b11000000; //black
+      } else {
         textcolor_bat_uint8 = 0b11111111;
         bkgrcolor_bat_uint8 = variable_color;
-      } else {
-        textcolor_bat_uint8 = 0b11111111; //white
-        bkgrcolor_bat_uint8 = 0b00000000; //black
+      }
+      //On all Profiles, make battery white on red if <= 20%:
+      if (actual_battery_percent <= 20){
+        textcolor_bat_uint8 = 0b11111111;
+        bkgrcolor_bat_uint8 = variable_color;
       }
   
   
@@ -1130,6 +1161,9 @@ static void handle_bluetooth(bool connected) {
     }
   }
   text_layer_set_text(connection_layer, connected ? "Bluetooth" : "---------");
+  #ifdef PBL_COLOR
+    if (!connected) text_layer_set_text_color(connection_layer, GColorRed); else text_layer_set_text_color(connection_layer, textcolor_con);
+  #endif
   if (connected && initDone){
     doUpdateWeather = true;
   }
@@ -1142,7 +1176,7 @@ static void handle_bluetooth(bool connected) {
 
 
 static void layer_update_callback_hour_1(Layer *layer, GContext* ctx) {
-  graphics_context_set_fill_color(ctx, textcolor_background);
+  graphics_context_set_fill_color(ctx, background_color_clock);
   graphics_fill_rect(ctx, GRect(0, 0, 26, 41), 0, GCornerNone);
   graphics_context_set_stroke_color(ctx, textcolor_clock);
   switch (digit_h_1){
@@ -1158,7 +1192,7 @@ static void layer_update_callback_hour_1(Layer *layer, GContext* ctx) {
 }
 
 static void layer_update_callback_hour_2(Layer *layer, GContext* ctx) {
-  graphics_context_set_fill_color(ctx, textcolor_background);
+  graphics_context_set_fill_color(ctx, background_color_clock);
   graphics_fill_rect(ctx, GRect(0, 0, 26, 41), 0, GCornerNone);
   graphics_context_set_stroke_color(ctx, textcolor_clock);
   switch (digit_h_2){
@@ -1197,7 +1231,7 @@ static void layer_update_callback_hour_2(Layer *layer, GContext* ctx) {
   }
 }
 static void layer_update_callback_minute_1(Layer *layer, GContext* ctx) {
-  graphics_context_set_fill_color(ctx, textcolor_background);
+  graphics_context_set_fill_color(ctx, background_color_clock);
   graphics_fill_rect(ctx, GRect(0, 0, 26, 41), 0, GCornerNone);
   graphics_context_set_stroke_color(ctx, textcolor_clock);
   switch (digit_m_1){
@@ -1238,7 +1272,7 @@ static void layer_update_callback_minute_1(Layer *layer, GContext* ctx) {
   }
 }
 static void layer_update_callback_minute_2(Layer *layer, GContext* ctx) {
-  graphics_context_set_fill_color(ctx, textcolor_background);
+  graphics_context_set_fill_color(ctx, background_color_clock);
   graphics_fill_rect(ctx, GRect(0, 0, 26, 41), 0, GCornerNone);
   graphics_context_set_stroke_color(ctx, textcolor_clock);
   switch (digit_m_2){
@@ -1278,7 +1312,7 @@ static void layer_update_callback_minute_2(Layer *layer, GContext* ctx) {
 }
 
 static void layer_update_callback_second_1(Layer *layer, GContext* ctx) {
-  graphics_context_set_fill_color(ctx, textcolor_background);
+  graphics_context_set_fill_color(ctx, background_color_clock);
   graphics_fill_rect(ctx, GRect(0, 0, 10, 15), 0, GCornerNone);
   graphics_context_set_stroke_color(ctx, textcolor_seconds);
   if (!DisplaySeconds){
@@ -1327,7 +1361,7 @@ static void layer_update_callback_second_1(Layer *layer, GContext* ctx) {
   }
 }
 static void layer_update_callback_second_2(Layer *layer, GContext* ctx) {
-  graphics_context_set_fill_color(ctx, textcolor_background);
+  graphics_context_set_fill_color(ctx, background_color_clock);
   graphics_fill_rect(ctx, GRect(0, 0, 10, 15), 0, GCornerNone);
   graphics_context_set_stroke_color(ctx, textcolor_seconds);
   if (!DisplaySeconds){
@@ -1376,12 +1410,12 @@ static void layer_update_callback_second_2(Layer *layer, GContext* ctx) {
 
 #ifdef PBL_COLOR
 static void layer_update_callback_paint_bat(Layer *layer, GContext* ctx) {
-  if (InvertColors == 3){
-    graphics_context_set_fill_color(ctx, bkgrcolor_bat);
-    graphics_context_set_stroke_color(ctx, bkgrcolor_bat);
-    GRect layer_bounds = layer_get_bounds(s_battery_layer_paint_bat);
-    graphics_fill_rect(ctx, layer_bounds, 0, 0);
-  }
+  //bkgrcolor_bat = GColorBlack;
+  graphics_context_set_fill_color(ctx, bkgrcolor_bat);
+  graphics_context_set_stroke_color(ctx, bkgrcolor_bat);
+  GRect layer_bounds = layer_get_bounds(s_battery_layer_paint_bat);
+  graphics_fill_rect(ctx, layer_bounds, 0, 0);
+  
   graphics_context_set_fill_color(ctx, GColorClear);
   graphics_context_set_stroke_color(ctx, textcolor_bat);
   graphics_draw_line(ctx, GPoint( 0+1, 0+2), GPoint(41+1, 0+2));
@@ -1394,7 +1428,286 @@ static void layer_update_callback_paint_bat(Layer *layer, GContext* ctx) {
   graphics_draw_line(ctx, GPoint(41+1, 4+2), GPoint(43+1, 4+2));
   graphics_draw_line(ctx, GPoint(41+1,10+2), GPoint(43+1,10+2));
 }
+
+static void layer_update_callback_background(Layer *layer, GContext* ctx){
+  //draw outlines:
+  graphics_context_set_fill_color(ctx, GColorClear);
+  graphics_context_set_stroke_color(ctx, background_color_lines);
+  graphics_draw_line(ctx, GPoint(110,   0), GPoint(110,  15));
+  graphics_draw_line(ctx, GPoint(  0,  16), GPoint(168,  16));
+  graphics_draw_line(ctx, GPoint( 47,  17), GPoint( 47,  49));
+  graphics_draw_line(ctx, GPoint( 85,  17), GPoint( 85,  68));
+  graphics_draw_line(ctx, GPoint(  0,  50), GPoint( 84,  50));
+  graphics_draw_line(ctx, GPoint(  0,  69), GPoint(168,  69));
+  graphics_draw_line(ctx, GPoint(  0,  90), GPoint(168,  90));
+  graphics_draw_line(ctx, GPoint(  0, 154), GPoint(168, 154));
+  
+  //draw background areas:
+  graphics_context_set_fill_color(ctx, background_color_clock);
+  graphics_context_set_stroke_color(ctx, background_color_clock);
+  graphics_fill_rect(ctx, GRect(0, 91, 144, 153-91+1), 0, 0);
+  
+  graphics_context_set_fill_color(ctx, background_color_date);
+  graphics_context_set_stroke_color(ctx, background_color_date);
+  graphics_fill_rect(ctx, GRect(0, 70, 144, 89-70+1), 0, 0);
+  
+  graphics_context_set_fill_color(ctx, background_color_status);
+  graphics_context_set_stroke_color(ctx, background_color_status);
+  graphics_fill_rect(ctx, GRect(0, 155, 144, 167-155+1), 0, 0);
+  
+  graphics_context_set_fill_color(ctx, background_color_weather);
+  graphics_context_set_stroke_color(ctx, background_color_weather);
+  graphics_fill_rect(ctx, GRect( 0, 51, 85, 18), 0, 0);
+  graphics_fill_rect(ctx, GRect(86, 17, 58, 52), 0, 0);
+  
+  if (warning_color_location){
+    graphics_context_set_fill_color(ctx, GColorRed);
+    graphics_context_set_stroke_color(ctx, GColorRed);
+  } else {
+    graphics_context_set_fill_color(ctx, background_color_location);
+    graphics_context_set_stroke_color(ctx, background_color_location);
+  }
+  graphics_fill_rect(ctx, GRect(0, 0, 110, 16), 0, 0);
+  
+  if (warning_color_last_update){
+    graphics_context_set_fill_color(ctx, GColorRed);
+    graphics_context_set_stroke_color(ctx, GColorRed);
+  } else {
+    graphics_context_set_fill_color(ctx, background_color_last_update);
+    graphics_context_set_stroke_color(ctx, background_color_last_update);
+  }
+  graphics_fill_rect(ctx, GRect(111, 0, 33, 16), 0, 0);
+  
+  //draw dots of time:
+  graphics_context_set_fill_color(ctx, textcolor_clock);
+  graphics_context_set_stroke_color(ctx, textcolor_clock);
+  graphics_fill_rect(ctx, GRect(69, 102, 7, 7), 0, 0);
+  graphics_fill_rect(ctx, GRect(69, 124, 7, 7), 0, 0);
+  
+  //draw arrows of sun rise/set:
+  graphics_context_set_fill_color(ctx, GColorClear);
+  graphics_context_set_stroke_color(ctx, textcolor_sun);
+  graphics_draw_line(ctx, GPoint(  3, 157), GPoint(  3, 165));
+  graphics_draw_line(ctx, GPoint(  2, 158), GPoint(  4, 158));
+  graphics_draw_line(ctx, GPoint(  1, 159), GPoint(  5, 159));
+  graphics_draw_line(ctx, GPoint(106, 157), GPoint(106, 165));
+  graphics_draw_line(ctx, GPoint(105, 164), GPoint(107, 164));
+  graphics_draw_line(ctx, GPoint(104, 163), GPoint(108, 163));
+}
 #endif
+  
+static void apply_color_profile(void){
+  /*
+  GColor textcolor_background;
+  #ifdef PBL_COLOR
+    GColor textcolor_sun;
+    GColor textcolor_con;
+    GColor textcolor_bat;
+    uint8_t textcolor_bat_uint8;
+    GColor bkgrcolor_bat;
+    uint8_t bkgrcolor_bat_uint8;
+    GColor textcolor_date;
+    GColor textcolor_cal;
+    GColor textcolor_moon;
+    GColor textcolor_weather;
+    GColor textcolor_location;
+    GColor textcolor_last_update;
+    GColor textcolor_tz;
+  
+    GColor background_color_lines;
+    GColor background_color_clock;
+    GColor background_color_date;
+    GColor background_color_weather;
+    GColor background_color_moon; //and weather_icon
+    GColor background_color_location;
+    GColor background_color_last_update;
+    GColor background_color_status;
+  #endif
+  GColor textcolor_clock;
+  GColor textcolor_seconds;
+  */
+  #ifdef PBL_COLOR
+    if (ColorProfile == 1){ //Black on White
+      textcolor_clock              = GColorBlack;
+      textcolor_seconds            = GColorBlack;
+      textcolor_tz                 = GColorBlack;
+      textcolor_cal                = GColorBlack; //calendar week
+      background_color_clock       = GColorWhite;
+      
+      textcolor_date               = GColorBlack;
+      background_color_date        = GColorWhite;
+      
+      textcolor_weather            = GColorBlack;
+      background_color_weather     = GColorWhite;
+      
+      textcolor_moon               = GColorBlack;
+      background_color_moon        = GColorWhite;
+      
+      textcolor_sun                = GColorBlack;
+      textcolor_con                = GColorBlack; //connection
+      background_color_status      = GColorWhite;
+      
+      textcolor_location           = GColorBlack;
+      background_color_location    = GColorWhite;
+      
+      textcolor_last_update        = GColorBlack;
+      background_color_last_update = GColorWhite;
+  
+      background_color_lines       = GColorBlack;    
+    } else if (ColorProfile == 2){ //Black Bkgr. and green clock
+      textcolor_clock              = GColorFromRGB(0, 255, 0);
+      textcolor_seconds            = GColorFromRGB(0, 170, 170);
+      textcolor_tz                 = GColorFromRGB(85, 85, 85); //OK
+      textcolor_cal                = GColorFromRGB(0, 170, 170);   //=GColorTiffanyBlue //calendar week
+      background_color_clock       = GColorBlack;
+      
+      textcolor_date               = GColorFromRGB(0, 170, 170);   //=GColorTiffanyBlue
+      background_color_date        = GColorBlack;
+      
+      textcolor_weather            = GColorFromRGB(0, 255, 170);   //GColorMediumSpringGreen
+      background_color_weather     = GColorBlack;
+      
+      textcolor_moon               = GColorWhite;
+      background_color_moon        = GColorBlack;
+      
+      textcolor_sun                = GColorFromRGB(255, 255, 0);
+      textcolor_con                = GColorFromRGB(0, 170, 255);   //GColorVividCerulean  //connection
+      background_color_status      = GColorBlack;
+      
+      textcolor_location           = GColorFromRGB(255, 170, 0);   //=GColorChromeYellow
+      background_color_location    = GColorBlack;
+      
+      textcolor_last_update        = GColorFromRGB(170, 170, 255);
+      background_color_last_update = GColorBlack;
+  
+      background_color_lines       = GColorWhite;    
+    } else if (ColorProfile == 3){ //colored high contrast (blue clock on yellow)
+      textcolor_clock              = GColorFromRGB(0, 0, 85);
+      textcolor_seconds            = GColorFromRGB(0, 170, 170);
+      textcolor_tz                 = GColorFromRGB(85, 85, 85); //OK
+      textcolor_cal                = GColorFromRGB(0, 170, 170);   //=GColorTiffanyBlue; //calendar week
+      background_color_clock       = GColorFromHEX(0xFFFF55);
+      
+      textcolor_date               = GColorFromRGB(170, 0, 85); //= GColorJazzberryJam; ;
+      background_color_date        = GColorFromHEX(0xFFFF00);
+      
+      textcolor_weather            = GColorBlack;
+      background_color_weather     = GColorWhite;
+      
+      textcolor_moon               = GColorWhite;
+      background_color_moon        = GColorBlack;
+      
+      textcolor_sun                = GColorFromRGB(255, 255, 0);   //=GColorYellow //OK
+      textcolor_con                = GColorFromRGB(0, 170, 255);   //GColorVividCerulean //connection
+      background_color_status      = GColorBlack;
+      
+      textcolor_location           = GColorBlack;
+      background_color_location    = GColorWhite;
+      
+      textcolor_last_update        = GColorBlack;
+      background_color_last_update = GColorWhite;
+  
+      background_color_lines       = GColorFromRGB(170, 170, 170);
+    } else { //default = BW
+      textcolor_clock              = GColorWhite;
+      textcolor_seconds            = GColorWhite;
+      textcolor_tz                 = GColorWhite;
+      textcolor_cal                = GColorWhite; //calendar week
+      background_color_clock       = GColorBlack;
+      
+      textcolor_date               = GColorWhite;
+      background_color_date        = GColorBlack;
+      
+      textcolor_weather            = GColorWhite;
+      background_color_weather     = GColorBlack;
+      
+      textcolor_moon               = GColorWhite;
+      background_color_moon        = GColorBlack;
+      
+      textcolor_sun                = GColorWhite;
+      textcolor_con                = GColorWhite; //connection
+      background_color_status      = GColorBlack;
+      
+      textcolor_location           = GColorWhite;
+      background_color_location    = GColorBlack;
+      
+      textcolor_last_update        = GColorWhite;
+      background_color_last_update = GColorBlack;
+  
+      background_color_lines       = GColorWhite;    
+    }
+    
+    layer_mark_dirty(background_paint_layer);
+  #endif
+    
+  // --- Create Text-Layers:
+  #ifndef PBL_COLOR
+    GColor textcolor = GColorWhite;
+    if (ColorProfile) textcolor = GColorBlack;
+    GColor bkgcolor = GColorBlack;
+    if (ColorProfile) bkgcolor = GColorWhite;
+    GColor textcolor_sun         = textcolor;
+    GColor textcolor_con         = textcolor;
+    GColor textcolor_bat         = textcolor;
+    GColor textcolor_date        = textcolor;
+    GColor textcolor_cal         = textcolor;
+    GColor textcolor_moon        = textcolor;
+    GColor textcolor_weather     = textcolor;
+    GColor textcolor_location    = textcolor;
+    GColor textcolor_last_update = textcolor;
+    GColor textcolor_tz          = textcolor;
+    textcolor_clock       = textcolor;
+    textcolor_seconds     = textcolor;
+    background_color_clock  = bkgcolor;
+  
+    if (ColorProfile == 1)
+      bitmap_layer_set_compositing_mode(background_layer, GCompOpAssignInverted);
+    else
+      bitmap_layer_set_compositing_mode(background_layer, GCompOpAssign);
+  #endif
+  
+  text_layer_set_text_color(text_sunrise_layer, textcolor_sun);
+  text_layer_set_text_color(text_sunset_layer, textcolor_sun);
+  text_layer_set_text_color(connection_layer, textcolor_con);
+  text_layer_set_text_color(battery_runtime_layer, textcolor_bat);
+  text_layer_set_text_color(Date_Layer, textcolor_date);
+  text_layer_set_text_color(cwLayer, textcolor_cal);
+  text_layer_set_text_color(moonLayer_IMG, textcolor_moon);
+  text_layer_set_text_color(weather_layer_1_temp, textcolor_weather);
+  text_layer_set_text_color(weather_layer_3_location, textcolor_location);
+  text_layer_set_text_color(weather_layer_4_last_update, textcolor_last_update);
+  text_layer_set_text_color(weather_layer_7_string_1, textcolor_weather);
+  text_layer_set_text_color(weather_layer_7_string_2, textcolor_weather);
+  text_layer_set_text_color(text_TimeZone_layer, textcolor_tz);
+  
+  #ifdef PBL_COLOR
+    if (warning_color_location) text_layer_set_text_color(weather_layer_3_location, GColorWhite);
+    if (warning_color_last_update) text_layer_set_text_color(weather_layer_4_last_update, GColorWhite);
+  #endif
+  #ifdef PBL_SDK_2
+    /*
+    layer_set_hidden(inverter_layer_get_layer(s_warning_color_location), (bool)!warning_color_location);
+    layer_set_hidden(inverter_layer_get_layer(s_warning_color_last_updated), (bool)!warning_color_last_update);
+    */
+    GColor text = GColorBlack;
+    GColor bkgr = GColorWhite;
+    if (ColorProfile){
+      text = GColorWhite;
+      bkgr = GColorBlack;
+    }
+    if (warning_color_location){
+      text_layer_set_text_color(weather_layer_3_location, text);
+      text_layer_set_background_color(weather_layer_3_location, bkgr);
+    } else text_layer_set_background_color(weather_layer_3_location, GColorClear);
+    if (warning_color_last_update){
+      text_layer_set_text_color(weather_layer_4_last_update, text);
+      text_layer_set_background_color(weather_layer_4_last_update, bkgr);
+    } else text_layer_set_background_color(weather_layer_4_last_update, GColorClear);
+  #endif
+  
+  handle_battery(battery_state_service_peek());
+}
+
   
 static void set_cwLayer_size(void){
   if (DisplaySeconds){
@@ -1410,7 +1723,6 @@ static void set_cwLayer_size(void){
     text_layer_set_text_alignment(cwLayer, GTextAlignmentRight);
   }
 }
-
 
 
 
@@ -1449,6 +1761,12 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       break;
     case KEY_LOCATION_LON:
       location_longitude = (int)t->value->int32;
+      break;
+    case KEY_WARN_LOCATION:
+      if (warning_color_location != (int)t->value->int32){
+        warning_color_location = (int)t->value->int32;
+        apply_color_profile();
+      } 
       break;
     case KEY_WEATHER_TEMP:
       #ifndef ITERATE_TEMP
@@ -1504,16 +1822,19 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       }
       break;
     case KEY_SET_INVERT_COLOR:
-      if ((int32_t)InvertColors != (int)t->value->int32) restart = 1;
+      /*
       #ifndef PBL_COLOR
-        if ((InvertColors == 0) && ((int)t->value->int32) > 1) restart = 0;
+        if ((int32_t)ColorProfile != (int)t->value->int32) restart = 1;
+        if ((ColorProfile == 0) && ((int)t->value->int32) > 1) restart = 0;
       #endif
-      InvertColors = (int)t->value->int32;
+      */
+      ColorProfile = (int)t->value->int32;
       #ifndef PBL_COLOR
         //reset all color schemes on aplite platform
-        if (InvertColors > 1) InvertColors = 0;
+        if (ColorProfile > 1) ColorProfile = 0;
       #endif
       doUpdateWeather = true; //must be done when a configuration was received //TODO: save this and check on startup to avoid not updating after color scheme selection.
+      apply_color_profile();
       break;
     case KEY_SET_LIGHT_ON:
       LightOn = (int)t->value->int32;
@@ -1665,43 +1986,25 @@ static void main_window_load(Window *window) {
   
   #ifndef PBL_COLOR
     //reset all color schemes on aplite platform
-    if (InvertColors > 1) InvertColors = 0;
+    if (ColorProfile > 1) ColorProfile = 0;
   #endif
   
   
   // --- Background Image ---
-  // --- Background Image ---
-  #ifdef PBL_COLOR
-    if (InvertColors >= 2){
-      switch (InvertColors){
-        case 2:
-          background_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND_COLOR_PROFILE_1);
-          break;
-        case 3:
-          background_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND_COLOR_PROFILE_5);
-          break;
-        default:
-          background_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND_COLOR_PROFILE_1);
-          break;
-      }
-        
-    } else {
-      background_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND_BW);
-    }
-  #else
-    background_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND_BW);
-  #endif
+  background_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND);
   background_layer = bitmap_layer_create(layer_get_frame(main_window_layer));
   bitmap_layer_set_bitmap(background_layer, background_image);
-  #ifdef PBL_COLOR
+  if (ColorProfile == 1)
+    bitmap_layer_set_compositing_mode(background_layer, GCompOpAssignInverted);
+  else
     bitmap_layer_set_compositing_mode(background_layer, GCompOpAssign);
-  #else
-    if (InvertColors == 1)
-      bitmap_layer_set_compositing_mode(background_layer, GCompOpAssignInverted);
-    else
-      bitmap_layer_set_compositing_mode(background_layer, GCompOpAssign);
-  #endif
   layer_add_child(main_window_layer, bitmap_layer_get_layer(background_layer));
+  
+  #ifdef PBL_COLOR
+    background_paint_layer = layer_create(GRect(0, 0, 144, 168));
+    layer_set_update_proc(background_paint_layer, layer_update_callback_background);
+    layer_add_child(main_window_layer, background_paint_layer);
+  #endif
   // --- END ---
 
   s_image_layer_hour_1 = layer_create(GRect(4, 94, 26, 41));
@@ -1725,95 +2028,26 @@ static void main_window_load(Window *window) {
   layer_set_update_proc(s_image_layer_second_2, layer_update_callback_second_2);
   layer_add_child(main_window_layer, s_image_layer_second_2);
   
-  // --- Create Text-Layers:
-  GColor textcolor = GColorWhite;
   
-  #ifdef PBL_COLOR
-    if (InvertColors >= 2){
-      textcolor_background  = GColorFromRGB(0, 0, 0);
-      textcolor_sun         = GColorFromRGB(255, 255, 0);   //=GColorYellow //OK
-      textcolor_con         = GColorFromRGB(0, 170, 255);   //GColorVividCerulean //connection
-      textcolor_bat_uint8   = 0b11110000; //red
-      textcolor_bat         = (GColor8){.argb = textcolor_bat_uint8};
-      //APP_LOG(APP_LOG_LEVEL_INFO, "textcolor_bat = %d", (int)textcolor_bat); //this does not work
-      textcolor_date        = GColorFromRGB(0, 170, 170);   //=GColorTiffanyBlue
-      textcolor_cal         = GColorFromRGB(0, 170, 170);   //=GColorTiffanyBlue  //calendar
-      textcolor_moon        = GColorFromRGB(255, 255, 255); //OK
-      textcolor_weather     = GColorFromRGB(0, 255, 170);   //GColorMediumSpringGreen
-      textcolor_location    = GColorFromRGB(255, 170, 0);   //=GColorChromeYellow //OK
-      textcolor_last_update = GColorFromRGB(170, 170, 255); //OK
-      textcolor_tz          = GColorFromRGB(85, 85, 85); //OK
-      textcolor_clock       = GColorFromRGB(0, 255, 0);
-      textcolor_seconds     = GColorFromRGB(0, 170, 170);
-      
-      //override some colors for some profiles:
-      if (InvertColors == 3){
-        textcolor_background  = GColorFromHEX(0xFFFF55);  //backgound of time and seconds (not of battery. battery is done a little bit down.)
-        textcolor_date        = GColorFromRGB(170, 0, 85); //= GColorJazzberryJam; // GColorMidnightGreen; //GColorFromRGB(0, 170, 170);   //=GColorTiffanyBlue
-        textcolor_cal         = GColorFromRGB(0, 170, 170);   //=GColorTiffanyBlue
-        textcolor_weather     = GColorFromRGB(0, 0, 0); //GColorFromRGB(0, 255, 170);   //GColorMediumSpringGreen
-        textcolor_location    = GColorFromRGB(170, 85, 0);   //=GColorChromeYellow //OK
-        textcolor_last_update = GColorIndigo;
-        textcolor_clock       = GColorFromRGB(0, 0, 85);
-        textcolor_seconds     = GColorFromRGB(0, 170, 170);
-      }
-    } else {
-      //if (InvertColors == 1){
-      //  textcolor = GColorBlack;
-      //  textcolor_background = GColorWhite;
-      //} else if (InvertColors == 0){
-        textcolor = GColorWhite;
-        textcolor_background = GColorBlack;
-      //}
-      textcolor_sun         = textcolor;
-      textcolor_con         = textcolor;
-      textcolor_bat         = textcolor;
-      textcolor_date        = textcolor;
-      textcolor_cal         = textcolor;
-      textcolor_moon        = textcolor;
-      textcolor_weather     = textcolor;
-      textcolor_location    = textcolor;
-      textcolor_last_update = textcolor;
-      textcolor_tz          = textcolor;
-      textcolor_clock       = textcolor;
-      textcolor_seconds     = textcolor;
-    }
-  #else  
-    if (InvertColors) textcolor = GColorBlack;
-    GColor bkgcolor = GColorBlack;
-    if (InvertColors) bkgcolor = GColorWhite;
-    textcolor_background  = bkgcolor;
-    GColor textcolor_sun         = textcolor;
-    GColor textcolor_con         = textcolor;
-    GColor textcolor_bat         = textcolor;
-    GColor textcolor_date        = textcolor;
-    GColor textcolor_cal         = textcolor;
-    GColor textcolor_moon        = textcolor;
-    GColor textcolor_weather     = textcolor;
-    GColor textcolor_location    = textcolor;
-    GColor textcolor_last_update = textcolor;
-    GColor textcolor_tz          = textcolor;
-    textcolor_clock       = textcolor;
-    textcolor_seconds     = textcolor;
-  #endif
+  GColor textcolor = GColorWhite;
     
   // Sunrise Text
   text_sunrise_layer = text_layer_create(GRect(7, 152, 50 /* width */, 30 /* height */)); 
-  text_layer_set_text_color(text_sunrise_layer, textcolor_sun);
+  text_layer_set_text_color(text_sunrise_layer, textcolor);
   text_layer_set_background_color(text_sunrise_layer, GColorClear );
   text_layer_set_font(text_sunrise_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
   layer_add_child(main_window_layer, text_layer_get_layer(text_sunrise_layer));
   
   // Sunset Text
   text_sunset_layer = text_layer_create(GRect(110, 152, 50 /* width */, 30 /* height */)); 
-  text_layer_set_text_color(text_sunset_layer, textcolor_sun);
+  text_layer_set_text_color(text_sunset_layer, textcolor);
   text_layer_set_background_color(text_sunset_layer, GColorClear );
   text_layer_set_font(text_sunset_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
   layer_add_child(main_window_layer, text_layer_get_layer(text_sunset_layer));      
   
   // Connection
   connection_layer = text_layer_create(GRect(47, 152, 50, 34));
-  text_layer_set_text_color(connection_layer, textcolor_con);
+  text_layer_set_text_color(connection_layer, textcolor);
   text_layer_set_background_color(connection_layer, GColorClear);
   text_layer_set_font(connection_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
   text_layer_set_text_alignment(connection_layer, GTextAlignmentCenter);
@@ -1821,38 +2055,28 @@ static void main_window_load(Window *window) {
   layer_add_child(main_window_layer, text_layer_get_layer(connection_layer));
 
   #ifdef PBL_SDK_3
-    GlobalInverterColor = textcolor_bat_uint8 & 0b00111111;
-    if (InvertColors == 3){
-      GlobalBkgColor = 0b00000000;
-    }
-    
-    //s_battery_layer_paint_bat = layer_create(GRect(39, 19, 82-39+1, 33-19+1));
-    s_battery_layer_paint_bat = layer_create(GRect(38, 17, 84-38+1, 49-17+1));
+    s_battery_layer_paint_bat = layer_create(GRect(0, 17, 84-38+1, 49-17+1));
     layer_set_update_proc(s_battery_layer_paint_bat, layer_update_callback_paint_bat);
     layer_add_child(main_window_layer, s_battery_layer_paint_bat);
   #endif
   
   // Battery state / runtime:
-  battery_runtime_layer = text_layer_create(GRect(40, 15+2, 45, 15+20));
-  text_layer_set_text_color(battery_runtime_layer, textcolor_bat);
+  battery_runtime_layer = text_layer_create(GRect(2, 15+2, 45, 15+20));
+  text_layer_set_text_color(battery_runtime_layer, textcolor);
   text_layer_set_background_color(battery_runtime_layer, GColorClear);
   text_layer_set_font(battery_runtime_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
   text_layer_set_text_alignment(battery_runtime_layer, GTextAlignmentCenter);
   text_layer_set_text(battery_runtime_layer, "100%\n0:00 d");
   layer_add_child(main_window_layer, text_layer_get_layer(battery_runtime_layer));
   
-  #ifndef PBL_SDK_3 //only on SDK 2.x
+  #ifdef PBL_SDK_2 //only on SDK 2.x
     //fill battery with an InverterLayer
-    s_battery_layer_fill = inverter_layer_create(GRect(41, 21, 38, 11));
+    s_battery_layer_fill = inverter_layer_create(GRect(3, 21, 38, 11));
     layer_set_hidden(inverter_layer_get_layer(s_battery_layer_fill), true);
     layer_add_child(main_window_layer, inverter_layer_get_layer(s_battery_layer_fill));
   #else //else use effect layer on basalt
-    s_battery_layer_fill = effect_layer_create(GRect(41, 21, 38, 11));
-    if (InvertColors >= 2){
-      effect_layer_add_effect(s_battery_layer_fill, effect_invert_color, (void *)0b00000000); //use global inverter color
-    } else {
-      effect_layer_add_effect(s_battery_layer_fill, effect_invert_color, (void *)0b00111111);
-    }
+    s_battery_layer_fill = effect_layer_create(GRect(3, 21, 38, 11));
+    effect_layer_add_effect(s_battery_layer_fill, effect_invert_color, (void *)0b00000000); //use global inverter color
     layer_set_hidden(effect_layer_get_layer(s_battery_layer_fill), true);
     layer_add_child(main_window_layer, effect_layer_get_layer(s_battery_layer_fill));
   #endif
@@ -1861,23 +2085,15 @@ static void main_window_load(Window *window) {
   
   // Date text
   Date_Layer = text_layer_create(GRect(5, 63, 134 /* width */, 30 /* height */));
-  text_layer_set_text_color(Date_Layer, textcolor_date);
+  text_layer_set_text_color(Date_Layer, textcolor);
   text_layer_set_background_color(Date_Layer, GColorClear );
   text_layer_set_font(Date_Layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
   text_layer_set_text_alignment(Date_Layer, GTextAlignmentCenter);
   layer_add_child(main_window_layer, text_layer_get_layer(Date_Layer));
   
   // Calendar Week
-  /*
-  cwLayer = text_layer_create(GRect(100, 70, 40, 30)); 
-  text_layer_set_text_color(cwLayer, textcolor_cal);
-  text_layer_set_background_color(cwLayer, GColorClear );
-  text_layer_set_font(cwLayer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
-  text_layer_set_text_alignment(cwLayer, GTextAlignmentRight);
-  layer_add_child(main_window_layer, text_layer_get_layer(cwLayer));
-  */
   cwLayer = text_layer_create(GRect(72, 135, 64, 20)); //64 = label_width = 144-72-2*4 = display_width - display_width/2 - 2*Space
-  text_layer_set_text_color(cwLayer, textcolor_cal);
+  text_layer_set_text_color(cwLayer, textcolor);
   text_layer_set_background_color(cwLayer, GColorClear );
   text_layer_set_font(cwLayer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
   text_layer_set_text_alignment(cwLayer, GTextAlignmentLeft);
@@ -1885,8 +2101,8 @@ static void main_window_load(Window *window) {
   set_cwLayer_size();
   
   // Moon phase
-  moonLayer_IMG = text_layer_create(GRect(3, 18, 33, 33));
-  text_layer_set_text_color(moonLayer_IMG, textcolor_moon);
+  moonLayer_IMG = text_layer_create(GRect(51, 18, 33, 33));
+  text_layer_set_text_color(moonLayer_IMG, textcolor);
   text_layer_set_background_color(moonLayer_IMG, GColorClear);
   text_layer_set_font(moonLayer_IMG, pFontMoon);
   text_layer_set_text_alignment(moonLayer_IMG, GTextAlignmentCenter);
@@ -1896,28 +2112,27 @@ static void main_window_load(Window *window) {
   
   // Create temperature Layer
   weather_layer_1_temp = text_layer_create(GRect(50, 10, 94, 30));
-  //weather_layer_1_temp = text_layer_create(GRect(0, 10, 144, 30));
   text_layer_set_background_color(weather_layer_1_temp, GColorClear);
-  text_layer_set_text_color(weather_layer_1_temp, textcolor_weather);
+  text_layer_set_text_color(weather_layer_1_temp, textcolor);
   text_layer_set_text_alignment(weather_layer_1_temp, GTextAlignmentRight);
   text_layer_set_text(weather_layer_1_temp, "---");
   text_layer_set_font(weather_layer_1_temp, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD)); //FONT_KEY_BITHAM_30_BLACK
 	layer_add_child(main_window_layer, text_layer_get_layer(weather_layer_1_temp));
   
   // Create location name Layer
-  weather_layer_3_location = text_layer_create(GRect(3, -1, 104, 17));
+  weather_layer_3_location = text_layer_create(GRect(0, -1, 110, 17));
   text_layer_set_background_color(weather_layer_3_location, GColorClear);
-  text_layer_set_text_color(weather_layer_3_location, textcolor_location);
+  text_layer_set_text_color(weather_layer_3_location, textcolor);
   text_layer_set_text_alignment(weather_layer_3_location, GTextAlignmentCenter);
   text_layer_set_text(weather_layer_3_location, "---" /*"Loading Weather ..."*/);
-  text_layer_set_font(weather_layer_3_location, fonts_get_system_font(FONT_KEY_GOTHIC_14));
+  text_layer_set_font(weather_layer_3_location, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
 	layer_add_child(main_window_layer, text_layer_get_layer(weather_layer_3_location));
   
   // Create last updated Layer
-  weather_layer_4_last_update = text_layer_create(GRect(104, -1, 40, 17));
+  weather_layer_4_last_update = text_layer_create(GRect(111, -1, 33, 17));
   text_layer_set_background_color(weather_layer_4_last_update, GColorClear);
-  text_layer_set_text_color(weather_layer_4_last_update, textcolor_last_update);
-  text_layer_set_text_alignment(weather_layer_4_last_update, GTextAlignmentRight);
+  text_layer_set_text_color(weather_layer_4_last_update, textcolor);
+  text_layer_set_text_alignment(weather_layer_4_last_update, GTextAlignmentCenter);
   text_layer_set_text(weather_layer_4_last_update, "---");
   text_layer_set_font(weather_layer_4_last_update, fonts_get_system_font(FONT_KEY_GOTHIC_14));
 	layer_add_child(main_window_layer, text_layer_get_layer(weather_layer_4_last_update));
@@ -1925,7 +2140,7 @@ static void main_window_load(Window *window) {
   // Create String_1 Layer
   weather_layer_7_string_1 = text_layer_create(GRect(86, 54-15, 144-86-2, 30)); //TODO
   text_layer_set_background_color(weather_layer_7_string_1, GColorClear);
-  text_layer_set_text_color(weather_layer_7_string_1, textcolor_weather);
+  text_layer_set_text_color(weather_layer_7_string_1, textcolor);
   text_layer_set_text_alignment(weather_layer_7_string_1, GTextAlignmentCenter);
   text_layer_set_text(weather_layer_7_string_1, "---\n---");
   text_layer_set_font(weather_layer_7_string_1, fonts_get_system_font(FONT_KEY_GOTHIC_14));
@@ -1934,7 +2149,7 @@ static void main_window_load(Window *window) {
   // Create String_2 Layer
   weather_layer_7_string_2 = text_layer_create(GRect(0, 50, 84, 17)); //TODO
   text_layer_set_background_color(weather_layer_7_string_2, GColorClear);
-  text_layer_set_text_color(weather_layer_7_string_2, textcolor_weather);
+  text_layer_set_text_color(weather_layer_7_string_2, textcolor);
   text_layer_set_text_alignment(weather_layer_7_string_2, GTextAlignmentCenter);
   text_layer_set_text(weather_layer_7_string_2, "--- / ---");
   text_layer_set_font(weather_layer_7_string_2, fonts_get_system_font(FONT_KEY_GOTHIC_14));
@@ -1943,7 +2158,7 @@ static void main_window_load(Window *window) {
   // Create TimeZone Layer
   text_TimeZone_layer = text_layer_create(GRect(5, 132, 100, 20)); //TODO
   text_layer_set_background_color(text_TimeZone_layer, GColorClear);
-  text_layer_set_text_color(text_TimeZone_layer, textcolor_tz);
+  text_layer_set_text_color(text_TimeZone_layer, textcolor);
   text_layer_set_text_alignment(text_TimeZone_layer, GTextAlignmentLeft);
   text_layer_set_text(text_TimeZone_layer, " ");
   text_layer_set_font(text_TimeZone_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
@@ -1951,16 +2166,22 @@ static void main_window_load(Window *window) {
     
   // --- END ---
   
-  
-  
-  
-  #ifdef PBL_SDK_3 //only on SDK 2.x
-    //fill the window with an InverterLayer (must be created as the last element)
-    invert_all_layer = inverter_layer_create(GRect(0, 0, 144, 168));
-    layer_set_hidden(inverter_layer_get_layer(invert_all_layer), InvertColors != 1);
-    layer_add_child(main_window_layer, inverter_layer_get_layer(invert_all_layer));
+  #ifdef PBL_SDK_2
+    /*
+    s_warning_color_location = inverter_layer_create(GRect(0, 0, 110, 16));
+    layer_set_hidden(inverter_layer_get_layer(s_warning_color_location), true);
+    layer_add_child(main_window_layer, inverter_layer_get_layer(s_warning_color_location));
+    
+    s_warning_color_last_updated = inverter_layer_create(GRect(111, 0, 33, 16));
+    layer_set_hidden(inverter_layer_get_layer(s_warning_color_last_updated), true);
+    layer_add_child(main_window_layer, inverter_layer_get_layer(s_warning_color_last_updated));
+    */
+    s_warning_color_battery = inverter_layer_create(GRect(0, 17, 47, 33));
+    layer_set_hidden(inverter_layer_get_layer(s_warning_color_battery), true);
+    layer_add_child(main_window_layer, inverter_layer_get_layer(s_warning_color_battery));
   #endif
   
+  apply_color_profile();
   
   DisplayData();
   
@@ -1993,11 +2214,11 @@ static void main_window_load(Window *window) {
   // Open AppMessage
   //APP_LOG(APP_LOG_LEVEL_INFO, "app_message_inbox_size_maximum()  = %d", (int)app_message_inbox_size_maximum());
   //APP_LOG(APP_LOG_LEVEL_INFO, "app_message_outbox_size_maximum() = %d", (int)app_message_outbox_size_maximum());
-  #ifdef PBL_SDK_3
-    app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
-  #else
+  #ifdef PBL_SDK_2
     //app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
-    app_message_open(500, 10); //in version 12.0, (200, 10) would be ok too. 500 just for security. Maybe 150 would also be OK. But not less!
+    app_message_open(200, 10); //in version 12.0, (200, 10) would be ok too. 500 just for security. Maybe 150 would also be OK. But not less!
+  #else
+    app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
   #endif
   
   
@@ -2015,11 +2236,17 @@ static void main_window_unload(Window *window) {
   
   SaveData();
   
+  // --- Event Handlers ---
+  tick_timer_service_unsubscribe();
+  battery_state_service_unsubscribe();
+  bluetooth_connection_service_unsubscribe();
+  
   
   // --- Background Image ---
   layer_remove_from_parent(bitmap_layer_get_layer(background_layer));
   bitmap_layer_destroy(background_layer);
   gbitmap_destroy(background_image);
+  layer_destroy(background_paint_layer);
   
   layer_destroy(s_image_layer_hour_1);
   layer_destroy(s_image_layer_hour_2);
@@ -2029,8 +2256,11 @@ static void main_window_unload(Window *window) {
   layer_destroy(s_image_layer_second_2);
   
   
-  #ifndef PBL_SDK_3 //only on SDK 2.x
+  #ifdef PBL_SDK_2 //only on SDK 2.x
     inverter_layer_destroy(s_battery_layer_fill);
+    //inverter_layer_destroy(s_warning_color_location);
+    //inverter_layer_destroy(s_warning_color_last_updated);
+    inverter_layer_destroy(s_warning_color_battery);
   #else
     effect_layer_destroy(s_battery_layer_fill);
     layer_destroy(s_battery_layer_paint_bat);
@@ -2056,15 +2286,6 @@ static void main_window_unload(Window *window) {
   text_layer_destroy(text_TimeZone_layer);
   
   // --- END ---
-  
-  #ifdef PBL_SDK_3
-    inverter_layer_destroy(invert_all_layer);
-  #endif
-  
-  // --- Event Handlers ---
-  tick_timer_service_unsubscribe();
-  battery_state_service_unsubscribe();
-  bluetooth_connection_service_unsubscribe();
 }
 
 static void init() {

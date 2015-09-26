@@ -170,7 +170,7 @@ void effect_invert_color(GContext* ctx,  GRect position, void* param) {
   
   for (int y = 0; y < position.size.h; y++)
      for (int x = 0; x < position.size.w; x++)
-        #ifdef PBL_COLOR // on Basalt simple doing NOT on entire returned byte/pixel
+        #ifdef PBL_COLOR 
           if ((get_pixel(bitmap_data, bytes_per_row, y + position.origin.y, x + position.origin.x) & 0b00111111) != BkgColor){
             set_pixel(bitmap_data, bytes_per_row, y + position.origin.y, x + position.origin.x, BkgColor);
           } else {

@@ -250,14 +250,16 @@ function locationError(err) {
 function SendToPebble(pos, use_default) {
   var url;
   var url_forecast;
+  
+  var multiplier = 10000;
+  var pos_lat = Math.round(multiplier*pos.coords.latitude)/multiplier;
+  var pos_lon = Math.round(multiplier*pos.coords.longitude)/multiplier;
+  console.log("pos_lat = " + pos_lat);
+  console.log("pos_lon = " + pos_lon);
+  
   // Construct URL
   console.log("conf.auto_loc = " + configuration.autodetect_loc);
   if ((use_default === 0) && (configuration.autodetect_loc)){
-    var multiplier = 10000;
-    var pos_lat = Math.round(multiplier*pos.coords.latitude)/multiplier;
-    var pos_lon = Math.round(multiplier*pos.coords.longitude)/multiplier;
-    console.log("pos_lat = " + pos_lat);
-    console.log("pos_lon = " + pos_lon);
     url = "http://api.openweathermap.org/data/2.5/weather?lat=" +
         pos_lat + "&lon=" + pos_lon + "&lang=" + configuration.lang_id;
     url_forecast = "http://api.openweathermap.org/data/2.5/forecast?lat=" +
@@ -300,292 +302,312 @@ function SendToPebble(pos, use_default) {
           
           //---------------------------------------------------------------------------------------------------
           
-          // Temperature in Kelvin requires adjustment
-          var temperature = Math.round((WeatherDataJSON.main.temp - 273.15));
-          console.log("Temperature is " + temperature);
-          var temp_min = Math.round((WeatherDataJSON.main.temp_min - 273.15));
-          console.log("Temp. MIN is " + temp_min);
-          var temp_max = Math.round((WeatherDataJSON.main.temp_max - 273.15));
-          console.log("Temp. MAX is " + temp_max);
-              
-        
-          // Conditions
-          var conditions = WeatherDataJSON.weather[0].description;
-          console.log("Conditions are " + conditions);
+          if (!WeatherDataJSON_error){
+            
+            // Temperature in Kelvin requires adjustment
+            var temperature = Math.round((WeatherDataJSON.main.temp - 273.15));
+            console.log("Temperature is " + temperature);
+            var temp_min = Math.round((WeatherDataJSON.main.temp_min - 273.15));
+            console.log("Temp. MIN is " + temp_min);
+            var temp_max = Math.round((WeatherDataJSON.main.temp_max - 273.15));
+            console.log("Temp. MAX is " + temp_max);
+                
           
-          var conditions_icon = OWMclimacon[WeatherDataJSON.weather[0].id].charCodeAt(0);
-          console.log("Conditions icon is " + conditions_icon);
-              
-              
-          var pressure = Math.round(WeatherDataJSON.main.pressure);
-          var pressure_unit = "hPa";
-          switch (configuration.pressure_unit){
-            case 1: 
-              pressure = Math.round(pressure/1.333);
-              pressure_unit = "mmHg";
-              break;
-            case 2:
-              pressure = Math.round(pressure/33.86389*100)/100;
-              pressure_unit = "inHg";
-              break;
-          }
-          console.log("Pressure is " + pressure + " " + pressure_unit);
-              
-          var humidity = Math.round(WeatherDataJSON.main.humidity);
-          console.log("Humidity is " + humidity);
-              
-          var speed_unit_conversion_factor = 1;
-          if (configuration.speed_unit === 0){
-            speed_unit_conversion_factor = 3.6; //m/s -> km/h
-          } else if (configuration.speed_unit == 1){
-            speed_unit_conversion_factor = 2.236; //m/s -> mph
-          }
-          var wind_speed = WeatherDataJSON.wind.speed*speed_unit_conversion_factor;
-          if (wind_speed < 10){
-            wind_speed = Math.round(wind_speed*10)/10;
-          } else {
-            wind_speed = Math.round(wind_speed);
-          }
-          var wind_speed_unit = "m/s";
-          if (configuration.speed_unit === 0) wind_speed_unit = "km/h";
-          if (configuration.speed_unit == 1) wind_speed_unit = "mph";
-          console.log("Wind Speed is " + wind_speed + " " + wind_speed_unit);
-              
-          var sunrise_unix = WeatherDataJSON.sys.sunrise;
-          var sunset_unix  = WeatherDataJSON.sys.sunset;
-          console.log("sunrise unix = "+sunrise_unix);
-          console.log("sunset  unix = "+sunset_unix);
-          var sunrise = timeConverter(Math.round(sunrise_unix));
-          var sunset  = timeConverter(Math.round(sunset_unix));
-          console.log("sunrise = " + sunrise);
-          console.log("sunset =  " + sunset);
-          //sunrise_unix = sunrise_unix - utc_offset;
-          //sunset_unix  = sunset_unix  - utc_offset;
-          
-          var time_of_last_data = Number(WeatherDataJSON.dt);
-          console.log("time_of_last_data = "+time_of_last_data);
-        
-          // Location:
-          var location_name = WeatherDataJSON.name;
-          if (use_default){
-            location_name = "*" + location_name + "*";
-          }
-          console.log("City name is " + location_name);
-          console.log("LATITUDE  is " + pos.coords.latitude);
-          console.log("LONGITUDE is " + pos.coords.longitude);
-        
-          // TIME:
-          console.log("UTC Offset is " + utc_offset);
-          
-          // Get Min/Max temp. from forecast:
-          console.log("forecast_list has " + ForecastDataJSON.cnt + " elements");
-          var Forecast = {
-            TempMin: 10000, // in Kelvin
-            TempMax:     0  // in Kelvin
-          };
-          if (!ForecastDataJSON_error){
-            var i;
-            for (i = 0; i < Math.min(ForecastDataJSON.cnt, 8); i++) { // 8 entries means 24 hours for 3 hour forecast
-              console.log("forecast_list[" + i + "].dt_text = "+ForecastDataJSON.list[i].dt_txt+"; T = " + (ForecastDataJSON.list[i].main.temp - 273.15) + " C");
-              Forecast.TempMin = Math.min(ForecastDataJSON.list[i].main.temp, Forecast.TempMin);
-              Forecast.TempMax = Math.max(ForecastDataJSON.list[i].main.temp, Forecast.TempMax);
+            // Conditions
+            var conditions = WeatherDataJSON.weather[0].description;
+            console.log("Conditions are " + conditions);
+            
+            var conditions_icon = OWMclimacon[WeatherDataJSON.weather[0].id].charCodeAt(0);
+            console.log("Conditions icon is " + conditions_icon);
+                
+                
+            var pressure = Math.round(WeatherDataJSON.main.pressure);
+            var pressure_unit = "hPa";
+            switch (configuration.pressure_unit){
+              case 1: 
+                pressure = Math.round(pressure/1.333);
+                pressure_unit = "mmHg";
+                break;
+              case 2:
+                pressure = Math.round(pressure/33.86389*100)/100;
+                pressure_unit = "inHg";
+                break;
             }
-          }
-          console.log("ForecastTempMin = "+Forecast.TempMin);
-          console.log("ForecastTempMax = "+Forecast.TempMax);
+            console.log("Pressure is " + pressure + " " + pressure_unit);
+                
+            var humidity = Math.round(WeatherDataJSON.main.humidity);
+            console.log("Humidity is " + humidity);
+                
+            var speed_unit_conversion_factor = 1;
+            if (configuration.speed_unit === 0){
+              speed_unit_conversion_factor = 3.6; //m/s -> km/h
+            } else if (configuration.speed_unit == 1){
+              speed_unit_conversion_factor = 2.236; //m/s -> mph
+            }
+            var wind_speed = WeatherDataJSON.wind.speed*speed_unit_conversion_factor;
+            if (wind_speed < 10){
+              wind_speed = Math.round(wind_speed*10)/10;
+            } else {
+              wind_speed = Math.round(wind_speed);
+            }
+            var wind_speed_unit = "m/s";
+            if (configuration.speed_unit === 0) wind_speed_unit = "km/h";
+            if (configuration.speed_unit == 1) wind_speed_unit = "mph";
+            console.log("Wind Speed is " + wind_speed + " " + wind_speed_unit);
+                
+            var sunrise_unix = WeatherDataJSON.sys.sunrise;
+            var sunset_unix  = WeatherDataJSON.sys.sunset;
+            console.log("sunrise unix = "+sunrise_unix);
+            console.log("sunset  unix = "+sunset_unix);
+            var sunrise = timeConverter(Math.round(sunrise_unix));
+            var sunset  = timeConverter(Math.round(sunset_unix));
+            console.log("sunrise = " + sunrise);
+            console.log("sunset =  " + sunset);
+            //sunrise_unix = sunrise_unix - utc_offset;
+            //sunset_unix  = sunset_unix  - utc_offset;
+            
+            var time_of_last_data = Number(WeatherDataJSON.dt);
+            console.log("time_of_last_data = "+time_of_last_data);
           
-          
-              
-          var weather_Line_1 = "";
-          var weather_Line_2 = "";
-          var weather_Line_3 = "";
-          var weather_Line_4 = "";
-          
-          
-          switch (configuration.weatherLine1){
-            case 1:
-              weather_Line_1 = conditions;
-              break;
-            case 2:
-              weather_Line_1 = wind_speed + " " + wind_speed_unit;
-              break;
-            case 3:
-              weather_Line_1 = humidity + " %";
-              break;
-            case 4:
-              weather_Line_1 = pressure + " " + pressure_unit;
-              break;
-            case 5:
-              if ((Forecast.TempMin == 10000) || (Forecast.TempMax === 0)){
-                weather_Line_1 = " --/-- ";
-              } else {
-                if (configuration.degree_f){
-                  weather_Line_1 = Math.round((Forecast.TempMax-273.15)*1.8+32) + "°/" + Math.round((Forecast.TempMin-273.15)*1.8+32) + "°F";
-                } else {
-                  weather_Line_1 = Math.round((Forecast.TempMax-273.15)) + "°/" + Math.round((Forecast.TempMin-273.15)) + "°C";
-                  //weather_Line_1 = Math.round((Forecast.TempMax-273.15)) + "/" + Math.round((Forecast.TempMin-273.15)) + "C";
-                }
+            // Location:
+            var location_name = WeatherDataJSON.name;
+            var warn_location = 0;
+            if ((configuration.autodetect_loc) && (use_default)){ //tried autodection of location, but could not get the lat long values from phone, so used default location set by the user.
+              warn_location = 1;
+              console.log("Tried autodection of location, but could not get the lat long values from phone.");
+            } 
+            if ((configuration.autodetect_loc === 0) && (use_default === 0)){ //detected location, but used user input
+              console.log("Could autodect location, but used user input instead.");
+              console.log(" |lat_autodetect - user_lat| = " + Math.abs(WeatherDataJSON.coord.lat - pos_lat));
+              console.log(" |lon_autodetect - user_lon| = " + Math.abs(WeatherDataJSON.coord.lon - pos_lon));
+              console.log("pos_lat                   = " + pos_lat);
+              console.log("WeatherDataJSON.coord.lat = " + WeatherDataJSON.coord.lat);
+              console.log("pos_lon                   = " + pos_lon);
+              console.log("WeatherDataJSON.coord.lon = " + WeatherDataJSON.coord.lon);
+              if ((Math.abs(WeatherDataJSON.coord.lat - pos_lat) > 0.3) && (Math.abs(WeatherDataJSON.coord.lon - pos_lon) > 0.5)){
+                console.log("User input location differs from autodeteced location.");
+                warn_location = 1;
               }
-              break;
-          }
-          console.log("weather_Line_1 = " + (weather_Line_1.replace('°', ' ')).replace('°', ' '));
+            }
+            console.log("City name is " + location_name);
+            console.log("LATITUDE  is " + pos.coords.latitude);
+            console.log("LONGITUDE is " + pos.coords.longitude);
+            console.log("warn_location = " + warn_location);
           
-          
-          
-          switch (configuration.weatherLine2){
-            case 1:
-              weather_Line_2 = conditions;
-              break;
-            case 2:
-              weather_Line_2 = wind_speed + " " + wind_speed_unit;
-              break;
-            case 3:
-              weather_Line_2 = humidity + " %";
-              break;
-            case 4:
-              weather_Line_2 = pressure + " " + pressure_unit;
-              break;
-            case 5:
-              if ((Forecast.TempMin == 10000) || (Forecast.TempMax === 0)){
-                weather_Line_2 = " --/-- ";
-              } else {
-                if (configuration.degree_f){
-                  weather_Line_2 = Math.round((Forecast.TempMax-273.15)*1.8+32) + "°/" + Math.round((Forecast.TempMin-273.15)*1.8+32) + "°F";
-                } else {
-                  weather_Line_2 = Math.round((Forecast.TempMax-273.15)) + "°/" + Math.round((Forecast.TempMin-273.15)) + "°C";
-                }
+            // TIME:
+            console.log("UTC Offset is " + utc_offset);
+            
+            // Get Min/Max temp. from forecast:
+            console.log("forecast_list has " + ForecastDataJSON.cnt + " elements");
+            var Forecast = {
+              TempMin: 10000, // in Kelvin
+              TempMax:     0  // in Kelvin
+            };
+            if (!ForecastDataJSON_error){
+              var i;
+              for (i = 0; i < Math.min(ForecastDataJSON.cnt, 8); i++) { // 8 entries means 24 hours for 3 hour forecast
+                console.log("forecast_list[" + i + "].dt_text = "+ForecastDataJSON.list[i].dt_txt+"; T = " + (ForecastDataJSON.list[i].main.temp - 273.15) + " C");
+                Forecast.TempMin = Math.min(ForecastDataJSON.list[i].main.temp, Forecast.TempMin);
+                Forecast.TempMax = Math.max(ForecastDataJSON.list[i].main.temp, Forecast.TempMax);
               }
-              break;
-          }
-          console.log("weather_Line_2 = " + (weather_Line_2.replace('°', ' ')).replace('°', ' '));
-          
-          
-          
-          switch (configuration.weatherLine3){
-            case 1:
-              weather_Line_3 = conditions;
-              break;
-            case 2:
-              weather_Line_3 = wind_speed + " " + wind_speed_unit;
-              break;
-            case 3:
-              weather_Line_3 = humidity + " %";
-              break;
-            case 4:
-              weather_Line_3 = pressure + " " + pressure_unit;
-              break;
-            case 5:
-              if ((Forecast.TempMin == 10000) || (Forecast.TempMax === 0)){
-                weather_Line_3 = " --/-- ";
-              } else {
-                if (configuration.degree_f){
-                  weather_Line_3 = Math.round((Forecast.TempMax-273.15)*1.8+32) + "°/" + Math.round((Forecast.TempMin-273.15)*1.8+32) + "°F";
+            }
+            console.log("ForecastTempMin = "+Forecast.TempMin);
+            console.log("ForecastTempMax = "+Forecast.TempMax);
+            
+            
+                
+            var weather_Line_1 = "";
+            var weather_Line_2 = "";
+            var weather_Line_3 = "";
+            var weather_Line_4 = "";
+            
+            
+            switch (configuration.weatherLine1){
+              case 1:
+                weather_Line_1 = conditions;
+                break;
+              case 2:
+                weather_Line_1 = wind_speed + " " + wind_speed_unit;
+                break;
+              case 3:
+                weather_Line_1 = humidity + " %";
+                break;
+              case 4:
+                weather_Line_1 = pressure + " " + pressure_unit;
+                break;
+              case 5:
+                if ((Forecast.TempMin == 10000) || (Forecast.TempMax === 0)){
+                  weather_Line_1 = " --/-- ";
                 } else {
-                  weather_Line_3 = Math.round((Forecast.TempMax-273.15)) + "°/" + Math.round((Forecast.TempMin-273.15)) + "°C";
+                  if (configuration.degree_f){
+                    weather_Line_1 = Math.round((Forecast.TempMax-273.15)*1.8+32) + "°/" + Math.round((Forecast.TempMin-273.15)*1.8+32) + "°F";
+                  } else {
+                    weather_Line_1 = Math.round((Forecast.TempMax-273.15)) + "°/" + Math.round((Forecast.TempMin-273.15)) + "°C";
+                    //weather_Line_1 = Math.round((Forecast.TempMax-273.15)) + "/" + Math.round((Forecast.TempMin-273.15)) + "C";
+                  }
                 }
-              }
-              break;
-          }
-          console.log("weather_Line_3 = " + (weather_Line_3.replace('°', ' ')).replace('°', ' '));
-          
-          
-          
-          switch (configuration.weatherLine4){
-            case 1:
-              weather_Line_4 = conditions;
-              break;
-            case 2:
-              weather_Line_4 = wind_speed + " " + wind_speed_unit;
-              break;
-            case 3:
-              weather_Line_4 = humidity + " %";
-              break;
-            case 4:
-              weather_Line_4 = pressure + " " + pressure_unit;
-              break;
-            case 5:
-              if ((Forecast.TempMin == 10000) || (Forecast.TempMax === 0)){
-                weather_Line_4 = " --/-- ";
-              } else {
-                if (configuration.degree_f){
-                  weather_Line_4 = Math.round((Forecast.TempMax-273.15)*1.8+32) + "°/" + Math.round((Forecast.TempMin-273.15)*1.8+32) + "°F";
+                break;
+            }
+            console.log("weather_Line_1 = " + (weather_Line_1.replace('°', ' ')).replace('°', ' '));
+            
+            
+            
+            switch (configuration.weatherLine2){
+              case 1:
+                weather_Line_2 = conditions;
+                break;
+              case 2:
+                weather_Line_2 = wind_speed + " " + wind_speed_unit;
+                break;
+              case 3:
+                weather_Line_2 = humidity + " %";
+                break;
+              case 4:
+                weather_Line_2 = pressure + " " + pressure_unit;
+                break;
+              case 5:
+                if ((Forecast.TempMin == 10000) || (Forecast.TempMax === 0)){
+                  weather_Line_2 = " --/-- ";
                 } else {
-                  weather_Line_4 = Math.round((Forecast.TempMax-273.15)) + "°/" + Math.round((Forecast.TempMin-273.15)) + "°C";
+                  if (configuration.degree_f){
+                    weather_Line_2 = Math.round((Forecast.TempMax-273.15)*1.8+32) + "°/" + Math.round((Forecast.TempMin-273.15)*1.8+32) + "°F";
+                  } else {
+                    weather_Line_2 = Math.round((Forecast.TempMax-273.15)) + "°/" + Math.round((Forecast.TempMin-273.15)) + "°C";
+                  }
                 }
-              }
-              break;
-          }
-          console.log("weather_Line_4 = " + (weather_Line_4.replace('°', ' ')).replace('°', ' '));
+                break;
+            }
+            console.log("weather_Line_2 = " + (weather_Line_2.replace('°', ' ')).replace('°', ' '));
+            
+            
+            
+            switch (configuration.weatherLine3){
+              case 1:
+                weather_Line_3 = conditions;
+                break;
+              case 2:
+                weather_Line_3 = wind_speed + " " + wind_speed_unit;
+                break;
+              case 3:
+                weather_Line_3 = humidity + " %";
+                break;
+              case 4:
+                weather_Line_3 = pressure + " " + pressure_unit;
+                break;
+              case 5:
+                if ((Forecast.TempMin == 10000) || (Forecast.TempMax === 0)){
+                  weather_Line_3 = " --/-- ";
+                } else {
+                  if (configuration.degree_f){
+                    weather_Line_3 = Math.round((Forecast.TempMax-273.15)*1.8+32) + "°/" + Math.round((Forecast.TempMin-273.15)*1.8+32) + "°F";
+                  } else {
+                    weather_Line_3 = Math.round((Forecast.TempMax-273.15)) + "°/" + Math.round((Forecast.TempMin-273.15)) + "°C";
+                  }
+                }
+                break;
+            }
+            console.log("weather_Line_3 = " + (weather_Line_3.replace('°', ' ')).replace('°', ' '));
+            
+            
+            
+            switch (configuration.weatherLine4){
+              case 1:
+                weather_Line_4 = conditions;
+                break;
+              case 2:
+                weather_Line_4 = wind_speed + " " + wind_speed_unit;
+                break;
+              case 3:
+                weather_Line_4 = humidity + " %";
+                break;
+              case 4:
+                weather_Line_4 = pressure + " " + pressure_unit;
+                break;
+              case 5:
+                if ((Forecast.TempMin == 10000) || (Forecast.TempMax === 0)){
+                  weather_Line_4 = " --/-- ";
+                } else {
+                  if (configuration.degree_f){
+                    weather_Line_4 = Math.round((Forecast.TempMax-273.15)*1.8+32) + "°/" + Math.round((Forecast.TempMin-273.15)*1.8+32) + "°F";
+                  } else {
+                    weather_Line_4 = Math.round((Forecast.TempMax-273.15)) + "°/" + Math.round((Forecast.TempMin-273.15)) + "°C";
+                  }
+                }
+                break;
+            }
+            console.log("weather_Line_4 = " + (weather_Line_4.replace('°', ' ')).replace('°', ' '));
+            
+            
+            
           
+            var weather_string_1 = weather_Line_1 + "\n" + weather_Line_2;
+            console.log("weather_string_1 is: \n" + (weather_string_1.replace('°', ' ')).replace('°', ' ') +'\n');
+            var weather_string_2 = weather_Line_3 + " / " + weather_Line_4; //TODO: what should be on this string?
+            if (configuration.weatherLine3 === 0) weather_string_2 = weather_Line_4;
+            if (configuration.weatherLine4 === 0) weather_string_2 = weather_Line_3;
+            console.log("weather_string_2 is: \n" + (weather_string_2.replace('°', ' ')).replace('°', ' ') +'\n');
           
+            if (CLOUDPEBBLE) {
+              weather_string_1 = (weather_string_1.replace('°', '__')).replace('°', '__');
+              weather_string_2 = (weather_string_2.replace('°', '__')).replace('°', '__');
+            }
+            
+            // Assemble dictionary using our keys
+            var dictionary = {
+              "KEY_LOCATION_NAME": location_name,
+              "KEY_LOCATION_LAT": Math.round(pos.coords.latitude*1000000),
+              "KEY_LOCATION_LON": Math.round(pos.coords.longitude*1000000),
+              "KEY_WEATHER_TEMP": temperature,
+              "KEY_WEATHER_STRING_1": weather_string_1,
+              "KEY_WEATHER_STRING_2": weather_string_2,
+              "KEY_WEATHER_ICON": conditions_icon,
+              "KEY_TIME_UTC_OFFSET": utc_offset,
+              "KEY_TIME_ZONE_NAME": getTimeZone(),
+              "KEY_SUN_RISE": sunrise,
+              "KEY_SUN_SET": sunset,
+              "KEY_SUN_RISE_UNIX": sunrise_unix,
+              "KEY_SUN_SET_UNIX": sunset_unix, //both converted to local time zone
+              "KEY_WEATHER_DATA_TIME": time_of_last_data,
+              "KEY_WARN_LOCATION": warn_location
+            };
           
-        
-          var weather_string_1 = weather_Line_1 + "\n" + weather_Line_2;
-          console.log("weather_string_1 is: \n" + (weather_string_1.replace('°', ' ')).replace('°', ' ') +'\n');
-          var weather_string_2 = weather_Line_3 + " / " + weather_Line_4; //TODO: what should be on this string?
-          if (configuration.weatherLine3 === 0) weather_string_2 = weather_Line_4;
-          if (configuration.weatherLine4 === 0) weather_string_2 = weather_Line_3;
-          console.log("weather_string_2 is: \n" + (weather_string_2.replace('°', ' ')).replace('°', ' ') +'\n');
-        
-          if (CLOUDPEBBLE) {
-            weather_string_1 = (weather_string_1.replace('°', '__')).replace('°', '__');
-            weather_string_2 = (weather_string_2.replace('°', '__')).replace('°', '__');
-          }
-          
-          // Assemble dictionary using our keys
-          var dictionary = {
-            "KEY_LOCATION_NAME": location_name,
-            "KEY_LOCATION_LAT": Math.round(pos.coords.latitude*1000000),
-            "KEY_LOCATION_LON": Math.round(pos.coords.longitude*1000000),
-            "KEY_WEATHER_TEMP": temperature,
-            "KEY_WEATHER_STRING_1": weather_string_1,
-            "KEY_WEATHER_STRING_2": weather_string_2,
-            "KEY_WEATHER_ICON": conditions_icon,
-            "KEY_TIME_UTC_OFFSET": utc_offset,
-            "KEY_TIME_ZONE_NAME": getTimeZone(),
-            "KEY_SUN_RISE": sunrise,
-            "KEY_SUN_SET": sunset,
-            "KEY_SUN_RISE_UNIX": sunrise_unix,
-            "KEY_SUN_SET_UNIX": sunset_unix, //both converted to local time zone
-            "KEY_WEATHER_DATA_TIME": time_of_last_data
-          };
-        
-          // Send to Pebble
-          
-          console.log("Sending Weather Info to Pebble ...");
-          Pebble.sendAppMessage(dictionary,
-                                function(e) {
-                                  console.log("Weather info sent to Pebble successfully!");
-                                },
-                                function(e) {
-                                  console.log("Error sending weather info to Pebble!");
-                                }
-                               );
-          
-          //var dictionary2 = {
-            /*"KEY_LOCATION_NAME": location_name,
-            "KEY_LOCATION_LAT": Math.round(pos.coords.latitude*1000000),
-            "KEY_LOCATION_LON": Math.round(pos.coords.longitude*1000000),
-            "KEY_WEATHER_TEMP": temperature,
-            */ //"KEY_WEATHER_STRING_1": weather_string_1,
-          //  "KEY_WEATHER_STRING_2": weather_string_2
-          /*,
-            "KEY_TIME_UTC_OFFSET": utc_offset,
-            "KEY_TIME_ZONE_NAME": getTimeZone(),
-            "KEY_SUN_RISE": sunrise,
-            "KEY_SUN_SET": sunset*/
-          //};
-          /*
-          console.log("Sending Weather Info to Pebble (2) ...");
-          Pebble.sendAppMessage(dictionary2,
-                                function(e) {
-                                  console.log("Weather info sent to Pebble successfully!");
-                                },
-                                function(e) {
-                                  console.log("Error sending weather info to Pebble!");
-                                }
-                               );
-            */                   
+            // Send to Pebble
+            
+            console.log("Sending Weather Info to Pebble ...");
+            Pebble.sendAppMessage(dictionary,
+                                  function(e) {
+                                    console.log("Weather info sent to Pebble successfully!");
+                                  },
+                                  function(e) {
+                                    console.log("Error sending weather info to Pebble!");
+                                  }
+                                 );
+            
+            //var dictionary2 = {
+              /*"KEY_LOCATION_NAME": location_name,
+              "KEY_LOCATION_LAT": Math.round(pos.coords.latitude*1000000),
+              "KEY_LOCATION_LON": Math.round(pos.coords.longitude*1000000),
+              "KEY_WEATHER_TEMP": temperature,
+              */ //"KEY_WEATHER_STRING_1": weather_string_1,
+            //  "KEY_WEATHER_STRING_2": weather_string_2
+            /*,
+              "KEY_TIME_UTC_OFFSET": utc_offset,
+              "KEY_TIME_ZONE_NAME": getTimeZone(),
+              "KEY_SUN_RISE": sunrise,
+              "KEY_SUN_SET": sunset*/
+            //};
+            /*
+            console.log("Sending Weather Info to Pebble (2) ...");
+            Pebble.sendAppMessage(dictionary2,
+                                  function(e) {
+                                    console.log("Weather info sent to Pebble successfully!");
+                                  },
+                                  function(e) {
+                                    console.log("Error sending weather info to Pebble!");
+                                  }
+                                 );
+              */                   
+          } //end: if (!WeatherDataJSON_error)
           var date = new Date();
           console.log("Time is " + date);
           
