@@ -4,8 +4,8 @@
 #include "config.h"
 #include "keys.h"
 #include "mooncalc.h"
-#include "math.h"
 #ifdef PBL_SDK_3
+  #include "math.h"
   #include "effect_layer.h"
 #endif
 
@@ -26,7 +26,9 @@ static int digit_s_2 = 0;
 
 static GBitmap *background_image;
 static BitmapLayer *background_layer;
-static Layer *background_paint_layer;
+#ifdef PBL_COLOR
+  static Layer *background_paint_layer;
+#endif
 
 static char *sys_locale;
 
@@ -1410,7 +1412,6 @@ static void layer_update_callback_second_2(Layer *layer, GContext* ctx) {
 
 #ifdef PBL_COLOR
 static void layer_update_callback_paint_bat(Layer *layer, GContext* ctx) {
-  //bkgrcolor_bat = GColorBlack;
   graphics_context_set_fill_color(ctx, bkgrcolor_bat);
   graphics_context_set_stroke_color(ctx, bkgrcolor_bat);
   GRect layer_bounds = layer_get_bounds(s_battery_layer_paint_bat);
@@ -2167,15 +2168,6 @@ static void main_window_load(Window *window) {
   // --- END ---
   
   #ifdef PBL_SDK_2
-    /*
-    s_warning_color_location = inverter_layer_create(GRect(0, 0, 110, 16));
-    layer_set_hidden(inverter_layer_get_layer(s_warning_color_location), true);
-    layer_add_child(main_window_layer, inverter_layer_get_layer(s_warning_color_location));
-    
-    s_warning_color_last_updated = inverter_layer_create(GRect(111, 0, 33, 16));
-    layer_set_hidden(inverter_layer_get_layer(s_warning_color_last_updated), true);
-    layer_add_child(main_window_layer, inverter_layer_get_layer(s_warning_color_last_updated));
-    */
     s_warning_color_battery = inverter_layer_create(GRect(0, 17, 47, 33));
     layer_set_hidden(inverter_layer_get_layer(s_warning_color_battery), true);
     layer_add_child(main_window_layer, inverter_layer_get_layer(s_warning_color_battery));
@@ -2246,7 +2238,9 @@ static void main_window_unload(Window *window) {
   layer_remove_from_parent(bitmap_layer_get_layer(background_layer));
   bitmap_layer_destroy(background_layer);
   gbitmap_destroy(background_image);
-  layer_destroy(background_paint_layer);
+  #ifdef PBL_COLOR
+    layer_destroy(background_paint_layer);
+  #endif
   
   layer_destroy(s_image_layer_hour_1);
   layer_destroy(s_image_layer_hour_2);
@@ -2258,8 +2252,6 @@ static void main_window_unload(Window *window) {
   
   #ifdef PBL_SDK_2 //only on SDK 2.x
     inverter_layer_destroy(s_battery_layer_fill);
-    //inverter_layer_destroy(s_warning_color_location);
-    //inverter_layer_destroy(s_warning_color_last_updated);
     inverter_layer_destroy(s_warning_color_battery);
   #else
     effect_layer_destroy(s_battery_layer_fill);

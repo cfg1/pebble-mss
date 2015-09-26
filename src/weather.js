@@ -282,10 +282,10 @@ function SendToPebble(pos, use_default) {
       var ForecastDataJSON_error = 0;
       try {
         ForecastDataJSON = JSON.parse(responseText);
-        console.log("successfully parsed retruned text of weather forecast.");
+        console.log("successfully parsed returned text of weather forecast.");
       } catch (e){
         ForecastDataJSON_error = 1;
-        console.log("could not parse retruned text of weather forecast: " + e);
+        console.log("could not parse returned text of weather forecast: " + e);
       }
         
       xhrRequest(url, 'GET', 
@@ -293,10 +293,10 @@ function SendToPebble(pos, use_default) {
           var WeatherDataJSON_error = 0;
           try {
             WeatherDataJSON = JSON.parse(responseText);
-            console.log("successfully parsed retruned text of weather data.");
+            console.log("successfully parsed returned text of weather data.");
           } catch (e){
             WeatherDataJSON_error = 1;
-            console.log("could not parse retruned text of weather data: " + e);
+            console.log("could not parse returned text of weather data: " + e);
           }
           
           
@@ -398,12 +398,12 @@ function SendToPebble(pos, use_default) {
             console.log("UTC Offset is " + utc_offset);
             
             // Get Min/Max temp. from forecast:
-            console.log("forecast_list has " + ForecastDataJSON.cnt + " elements");
             var Forecast = {
               TempMin: 10000, // in Kelvin
               TempMax:     0  // in Kelvin
             };
             if (!ForecastDataJSON_error){
+              console.log("forecast_list has " + ForecastDataJSON.cnt + " elements");
               var i;
               for (i = 0; i < Math.min(ForecastDataJSON.cnt, 8); i++) { // 8 entries means 24 hours for 3 hour forecast
                 console.log("forecast_list[" + i + "].dt_text = "+ForecastDataJSON.list[i].dt_txt+"; T = " + (ForecastDataJSON.list[i].main.temp - 273.15) + " C");
@@ -713,7 +713,7 @@ Pebble.addEventListener("showConfiguration",
   function(e) {
     //Load the remote config page
     
-    /* --> */ Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_m7s_config_v12.4.html");
+    /* --> */ Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_m7s_config_v12.5.html");
     
     //TODO: send some usefull values to the settings page (e. g. location, battery staistics etc.) by adding ?xxx to the URL
   }
