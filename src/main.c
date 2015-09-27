@@ -530,39 +530,39 @@ void DisplayData(void) {
   
   #ifdef PBL_COLOR
   if (ColorProfile > 1){
-    
+    GColor textcolor_weather_int;
     if (weather_TEMP >= 40){
-      textcolor_weather = GColorRed;  // >= 40°C
+      textcolor_weather_int = GColorRed;  // >= 40°C
     } else if (weather_TEMP >= 28){
-      textcolor_weather = GColorOrange; // 28-39°C
+      textcolor_weather_int = GColorOrange; // 28-39°C
     } else if (weather_TEMP >= 26){
-      textcolor_weather = GColorChromeYellow;  // 26-27°C
+      textcolor_weather_int = GColorChromeYellow;  // 26-27°C
     } else if (weather_TEMP >= 23){
-      textcolor_weather = GColorChromeYellow;      // 23-25°C
+      textcolor_weather_int = GColorChromeYellow;      // 23-25°C
     } else if (weather_TEMP >= 20){
-      textcolor_weather = GColorGreen;          // 20-22°C
+      textcolor_weather_int = GColorGreen;          // 20-22°C
     } else if (weather_TEMP >= 18){
-      textcolor_weather = GColorMalachite; // 18-19°C
+      textcolor_weather_int = GColorMalachite; // 18-19°C
     } else if (weather_TEMP >= 15){
-      textcolor_weather = GColorIslamicGreen;   // 15-17°C
+      textcolor_weather_int = GColorIslamicGreen;   // 15-17°C
     } else if (weather_TEMP >= 10){
-      textcolor_weather = GColorJaegerGreen;    // 10-14°C
+      textcolor_weather_int = GColorJaegerGreen;    // 10-14°C
     } else if (weather_TEMP >= 6){
-      textcolor_weather = GColorDarkGray;    // 6-9°C
+      textcolor_weather_int = GColorDarkGray;    // 6-9°C
     } else if (weather_TEMP >= 2){
-      textcolor_weather = GColorElectricBlue;           // 2-5°C
+      textcolor_weather_int = GColorElectricBlue;           // 2-5°C
     } else if (weather_TEMP >= -1){
-      textcolor_weather = GColorCyan;        // -1 - +1°C
+      textcolor_weather_int = GColorCyan;        // -1 - +1°C
     } else if (weather_TEMP >= -10){
-      textcolor_weather = GColorVividCerulean;  // -10 - -2°C
+      textcolor_weather_int = GColorVividCerulean;  // -10 - -2°C
     } else if (weather_TEMP >= -20){
-      textcolor_weather = GColorPictonBlue;       // -20 - -11°C
+      textcolor_weather_int = GColorPictonBlue;       // -20 - -11°C
     } else if (weather_TEMP >= -30){
-      textcolor_weather = GColorBlueMoon;           // -30 - -21°C
+      textcolor_weather_int = GColorBlueMoon;           // -30 - -21°C
     } else {
-      textcolor_weather = GColorCobaltBlue;     // < -30°C
+      textcolor_weather_int = GColorCobaltBlue;     // < -30°C
     }  
-    text_layer_set_text_color(weather_layer_1_temp, textcolor_weather);
+    text_layer_set_text_color(weather_layer_1_temp, textcolor_weather_int);
   }
   #endif
   
@@ -605,7 +605,8 @@ void DisplayData(void) {
 #ifdef PBL_COLOR
 static GColor get_weather_icon_color(int nr){
   if (ColorProfile == 0) return GColorWhite;
-  if (ColorProfile == 1) return GColorWhite;
+  if (gcolor_equal(background_color_moon, GColorWhite)) return GColorBlack;
+  //if (ColorProfile == 1) return GColorWhite;
   if (nr < 33) return GColorWhite;
   if (nr > 106) return GColorWhite;
   switch (nr){
@@ -1116,10 +1117,10 @@ static void handle_battery(BatteryChargeState charge_state) {
       } else if (ColorProfile == 1) {
         textcolor_bat_uint8 = 0b11000000; //black
         bkgrcolor_bat_uint8 = 0b11111111; //white
-      } else if (ColorProfile == 2){
+      } /*else if (ColorProfile == 2){
         textcolor_bat_uint8 = variable_color;
         bkgrcolor_bat_uint8 = 0b11000000; //black
-      } else {
+      } */ else {
         textcolor_bat_uint8 = 0b11111111;
         bkgrcolor_bat_uint8 = variable_color;
       }
@@ -1461,6 +1462,10 @@ static void layer_update_callback_background(Layer *layer, GContext* ctx){
   graphics_fill_rect(ctx, GRect( 0, 51, 85, 18), 0, 0);
   graphics_fill_rect(ctx, GRect(86, 17, 58, 52), 0, 0);
   
+  graphics_context_set_fill_color(ctx, background_color_moon);
+  graphics_context_set_stroke_color(ctx, background_color_moon);
+  graphics_fill_rect(ctx, GRect(48, 17, 37, 33), 0, 0);
+  
   if (warning_color_location){
     graphics_context_set_fill_color(ctx, GColorRed);
     graphics_context_set_stroke_color(ctx, GColorRed);
@@ -1555,34 +1560,34 @@ static void apply_color_profile(void){
       background_color_last_update = GColorWhite;
   
       background_color_lines       = GColorBlack;    
-    } else if (ColorProfile == 2){ //Black Bkgr. and green clock
-      textcolor_clock              = GColorFromRGB(0, 255, 0);
-      textcolor_seconds            = GColorFromRGB(0, 170, 170);
-      textcolor_tz                 = GColorFromRGB(85, 85, 85); //OK
-      textcolor_cal                = GColorFromRGB(0, 170, 170);   //=GColorTiffanyBlue //calendar week
+    } else if (ColorProfile == 5){ //Black Bkgr. and green clock
+      textcolor_clock              = GColorFromHEX(0x00FF00);;
+      textcolor_seconds            = GColorFromHEX(0x00AAAA);;
+      textcolor_tz                 = GColorFromHEX(0x555555);; //OK
+      textcolor_cal                = GColorFromHEX(0x00AAAA);;   //=GColorTiffanyBlue //calendar week
       background_color_clock       = GColorBlack;
       
-      textcolor_date               = GColorFromRGB(0, 170, 170);   //=GColorTiffanyBlue
+      textcolor_date               = GColorFromHEX(0x00AAAA);;   //=GColorTiffanyBlue
       background_color_date        = GColorBlack;
       
-      textcolor_weather            = GColorFromRGB(0, 255, 170);   //GColorMediumSpringGreen
+      textcolor_weather            = GColorFromHEX(0x00FFAA);   //GColorMediumSpringGreen
       background_color_weather     = GColorBlack;
       
       textcolor_moon               = GColorWhite;
       background_color_moon        = GColorBlack;
       
-      textcolor_sun                = GColorFromRGB(255, 255, 0);
-      textcolor_con                = GColorFromRGB(0, 170, 255);   //GColorVividCerulean  //connection
+      textcolor_sun                = GColorFromHEX(0xFFFF00);;
+      textcolor_con                = GColorFromHEX(0x00AAFF);;   //GColorVividCerulean  //connection
       background_color_status      = GColorBlack;
       
-      textcolor_location           = GColorFromRGB(255, 170, 0);   //=GColorChromeYellow
-      background_color_location    = GColorBlack;
+      textcolor_location           = GColorFromHEX(0xFFAA00);;   //=GColorChromeYellow
+      background_color_location    = GColorFromHEX(0x005500);
       
-      textcolor_last_update        = GColorFromRGB(170, 170, 255);
-      background_color_last_update = GColorBlack;
+      textcolor_last_update        = GColorFromHEX(0xFFFFFF);;
+      background_color_last_update = GColorFromHEX(0x005500);
   
-      background_color_lines       = GColorWhite;    
-    } else if (ColorProfile == 3){ //colored high contrast (blue clock on yellow)
+      background_color_lines       = GColorWhite;
+    } else if (ColorProfile == 13){ //colored high contrast (blue clock on yellow)
       textcolor_clock              = GColorFromRGB(0, 0, 85);
       textcolor_seconds            = GColorFromRGB(0, 170, 170);
       textcolor_tz                 = GColorFromRGB(85, 85, 85); //OK
@@ -1609,6 +1614,311 @@ static void apply_color_profile(void){
       background_color_last_update = GColorWhite;
   
       background_color_lines       = GColorFromRGB(170, 170, 170);
+    } else if (ColorProfile == 14){ //TESTING (Blue with colored background)
+      textcolor_clock              = GColorFromHEX(0x00FFFF);
+      textcolor_seconds            = GColorFromHEX(0xFF5500);
+      textcolor_tz                 = GColorFromHEX(0x555555); //OK
+      textcolor_cal                = GColorFromHEX(0x00AAAA); //calendar week
+      background_color_clock       = GColorFromHEX(0x000055);
+      
+      textcolor_date               = GColorFromHEX(0xAAFFFF);
+      background_color_date        = GColorFromHEX(0x0000AA);
+      
+      textcolor_weather            = GColorFromHEX(0x55FF00);
+      background_color_weather     = GColorFromHEX(0x000000);
+      
+      textcolor_moon               = GColorFromHEX(0xFFFFFF);
+      background_color_moon        = GColorFromHEX(0x000000);
+      
+      textcolor_sun                = GColorFromHEX(0xFFFF00);   //=GColorYellow //OK
+      textcolor_con                = GColorFromHEX(0x00AAFF);   //GColorVividCerulean //connection
+      background_color_status      = GColorFromHEX(0x000000);
+      
+      textcolor_location           = GColorFromHEX(0xFFAA00);
+      background_color_location    = GColorFromHEX(0x550000);
+      
+      textcolor_last_update        = GColorFromHEX(0xFFAAFF);
+      background_color_last_update = GColorFromHEX(0x550055);
+  
+      background_color_lines       = GColorFromHEX(0xAAAAAA);
+    } else if (ColorProfile == 6){ //TESTING (Blue with black Bkgr.)
+      textcolor_clock              = GColorFromHEX(0x0055FF);
+      textcolor_seconds            = GColorFromHEX(0x00AAFF);
+      textcolor_tz                 = GColorFromHEX(0x555555); //OK
+      textcolor_cal                = GColorFromHEX(0x00AAAA); //calendar week
+      background_color_clock       = GColorFromHEX(0x000000);
+      
+      textcolor_date               = GColorFromHEX(0x0055FF);
+      background_color_date        = GColorFromHEX(0x000000);
+      
+      textcolor_weather            = GColorFromHEX(0x55FF00);
+      background_color_weather     = GColorFromHEX(0x000000);
+      
+      textcolor_moon               = GColorFromHEX(0xFFFFFF);
+      background_color_moon        = GColorFromHEX(0x000000);
+      
+      textcolor_sun                = GColorFromHEX(0xFFFF00);   //=GColorYellow //OK
+      textcolor_con                = GColorFromHEX(0x00AAFF);   //GColorVividCerulean //connection
+      background_color_status      = GColorFromHEX(0x000000);
+      
+      textcolor_location           = GColorFromHEX(0x00AAFF);
+      background_color_location    = GColorFromHEX(0x000055);
+      
+      textcolor_last_update        = GColorFromHEX(0xFFAAFF);
+      background_color_last_update = GColorFromHEX(0x550055);
+  
+      background_color_lines       = GColorFromHEX(0x0000AA);
+    } else if (ColorProfile == 4){ //TESTING (Red with black Bkgr.)
+      textcolor_clock              = GColorFromHEX(0xFF0000);
+      textcolor_seconds            = GColorFromHEX(0xFF5500);
+      textcolor_tz                 = GColorFromHEX(0x555555); //OK
+      textcolor_cal                = GColorFromHEX(0xAA00AA); //calendar week
+      background_color_clock       = GColorFromHEX(0x000000);
+      
+      textcolor_date               = GColorFromHEX(0xFF0000);
+      background_color_date        = GColorFromHEX(0x000000);
+      
+      textcolor_weather            = GColorFromHEX(0xFF5555);
+      background_color_weather     = GColorFromHEX(0x000000);
+      
+      textcolor_moon               = GColorFromHEX(0xFFFFFF);
+      background_color_moon        = GColorFromHEX(0x000000);
+      
+      textcolor_sun                = GColorFromHEX(0xFFFF00);   //=GColorYellow //OK
+      textcolor_con                = GColorFromHEX(0x00AAFF);   //GColorVividCerulean //connection
+      background_color_status      = GColorFromHEX(0x000000);
+      
+      textcolor_location           = GColorFromHEX(0xFFAAAA);
+      background_color_location    = GColorFromHEX(0x550000);
+      
+      textcolor_last_update        = GColorFromHEX(0xFFAAFF);
+      background_color_last_update = GColorFromHEX(0x550055);
+  
+      background_color_lines       = GColorFromHEX(0xAA0000);
+    } else if (ColorProfile == 7){ //TESTING (Red-Red)
+      textcolor_clock              = GColorFromHEX(0xFFFF00);
+      textcolor_seconds            = GColorFromHEX(0xFFFF00);
+      textcolor_tz                 = GColorFromHEX(0xAAAAAA); //OK
+      textcolor_cal                = GColorFromHEX(0xFFAA55); //calendar week
+      background_color_clock       = GColorFromHEX(0x550000);
+      
+      textcolor_date               = GColorFromHEX(0xFFFFFF);
+      background_color_date        = GColorFromHEX(0xAA0000);
+      
+      /*
+      textcolor_weather            = GColorFromHEX(0xFFFFFF);
+      background_color_weather     = GColorFromHEX(0x000000);
+      
+      textcolor_moon               = GColorFromHEX(0xFFFFFF);
+      background_color_moon        = GColorFromHEX(0x000000);
+      */
+      textcolor_weather            = GColorFromHEX(0xFFFFFF);
+      background_color_weather     = GColorFromHEX(0x000000);
+      
+      textcolor_moon               = GColorFromHEX(0xFFFFFF);
+      background_color_moon        = GColorFromHEX(0x000000);
+      
+      
+      textcolor_sun                = GColorFromHEX(0xFFFF00);   //=GColorYellow //OK
+      textcolor_con                = GColorFromHEX(0x00AAFF);   //GColorVividCerulean //connection
+      background_color_status      = GColorFromHEX(0x000000);
+      
+      textcolor_location           = GColorFromHEX(0xFFFFFF);
+      background_color_location    = GColorFromHEX(0x550000);
+      
+      textcolor_last_update        = GColorFromHEX(0xFFFFFF);
+      background_color_last_update = GColorFromHEX(0x550055);
+  
+      background_color_lines       = GColorFromHEX(0xAAAAAA);
+    } else if (ColorProfile == 8){ //TESTING (Green-Green)
+      textcolor_clock              = GColorFromHEX(0xFFFF00);
+      textcolor_seconds            = GColorFromHEX(0xFFFF00);
+      textcolor_tz                 = GColorFromHEX(0xAAAAAA); //OK
+      textcolor_cal                = GColorFromHEX(0xAAFF55); //calendar week
+      background_color_clock       = GColorFromHEX(0x005500);
+      
+      textcolor_date               = GColorFromHEX(0xFFFFFF);
+      background_color_date        = GColorFromHEX(0x00AA00);
+      
+      textcolor_weather            = GColorFromHEX(0xFFFFFF);
+      background_color_weather     = GColorFromHEX(0x000000);
+      
+      textcolor_moon               = GColorFromHEX(0xFFFFFF);
+      background_color_moon        = GColorFromHEX(0x000000);
+      
+      textcolor_sun                = GColorFromHEX(0xFFFF00);   //=GColorYellow //OK
+      textcolor_con                = GColorFromHEX(0x00AAFF);   //GColorVividCerulean //connection
+      background_color_status      = GColorFromHEX(0x000000);
+      
+      textcolor_location           = GColorFromHEX(0xFFFFFF);
+      background_color_location    = GColorFromHEX(0x005500);
+      
+      textcolor_last_update        = GColorFromHEX(0xFFFFFF);
+      background_color_last_update = GColorFromHEX(0x005555);
+  
+      background_color_lines       = GColorFromHEX(0xAAAAAA);
+    } else if (ColorProfile == 9){ //TESTING (Blue-Blue)
+      textcolor_clock              = GColorFromHEX(0x00FFFF);
+      textcolor_seconds            = GColorFromHEX(0x00FFFF);
+      textcolor_tz                 = GColorFromHEX(0x555555); //OK
+      textcolor_cal                = GColorFromHEX(0xAAAAAA); //calendar week
+      background_color_clock       = GColorFromHEX(0x000055);
+      
+      textcolor_date               = GColorFromHEX(0xFFFFFF);
+      background_color_date        = GColorFromHEX(0x0000AA);
+      
+      textcolor_weather            = GColorFromHEX(0xFFFFFF);
+      background_color_weather     = GColorFromHEX(0x000000);
+      
+      textcolor_moon               = GColorFromHEX(0xFFFFFF);
+      background_color_moon        = GColorFromHEX(0x000000);
+      
+      textcolor_sun                = GColorFromHEX(0xFFFF00);   //=GColorYellow //OK
+      textcolor_con                = GColorFromHEX(0x00AAFF);   //GColorVividCerulean //connection
+      background_color_status      = GColorFromHEX(0x000000);
+      
+      textcolor_location           = GColorFromHEX(0xFFFFFF);
+      background_color_location    = GColorFromHEX(0x000055);
+      
+      textcolor_last_update        = GColorFromHEX(0xFFFFFF);
+      background_color_last_update = GColorFromHEX(0x005555);
+  
+      background_color_lines       = GColorFromHEX(0xAAAAAA);
+    } else if (ColorProfile == 10){ //TESTING (light red)
+      textcolor_clock              = GColorFromHEX(0x550000);
+      textcolor_seconds            = GColorFromHEX(0x550000);
+      textcolor_tz                 = GColorFromHEX(0x555555); //OK
+      textcolor_cal                = GColorFromHEX(0x550000); //calendar week
+      background_color_clock       = GColorFromHEX(0xFFAA55);
+      
+      textcolor_date               = GColorFromHEX(0x550000);
+      background_color_date        = GColorFromHEX(0xFFAA55);
+      
+      textcolor_weather            = GColorFromHEX(0x000000);
+      background_color_weather     = GColorFromHEX(0xFFFFAA);
+      
+      textcolor_moon               = GColorFromHEX(0x000000);
+      background_color_moon        = GColorFromHEX(0xFFFFFF);
+      
+      textcolor_sun                = GColorFromHEX(0xFFFF00);   //=GColorYellow //OK
+      textcolor_con                = GColorFromHEX(0x00AAFF);   //GColorVividCerulean //connection
+      background_color_status      = GColorFromHEX(0x000000);
+      
+      textcolor_location           = GColorFromHEX(0x000000);
+      background_color_location    = GColorFromHEX(0xFFAA00);
+      
+      textcolor_last_update        = GColorFromHEX(0x000000);
+      background_color_last_update = GColorFromHEX(0xFFFF00);
+  
+      background_color_lines       = GColorFromHEX(0xAAAAAA);
+    } else if (ColorProfile == 11){ //TESTING (light green)
+      textcolor_clock              = GColorFromHEX(0x000000);
+      textcolor_seconds            = GColorFromHEX(0x000000);
+      textcolor_tz                 = GColorFromHEX(0x555555); //OK
+      textcolor_cal                = GColorFromHEX(0x005500); //calendar week
+      background_color_clock       = GColorFromHEX(0x00FF00);
+      
+      textcolor_date               = GColorFromHEX(0x005500);
+      background_color_date        = GColorFromHEX(0x00FF00);
+      
+      textcolor_weather            = GColorFromHEX(0x000000);
+      background_color_weather     = GColorFromHEX(0xAAFFAA);
+      
+      textcolor_moon               = GColorFromHEX(0x000000);
+      background_color_moon        = GColorFromHEX(0xFFFFFF);
+      
+      textcolor_sun                = GColorFromHEX(0xFFFF00);   //=GColorYellow //OK
+      textcolor_con                = GColorFromHEX(0x00AAFF);   //GColorVividCerulean //connection
+      background_color_status      = GColorFromHEX(0x000000);
+      
+      textcolor_location           = GColorFromHEX(0xFFFFFF);
+      background_color_location    = GColorFromHEX(0x00AA00);
+      
+      textcolor_last_update        = GColorFromHEX(0x000000);
+      background_color_last_update = GColorFromHEX(0x00FF00);
+  
+      background_color_lines       = GColorFromHEX(0xAAAAAA);
+    } else if (ColorProfile == 12){ //TESTING 10
+      textcolor_clock              = GColorFromHEX(0x000000);
+      textcolor_seconds            = GColorFromHEX(0x000000);
+      textcolor_tz                 = GColorFromHEX(0xAAAAAA); //OK
+      textcolor_cal                = GColorFromHEX(0xAAAAAA); //calendar week
+      background_color_clock       = GColorFromHEX(0x00AAFF);
+      
+      textcolor_date               = GColorFromHEX(0x000000);
+      background_color_date        = GColorFromHEX(0x00AAFF);
+      
+      textcolor_weather            = GColorFromHEX(0x000000);
+      background_color_weather     = GColorFromHEX(0xAAFFFF);
+      
+      textcolor_moon               = GColorFromHEX(0x000000);
+      background_color_moon        = GColorFromHEX(0xFFFFFF);
+      
+      textcolor_sun                = GColorFromHEX(0xFFFF00);   //=GColorYellow //OK
+      textcolor_con                = GColorFromHEX(0x00AAFF);   //GColorVividCerulean //connection
+      background_color_status      = GColorFromHEX(0x000000);
+      
+      textcolor_location           = GColorFromHEX(0x000000);
+      background_color_location    = GColorFromHEX(0x00AAFF);
+      
+      textcolor_last_update        = GColorFromHEX(0x000000);
+      background_color_last_update = GColorFromHEX(0x55FFFF);
+  
+      background_color_lines       = GColorFromHEX(0xAAAAAA);
+    } else if (ColorProfile == 2){ //TESTING (White on Black with Colors)
+      textcolor_clock              = GColorFromHEX(0xFFFFFF);
+      textcolor_seconds            = GColorFromHEX(0xFFFFFF);
+      textcolor_tz                 = GColorFromHEX(0x555555); //OK
+      textcolor_cal                = GColorFromHEX(0xAAAAAA); //calendar week
+      background_color_clock       = GColorFromHEX(0x000000);
+      
+      textcolor_date               = GColorFromHEX(0xFFFFFF);
+      background_color_date        = GColorFromHEX(0x000000);
+      
+      textcolor_weather            = GColorFromHEX(0xFFFFFF);
+      background_color_weather     = GColorFromHEX(0x000000);
+      
+      textcolor_moon               = GColorFromHEX(0xFFFFFF);
+      background_color_moon        = GColorFromHEX(0x000000);
+      
+      textcolor_sun                = GColorFromHEX(0xFFFF00);   //=GColorYellow //OK
+      textcolor_con                = GColorFromHEX(0x00AAFF);   //GColorVividCerulean //connection
+      background_color_status      = GColorFromHEX(0x000000);
+      
+      textcolor_location           = GColorFromHEX(0xFFFFFF);
+      background_color_location    = GColorFromHEX(0x000000);
+      
+      textcolor_last_update        = GColorFromHEX(0xFFFFFF);
+      background_color_last_update = GColorFromHEX(0x000000);
+  
+      background_color_lines       = GColorFromHEX(0xAAAAAA);
+    } else if (ColorProfile == 3){ //TESTING (Black on White with Colors)
+      textcolor_clock              = GColorFromHEX(0x000000);
+      textcolor_seconds            = GColorFromHEX(0x000000);
+      textcolor_tz                 = GColorFromHEX(0x555555); //OK
+      textcolor_cal                = GColorFromHEX(0xAAAAAA); //calendar week
+      background_color_clock       = GColorFromHEX(0xFFFFFF);
+      
+      textcolor_date               = GColorFromHEX(0x000000);
+      background_color_date        = GColorFromHEX(0xFFFFFF);
+      
+      textcolor_weather            = GColorFromHEX(0x000000);
+      background_color_weather     = GColorFromHEX(0xFFFFFF);
+      
+      textcolor_moon               = GColorFromHEX(0x000000);
+      background_color_moon        = GColorFromHEX(0xFFFFFF);
+      
+      textcolor_sun                = GColorFromHEX(0xFFFF00);   //=GColorYellow //OK
+      textcolor_con                = GColorFromHEX(0x00AAFF);   //GColorVividCerulean //connection
+      background_color_status      = GColorFromHEX(0x000000);
+      
+      textcolor_location           = GColorFromHEX(0x000000);
+      background_color_location    = GColorFromHEX(0xFFFFFF);
+      
+      textcolor_last_update        = GColorFromHEX(0x000000);
+      background_color_last_update = GColorFromHEX(0xFFFFFF);
+  
+      background_color_lines       = GColorFromHEX(0xAAAAAA);
     } else { //default = BW
       textcolor_clock              = GColorWhite;
       textcolor_seconds            = GColorWhite;
@@ -1707,6 +2017,12 @@ static void apply_color_profile(void){
   #endif
   
   handle_battery(battery_state_service_peek());
+  /*
+  WeatherUpdateReceived = 1;
+  time_t now = time(NULL);
+  struct tm *tick_time = localtime(&now);
+  handle_second_tick(tick_time, SECOND_UNIT | MINUTE_UNIT | HOUR_UNIT);
+  */
 }
 
   
