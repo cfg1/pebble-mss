@@ -103,7 +103,7 @@ GColor background_color_clock;
   uint8_t bkgrcolor_bat_uint8;
   GColor textcolor_date;
   GColor textcolor_cal;
-  GColor textcolor_moon;
+  GColor textcolor_moon; //not used any more. Its done through get_weather_icon_color(0);
   GColor textcolor_weather;
   GColor textcolor_location;
   GColor textcolor_last_update;
@@ -605,18 +605,18 @@ void DisplayData(void) {
 #ifdef PBL_COLOR
 static GColor get_weather_icon_color(int nr){
   if (ColorProfile == 0) return GColorWhite;
-  if (gcolor_equal(background_color_moon, GColorWhite)) return GColorBlack;
+  if (ColorProfile == 1) return GColorBlack; //if (gcolor_equal(background_color_moon, GColorWhite)) return GColorBlack;
   //if (ColorProfile == 1) return GColorWhite;
   if (nr < 33) return GColorWhite;
   if (nr > 106) return GColorWhite;
   switch (nr){
-    case 33: return GColorVividCerulean; //Cloud
+    case 33: return GColorFromHEX(0xFFFFFF); //GColorVividCerulean; //Cloud
     case 34: return GColorIcterine;
     case 35: return GColorPictonBlue;
-    case 36: return GColorBabyBlueEyes;
+    case 36: return GColorFromHEX(0x55FFFF); //GColorBabyBlueEyes; //Rain
     case 37: return GColorChromeYellow;
     case 38: return GColorBlueMoon;
-    case 39: return GColorCobaltBlue;
+    case 39: return GColorFromHEX(0x55FFFF);
     case 40: return GColorChromeYellow;
     case 41: return GColorBlueMoon;
     case 42: return GColorPictonBlue;
@@ -625,9 +625,9 @@ static GColor get_weather_icon_color(int nr){
     case 45: return GColorCadetBlue;
     case 46: return GColorRajah;
     case 47: return GColorBlueMoon;
-    case 48: return GColorElectricBlue;
+    case 48: return GColorWhite;
     case 49: return GColorPastelYellow;
-    case 50: return GColorCadetBlue;
+    case 50: return GColorFromHEX(0x55AAAA); //GColorCadetBlue
     case 51: return GColorSunsetOrange; //hail (Hagel)
     case 52: return GColorWhite;
     case 53: return GColorWhite;
@@ -687,6 +687,91 @@ static GColor get_weather_icon_color(int nr){
   }
   return GColorBlue;
 }
+
+static GColor get_weather_icon_bkgr_color(int nr){
+  if (ColorProfile == 0) return GColorBlack;
+  //if (gcolor_equal(background_color_moon, GColorWhite)) return GColorWhite;
+  if (ColorProfile == 1) return GColorWhite;
+  if (nr < 33) return GColorBlack;
+  if (nr > 106) return GColorBlack;
+  switch (nr){
+    case 33: return GColorVividCerulean; //Cloud
+    case 34: return GColorVividCerulean; //Cloud and Sun
+    case 35: return GColorFromHEX(0x000055); //GColorPictonBlue;
+    case 36: return GColorFromHEX(0x555555); //GColorBabyBlueEyes;
+    case 37: return GColorFromHEX(0x0055AA);
+    case 38: return GColorFromHEX(0x000055);
+    case 39: return GColorFromHEX(0x555555);
+    case 40: return GColorFromHEX(0x0055AA);
+    case 41: return GColorFromHEX(0x000055);
+    case 42: return GColorFromHEX(0x555555);
+    case 43: return GColorFromHEX(0x0055AA);
+    case 44: return GColorFromHEX(0x000055);
+    case 45: return GColorFromHEX(0x555555);
+    case 46: return GColorFromHEX(0x0055AA);
+    case 47: return GColorFromHEX(0x000055);
+    case 48: return GColorElectricBlue;
+    case 49: return GColorFromHEX(0x00AAFF);
+    case 50: return GColorFromHEX(0x000055);
+    case 51: return GColorFromHEX(0x0055AA); //hail (Hagel)
+    case 52: return GColorBlack;
+    case 53: return GColorBlack;
+    case 54: return GColorBlack;
+    case 55: return GColorBlack;
+    case 56: return GColorBlack;
+    case 57: return GColorFromHEX(0x555555); //snow
+    case 58: return GColorFromHEX(0x0055AA);
+    case 59: return GColorFromHEX(0x000055);
+    case 60: return GColorWhite; //fog
+    case 61: return GColorFromHEX(0x0055AA);
+    case 62: return GColorWhite;
+    case 63: return GColorWhite; //haze (Dunst)
+    case 64: return GColorWhite;
+    case 65: return GColorWhite;
+    case 66: return GColorFromHEX(0x0055AA); //wind
+    case 67: return GColorBlack;
+    case 68: return GColorBlack;
+    case 69: return GColorBlack;
+    case 70: return GColorFromHEX(0x555555);
+    case 71: return GColorFromHEX(0x555555);
+    case 72: return GColorBlack;
+    case 73: return GColorFromHEX(0x00AAFF);
+    case 74: return GColorFromHEX(0x0055AA);
+    case 75: return GColorFromHEX(0x0055AA);
+    case 76: return GColorBlack;
+    case 77: return GColorBlack;
+    case 78: return GColorBlack;
+    case 79: return GColorBlack;
+    case 80: return GColorBlack;
+    case 81: return GColorBlack;
+    case 82: return GColorBlack;
+    case 83: return GColorBlack;
+    case 84: return GColorBlack;
+    case 85: return GColorBlack;
+    case 86: return GColorBlack;
+    case 87: return GColorBlack;
+    case 88: return GColorFromHEX(0x555555); //tornado
+    case 89: return GColorBlack;
+    case 90: return GColorFromHEX(0x000055); // temp_low
+    case 91: return GColorBlack;
+    case 92: return GColorBlack;
+    case 93: return GColorFromHEX(0xFFFF00); // temp_high
+    case 94: return GColorBlack;
+    case 95: return GColorBlack;
+    case 96: return GColorBlack;
+    case 97: return GColorBlack;
+    case 98: return GColorBlack;
+    case 99: return GColorBlack;
+    case 100: return GColorBlack;
+    case 101: return GColorBlack;
+    case 102: return GColorBlack;
+    case 103: return GColorBlack;
+    case 104: return GColorBlack;
+    case 105: return GColorBlack;
+    case 106: return GColorBlack;
+  }
+  return GColorFromHEX(0x000055);
+}
 #endif
 
 
@@ -700,6 +785,11 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
   current_time_copy = *current_time;
   
   //units_changed = SECOND_UNIT | MINUTE_UNIT | HOUR_UNIT;
+  
+  
+  #ifdef PBL_COLOR
+    GColor background_color_moon_old = background_color_moon;
+  #endif
   
   if (LightOn == 3){
     if (LightIsOn){
@@ -847,6 +937,7 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
         
         #ifdef PBL_COLOR
           weather_icon_color = get_weather_icon_color((int)weather_icon[0]);
+          background_color_moon = get_weather_icon_bkgr_color((int)weather_icon[0]);
           text_layer_set_text_color(moonLayer_IMG, weather_icon_color);
         #endif
       }
@@ -862,6 +953,7 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     
     #ifdef PBL_COLOR
       weather_icon_color = get_weather_icon_color((int)weather_icon[0]);
+      background_color_moon = get_weather_icon_bkgr_color((int)weather_icon[0]);
       text_layer_set_text_color(moonLayer_IMG, weather_icon_color);
     #endif
   #endif
@@ -879,7 +971,8 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     layer_set_frame(text_layer_get_layer(moonLayer_IMG), GRect(51, 21, 33, 33));
     text_layer_set_text(moonLayer_IMG, moon);
     #ifdef PBL_COLOR
-      weather_icon_color = textcolor_moon;
+      weather_icon_color = get_weather_icon_color(0);
+      background_color_moon = get_weather_icon_bkgr_color(0);
       text_layer_set_text_color(moonLayer_IMG, weather_icon_color);
     #endif
     
@@ -893,6 +986,11 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
 		// -------------------- Moon_phase	  
   }
   NightModeOld = NightMode;
+  #ifdef PBL_COLOR
+    if (!gcolor_equal(background_color_moon, background_color_moon_old)){
+      layer_mark_dirty(background_paint_layer);
+    }
+  #endif
   
   
 	if (units_changed & HOUR_UNIT){

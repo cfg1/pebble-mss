@@ -192,6 +192,8 @@ var OWMclimacon= {
   962 : CLIMACON['tornado'], // Hurricane 
 };
 
+var OWM_DEFAULT_API_KEY = "";
+
 var configuration = {
   invert: 0,
   light: 1,
@@ -217,7 +219,9 @@ var configuration = {
   
   degree_f: 0,
   speed_unit: 0,
-  pressure_unit: 0
+  pressure_unit: 0, 
+  
+  OWM_API_KEY: OWM_DEFAULT_API_KEY
 };
 
 var ForecastDataJSON;
@@ -259,17 +263,29 @@ function SendToPebble(pos, use_default) {
   
   // Construct URL
   console.log("conf.auto_loc = " + configuration.autodetect_loc);
+  //configuration.OWM_API_KEY = OWM_DEFAULT_API_KEY; //TODO
+  if (typeof configuration.OWM_API_KEY === 'string' || configuration.OWM_API_KEY instanceof String){
+    if (configuration.OWM_API_KEY == "default"){
+      configuration.OWM_API_KEY = OWM_DEFAULT_API_KEY;
+    }
+    if (String(configuration.OWM_API_KEY).length < 20){
+      configuration.OWM_API_KEY = OWM_DEFAULT_API_KEY;
+    }
+  } else {
+    configuration.OWM_API_KEY = OWM_DEFAULT_API_KEY;
+  }
+  console.log("Using OWM API KEY: "+configuration.OWM_API_KEY);
   if ((use_default === 0) && (configuration.autodetect_loc)){
-    url = "http://api.openweathermap.org/data/2.5/weather?lat=" +
+    url = "http://api.openweathermap.org/data/2.5/weather?APPID=" + configuration.OWM_API_KEY + "&lat=" +
         pos_lat + "&lon=" + pos_lon + "&lang=" + configuration.lang_id;
-    url_forecast = "http://api.openweathermap.org/data/2.5/forecast?lat=" +
+    url_forecast = "http://api.openweathermap.org/data/2.5/forecast?APPID=" + configuration.OWM_API_KEY + "&lat=" +
         pos_lat + "&lon=" + pos_lon + "&lang=" + configuration.lang_id;
   } else {
     console.log("conf.def_loc = " + configuration.default_loc);
     var city_name_req = configuration.default_loc;
     // Construct URL
-    url = "http://api.openweathermap.org/data/2.5/weather?q=" + city_name_req + "&lang=" + configuration.lang_id;
-    url_forecast = "http://api.openweathermap.org/data/2.5/forecast?q=" + city_name_req + "&lang=" + configuration.lang_id;
+    url = "http://api.openweathermap.org/data/2.5/weather?APPID=" + configuration.OWM_API_KEY + "&q=" + city_name_req + "&lang=" + configuration.lang_id;
+    url_forecast = "http://api.openweathermap.org/data/2.5/forecast?APPID=" + configuration.OWM_API_KEY + "&q=" + city_name_req + "&lang=" + configuration.lang_id;
   }
   
   console.log("Weather URL = " + url);
@@ -713,7 +729,7 @@ Pebble.addEventListener("showConfiguration",
   function(e) {
     //Load the remote config page
     
-    /* --> */ Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_m7s_config_v12.5.html");
+    /* --> */ Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_m7s_config_v12.6.html");
     
     //TODO: send some usefull values to the settings page (e. g. location, battery staistics etc.) by adding ?xxx to the URL
   }
@@ -729,6 +745,18 @@ Pebble.addEventListener("webviewclosed",
     if (configuration_str.charAt(0) == "{" && configuration_str.slice(-1) == "}" && configuration_str.length > 5) {
     
       window.localStorage.configuration = JSON.stringify(configuration);
+      
+      
+      if (typeof configuration.OWM_API_KEY === 'string' || configuration.OWM_API_KEY instanceof String){
+        if (configuration.OWM_API_KEY == "default"){
+          configuration.OWM_API_KEY = OWM_DEFAULT_API_KEY;
+        }
+        if (String(configuration.OWM_API_KEY).length < 10){
+          configuration.OWM_API_KEY = OWM_DEFAULT_API_KEY;
+        }
+      } else {
+        configuration.OWM_API_KEY = OWM_DEFAULT_API_KEY;
+      }
       
    
       //Send to Pebble, persist there
