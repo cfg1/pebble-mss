@@ -192,7 +192,7 @@ var OWMclimacon= {
   962 : CLIMACON['tornado'], // Hurricane 
 };
 
-var OWM_DEFAULT_API_KEY = "";
+var OWM_DEFAULT_API_KEY = "1b5b37a3117bb6acd583d662fdbb24c7";
 
 var configuration = {
   invert: 0,
@@ -307,11 +307,13 @@ function SendToPebble(pos, use_default) {
       xhrRequest(url, 'GET', 
         function(responseText) {
           var WeatherDataJSON_error = 0;
+          var WeatherDataJSON_error_str = "";
           try {
             WeatherDataJSON = JSON.parse(responseText);
             console.log("successfully parsed returned text of weather data.");
           } catch (e){
             WeatherDataJSON_error = 1;
+            WeatherDataJSON_error_str = responseText;
             console.log("could not parse returned text of weather data: " + e);
           }
           
@@ -623,7 +625,31 @@ function SendToPebble(pos, use_default) {
                                   }
                                  );
               */                   
-          } //end: if (!WeatherDataJSON_error)
+          } else { //end: if (!WeatherDataJSON_error)
+            
+            var weather_string_1 = WeatherDataJSON_error_str;
+            var weather_string_2 = "E01: OWM Data error.";
+            
+            // Assemble dictionary using our keys
+            var dictionary = {
+              "KEY_WEATHER_STRING_1": weather_string_1,
+              "KEY_WEATHER_STRING_2": weather_string_2,
+              "KEY_TIME_UTC_OFFSET": utc_offset,
+              "KEY_TIME_ZONE_NAME": getTimeZone()
+            };
+            
+            console.log("Sending Error Message to Pebble:");
+            console.log("  "+weather_string_2+":");
+            console.log("  '"+weather_string_1+"'");
+            Pebble.sendAppMessage(dictionary,
+                                  function(e) {
+                                    console.log("Error message sent to Pebble successfully!");
+                                  },
+                                  function(e) {
+                                    console.log("Error sending Error message to Pebble!");
+                                  }
+                                 );
+          }
           var date = new Date();
           console.log("Time is " + date);
           

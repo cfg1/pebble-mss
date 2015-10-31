@@ -57,7 +57,7 @@
         "configurable"
     ],
     "companyName": "fg",
-    "longName": "M7S_watchface_12_6",
+    "longName": "M7S_watchface_12_7",
     "projectType": "native",
     "resources": {
         "media": [
@@ -89,13 +89,14 @@
         ]
     },
     "sdkVersion": "3",
-    "shortName": "M7S_watchface_12_6",
+    "shortName": "M7S_watchface_12_7",
     "targetPlatforms": [
         "aplite",
-        "basalt"
+        "basalt",
+        "chalk"
     ],
     "uuid": "03adc57a-569b-4669-9a80-b505eaea314d",
-    "versionLabel": "12.6",
+    "versionLabel": "12.7",
     "watchapp": {
         "watchface": true
     }

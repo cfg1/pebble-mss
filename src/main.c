@@ -1011,8 +1011,14 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
   static char buffer_9[20];
   if (TimeZoneFormat == 0){
     if (units_changed & MINUTE_UNIT){
-      time_t UTC_TIME_UNIX = time(NULL) - time_UTC_OFFSET;
-      struct tm* utc_time = localtime(&UTC_TIME_UNIX);
+      time_t UTC_TIME_UNIX = time(NULL);
+      struct tm* utc_time;
+      #ifdef PBL_SDK_2
+        UTC_TIME_UNIX = time(NULL) - time_UTC_OFFSET;
+        utc_time = localtime(&UTC_TIME_UNIX);
+      #else
+        utc_time = gmtime(&UTC_TIME_UNIX);
+      #endif
       if(clock_is_24h_style() == true) {
         strftime(buffer_9, sizeof(buffer_9), "%R UTC", utc_time);
       } else {
@@ -1061,6 +1067,13 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
         
         //text_layer_set_text(weather_layer_2, "***");
         //APP_LOG(APP_LOG_LEVEL_INFO, "Weather Update requested");
+        
+        /*
+        #ifdef PBL_COLOR
+          textcolor_last_update = GColorBlue;
+          text_layer_set_text_color(weather_layer_4_last_update, textcolor_last_update);
+        #endif
+        */
       }
     }
   }
@@ -2121,6 +2134,10 @@ static void apply_color_profile(void){
   struct tm *tick_time = localtime(&now);
   handle_second_tick(tick_time, SECOND_UNIT | MINUTE_UNIT | HOUR_UNIT);
   */
+  
+  #ifdef PBL_COLOR
+    DisplayData(); //set correct color of temperature
+  #endif
 }
 
   
