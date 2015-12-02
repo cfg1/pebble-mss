@@ -2144,15 +2144,15 @@ static void apply_color_profile(void){
 static void set_cwLayer_size(void){
   if (DisplaySeconds){
     if (TimeZoneFormat == 1){
-      layer_set_frame(text_layer_get_layer(cwLayer), GRect(0, 135, 144, 20));
       text_layer_set_text_alignment(cwLayer, GTextAlignmentCenter);
+      layer_set_frame(text_layer_get_layer(cwLayer), GRect(0, 135, 144, 20));
     } else {
-      layer_set_frame(text_layer_get_layer(cwLayer), GRect(72, 135, 64, 20));
       text_layer_set_text_alignment(cwLayer, GTextAlignmentLeft);
+      layer_set_frame(text_layer_get_layer(cwLayer), GRect(72, 135, 64, 20));
     }
   } else {
+    text_layer_set_text_alignment(cwLayer, GTextAlignmentRight); // this must be done before layer_set_frame for alignment on Aplite.
     layer_set_frame(text_layer_get_layer(cwLayer), GRect(72, 135, 64, 20));
-    text_layer_set_text_alignment(cwLayer, GTextAlignmentRight);
   }
 }
 
