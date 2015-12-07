@@ -811,7 +811,20 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     }
   }
   
+  #ifdef GET_TIME_FROM_STRING
+    char time_String[10];
+    if(clock_is_24h_style() == true) {
+      strftime(time_String, sizeof(time_String), "%H:%M:%S", &current_time_copy);
+    } else {
+      strftime(time_String, sizeof(time_String), "%I:%M:%S", &current_time_copy);
+    }
+  #endif
+  
   if (units_changed & HOUR_UNIT){
+    #ifdef GET_TIME_FROM_STRING
+      digit_h_1 = ((int)time_String[0]-48);
+      digit_h_2 = ((int)time_String[1]-48);
+    #else
     if(clock_is_24h_style() == true) {
       digit_h_1 = current_time_copy.tm_hour/10;
       digit_h_2 = current_time_copy.tm_hour%10;
@@ -826,15 +839,26 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
       digit_h_1 = hour12/10;
       digit_h_2 = hour12%10;
     }
+    #endif
   }
   
   if (units_changed & MINUTE_UNIT){
-    digit_m_1 = current_time_copy.tm_min/10;
-    digit_m_2 = current_time_copy.tm_min%10;
+    #ifdef GET_TIME_FROM_STRING
+      digit_m_1 = ((int)time_String[3]-48);
+      digit_m_2 = ((int)time_String[4]-48);
+    #else
+      digit_m_1 = current_time_copy.tm_min/10;
+      digit_m_2 = current_time_copy.tm_min%10;
+    #endif
   }
   
-  digit_s_1 = current_time_copy.tm_sec/10;
-  digit_s_2 = current_time_copy.tm_sec%10;
+  #ifdef GET_TIME_FROM_STRING
+    digit_s_1 = ((int)time_String[6]-48);
+    digit_s_2 = ((int)time_String[7]-48);
+  #else
+    digit_s_1 = current_time_copy.tm_sec/10;
+    digit_s_2 = current_time_copy.tm_sec%10;
+  #endif
   
   
   static int digit_s_1_old = 10;

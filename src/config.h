@@ -26,7 +26,10 @@
 
 #define WEATHER_UPDATE_INTERVAL_MINUTE 30
 
-#define DISPLAY_SECONDS 1
+#define DISPLAY_SECONDS 5
   
 // uncomment this to show all colors of the temperature
 //#define ITERATE_TEMP
+
+// uncomment to use a different method to get HH:MM:SS:
+#define GET_TIME_FROM_STRING
