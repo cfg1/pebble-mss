@@ -33,3 +33,11 @@
 
 // uncomment to use a different method to get HH:MM:SS:
 #define GET_TIME_FROM_STRING
+
+#ifdef PBL_ROUND
+  #define X_OFFSET ((180-144)/2)
+  #define Y_OFFSET ((180-168)/2)
+#else
+  #define X_OFFSET 0
+  #define Y_OFFSET 0  
+#endif

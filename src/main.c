@@ -952,7 +952,7 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
       if (!NightMode){
         //static int wi_counter = 33;
         text_layer_set_font(moonLayer_IMG, pFontClimacons);
-        layer_set_frame(text_layer_get_layer(moonLayer_IMG), GRect(51, 15, 33, 33));
+        layer_set_frame(text_layer_get_layer(moonLayer_IMG), GRect(51+X_OFFSET, 15+Y_OFFSET, 33, 33));
         
         //wi_counter++; if (wi_counter>106) wi_counter = 33;
         //wi_counter = WeatherIcon;
@@ -968,7 +968,7 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     }
   #else
     text_layer_set_font(moonLayer_IMG, pFontClimacons);
-    layer_set_frame(text_layer_get_layer(moonLayer_IMG), GRect(51, 15, 33, 33));
+    layer_set_frame(text_layer_get_layer(moonLayer_IMG), GRect(51+X_OFFSET, 15+Y_OFFSET, 33, 33));
   
     static int wi_counter = 33;
     wi_counter++; if (wi_counter>106) wi_counter = 33;
@@ -992,7 +992,7 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     
     
     text_layer_set_font(moonLayer_IMG, pFontMoon);
-    layer_set_frame(text_layer_get_layer(moonLayer_IMG), GRect(51, 21, 33, 33));
+    layer_set_frame(text_layer_get_layer(moonLayer_IMG), GRect(51+X_OFFSET, 21+Y_OFFSET, 33, 33));
     text_layer_set_text(moonLayer_IMG, moon);
     #ifdef PBL_COLOR
       weather_icon_color = get_weather_icon_color(0);
@@ -1225,11 +1225,11 @@ static void handle_battery(BatteryChargeState charge_state) {
   
   #ifdef PBL_SDK_2 //only on SDK 2.x
     //GRect(41, 21, 38, 11): size of InverterLayer
-    layer_set_frame(inverter_layer_get_layer(s_battery_layer_fill), GRect(3, 21, (int)38*actual_battery_percent/100, 11));
+    layer_set_frame(inverter_layer_get_layer(s_battery_layer_fill), GRect(3+X_OFFSET, 21+Y_OFFSET, (int)38*actual_battery_percent/100, 11));
     layer_set_hidden(inverter_layer_get_layer(s_battery_layer_fill), false);
     layer_set_hidden(inverter_layer_get_layer(s_warning_color_battery), actual_battery_percent>20);
   #else
-    layer_set_frame(effect_layer_get_layer(s_battery_layer_fill), GRect(3, 21, (int)38*actual_battery_percent/100, 11));
+    layer_set_frame(effect_layer_get_layer(s_battery_layer_fill), GRect(3+X_OFFSET, 21+Y_OFFSET, (int)38*actual_battery_percent/100, 11));
     layer_set_hidden(effect_layer_get_layer(s_battery_layer_fill), false);
     #ifdef PBL_COLOR
       uint8_t variable_color = 0;
@@ -2129,8 +2129,7 @@ static void apply_color_profile(void){
   #ifdef PBL_COLOR
     if (warning_color_location) text_layer_set_text_color(weather_layer_3_location, GColorWhite);
     if (warning_color_last_update) text_layer_set_text_color(weather_layer_4_last_update, GColorWhite);
-  #endif
-  #ifdef PBL_SDK_2
+  #else
     /*
     layer_set_hidden(inverter_layer_get_layer(s_warning_color_location), (bool)!warning_color_location);
     layer_set_hidden(inverter_layer_get_layer(s_warning_color_last_updated), (bool)!warning_color_last_update);
@@ -2169,14 +2168,14 @@ static void set_cwLayer_size(void){
   if (DisplaySeconds){
     if (TimeZoneFormat == 1){
       text_layer_set_text_alignment(cwLayer, GTextAlignmentCenter);
-      layer_set_frame(text_layer_get_layer(cwLayer), GRect(0, 135, 144, 20));
+      layer_set_frame(text_layer_get_layer(cwLayer), GRect(0+X_OFFSET, 135+Y_OFFSET, 144, 20));
     } else {
       text_layer_set_text_alignment(cwLayer, GTextAlignmentLeft);
-      layer_set_frame(text_layer_get_layer(cwLayer), GRect(72, 135, 64, 20));
+      layer_set_frame(text_layer_get_layer(cwLayer), GRect(72+X_OFFSET, 135+Y_OFFSET, 64, 20));
     }
   } else {
     text_layer_set_text_alignment(cwLayer, GTextAlignmentRight); // this must be done before layer_set_frame for alignment on Aplite.
-    layer_set_frame(text_layer_get_layer(cwLayer), GRect(72, 135, 64, 20));
+    layer_set_frame(text_layer_get_layer(cwLayer), GRect(72+X_OFFSET, 135+Y_OFFSET, 64, 20));
   }
 }
 
@@ -2457,30 +2456,30 @@ static void main_window_load(Window *window) {
   layer_add_child(main_window_layer, bitmap_layer_get_layer(background_layer));
   
   #ifdef PBL_COLOR
-    background_paint_layer = layer_create(GRect(0, 0, 144, 168));
+    background_paint_layer = layer_create(GRect(0+X_OFFSET, 0+Y_OFFSET, 144, 168));
     layer_set_update_proc(background_paint_layer, layer_update_callback_background);
     layer_add_child(main_window_layer, background_paint_layer);
   #endif
   // --- END ---
 
-  s_image_layer_hour_1 = layer_create(GRect(4, 94, 26, 41));
+  s_image_layer_hour_1 = layer_create(GRect(4+X_OFFSET, 94+Y_OFFSET, 26, 41));
   layer_set_update_proc(s_image_layer_hour_1, layer_update_callback_hour_1);
   layer_add_child(main_window_layer, s_image_layer_hour_1);
-  s_image_layer_hour_2 = layer_create(GRect(37, 94, 26, 41));
+  s_image_layer_hour_2 = layer_create(GRect(37+X_OFFSET, 94+Y_OFFSET, 26, 41));
   layer_set_update_proc(s_image_layer_hour_2, layer_update_callback_hour_2);
   layer_add_child(main_window_layer, s_image_layer_hour_2);
   
-  s_image_layer_minute_1 = layer_create(GRect(80, 94, 26, 41));
+  s_image_layer_minute_1 = layer_create(GRect(80+X_OFFSET, 94+Y_OFFSET, 26, 41));
   layer_set_update_proc(s_image_layer_minute_1, layer_update_callback_minute_1);
   layer_add_child(main_window_layer, s_image_layer_minute_1);
-  s_image_layer_minute_2 = layer_create(GRect(111, 94, 26, 41));
+  s_image_layer_minute_2 = layer_create(GRect(111+X_OFFSET, 94+Y_OFFSET, 26, 41));
   layer_set_update_proc(s_image_layer_minute_2, layer_update_callback_minute_2);
   layer_add_child(main_window_layer, s_image_layer_minute_2);
   
-  s_image_layer_second_1 = layer_create(GRect(113, 137, 10, 15));
+  s_image_layer_second_1 = layer_create(GRect(113+X_OFFSET, 137+Y_OFFSET, 10, 15));
   layer_set_update_proc(s_image_layer_second_1, layer_update_callback_second_1);
   layer_add_child(main_window_layer, s_image_layer_second_1);
-  s_image_layer_second_2 = layer_create(GRect(126, 137, 10, 15));
+  s_image_layer_second_2 = layer_create(GRect(126+X_OFFSET, 137+Y_OFFSET, 10, 15));
   layer_set_update_proc(s_image_layer_second_2, layer_update_callback_second_2);
   layer_add_child(main_window_layer, s_image_layer_second_2);
   
@@ -2488,21 +2487,21 @@ static void main_window_load(Window *window) {
   GColor textcolor = GColorWhite;
     
   // Sunrise Text
-  text_sunrise_layer = text_layer_create(GRect(7, 152, 50 /* width */, 30 /* height */)); 
+  text_sunrise_layer = text_layer_create(GRect(7+X_OFFSET, 152+Y_OFFSET, 50 /* width */, 30 /* height */)); 
   text_layer_set_text_color(text_sunrise_layer, textcolor);
   text_layer_set_background_color(text_sunrise_layer, GColorClear );
   text_layer_set_font(text_sunrise_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
   layer_add_child(main_window_layer, text_layer_get_layer(text_sunrise_layer));
   
   // Sunset Text
-  text_sunset_layer = text_layer_create(GRect(110, 152, 50 /* width */, 30 /* height */)); 
+  text_sunset_layer = text_layer_create(GRect(110+X_OFFSET, 152+Y_OFFSET, 50 /* width */, 30 /* height */)); 
   text_layer_set_text_color(text_sunset_layer, textcolor);
   text_layer_set_background_color(text_sunset_layer, GColorClear );
   text_layer_set_font(text_sunset_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
   layer_add_child(main_window_layer, text_layer_get_layer(text_sunset_layer));      
   
   // Connection
-  connection_layer = text_layer_create(GRect(47, 152, 50, 34));
+  connection_layer = text_layer_create(GRect(47+X_OFFSET, 152+Y_OFFSET, 50, 34));
   text_layer_set_text_color(connection_layer, textcolor);
   text_layer_set_background_color(connection_layer, GColorClear);
   text_layer_set_font(connection_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
@@ -2511,13 +2510,13 @@ static void main_window_load(Window *window) {
   layer_add_child(main_window_layer, text_layer_get_layer(connection_layer));
 
   #ifdef PBL_SDK_3
-    s_battery_layer_paint_bat = layer_create(GRect(0, 17, 84-38+1, 49-17+1));
+    s_battery_layer_paint_bat = layer_create(GRect(0+X_OFFSET, 17+Y_OFFSET, 84-38+1, 49-17+1));
     layer_set_update_proc(s_battery_layer_paint_bat, layer_update_callback_paint_bat);
     layer_add_child(main_window_layer, s_battery_layer_paint_bat);
   #endif
   
   // Battery state / runtime:
-  battery_runtime_layer = text_layer_create(GRect(2, 15+2, 45, 15+20));
+  battery_runtime_layer = text_layer_create(GRect(2+X_OFFSET, 15+2+Y_OFFSET, 45, 15+20));
   text_layer_set_text_color(battery_runtime_layer, textcolor);
   text_layer_set_background_color(battery_runtime_layer, GColorClear);
   text_layer_set_font(battery_runtime_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
@@ -2527,11 +2526,11 @@ static void main_window_load(Window *window) {
   
   #ifdef PBL_SDK_2 //only on SDK 2.x
     //fill battery with an InverterLayer
-    s_battery_layer_fill = inverter_layer_create(GRect(3, 21, 38, 11));
+    s_battery_layer_fill = inverter_layer_create(GRect(3+X_OFFSET, 21+Y_OFFSET, 38, 11));
     layer_set_hidden(inverter_layer_get_layer(s_battery_layer_fill), true);
     layer_add_child(main_window_layer, inverter_layer_get_layer(s_battery_layer_fill));
   #else //else use effect layer on basalt
-    s_battery_layer_fill = effect_layer_create(GRect(3, 21, 38, 11));
+    s_battery_layer_fill = effect_layer_create(GRect(3+X_OFFSET, 21+Y_OFFSET, 38, 11));
     effect_layer_add_effect(s_battery_layer_fill, effect_invert_color, (void *)0b00000000); //use global inverter color
     layer_set_hidden(effect_layer_get_layer(s_battery_layer_fill), true);
     layer_add_child(main_window_layer, effect_layer_get_layer(s_battery_layer_fill));
@@ -2540,7 +2539,7 @@ static void main_window_load(Window *window) {
   
   
   // Date text
-  Date_Layer = text_layer_create(GRect(5, 63, 134 /* width */, 30 /* height */));
+  Date_Layer = text_layer_create(GRect(5+X_OFFSET, 63+Y_OFFSET, 134 /* width */, 30 /* height */));
   text_layer_set_text_color(Date_Layer, textcolor);
   text_layer_set_background_color(Date_Layer, GColorClear );
   text_layer_set_font(Date_Layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
@@ -2548,7 +2547,7 @@ static void main_window_load(Window *window) {
   layer_add_child(main_window_layer, text_layer_get_layer(Date_Layer));
   
   // Calendar Week
-  cwLayer = text_layer_create(GRect(72, 135, 64, 20)); //64 = label_width = 144-72-2*4 = display_width - display_width/2 - 2*Space
+  cwLayer = text_layer_create(GRect(72+X_OFFSET, 135+Y_OFFSET, 64, 20)); //64 = label_width = 144-72-2*4 = display_width - display_width/2 - 2*Space
   text_layer_set_text_color(cwLayer, textcolor);
   text_layer_set_background_color(cwLayer, GColorClear );
   text_layer_set_font(cwLayer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
@@ -2557,7 +2556,7 @@ static void main_window_load(Window *window) {
   set_cwLayer_size();
   
   // Moon phase
-  moonLayer_IMG = text_layer_create(GRect(51, 18, 33, 33));
+  moonLayer_IMG = text_layer_create(GRect(51+X_OFFSET, 18+Y_OFFSET, 33, 33));
   text_layer_set_text_color(moonLayer_IMG, textcolor);
   text_layer_set_background_color(moonLayer_IMG, GColorClear);
   text_layer_set_font(moonLayer_IMG, pFontMoon);
@@ -2567,7 +2566,7 @@ static void main_window_load(Window *window) {
   // --- Weather Layers: ---
   
   // Create temperature Layer
-  weather_layer_1_temp = text_layer_create(GRect(50, 10, 94, 30));
+  weather_layer_1_temp = text_layer_create(GRect(50+X_OFFSET, 10+Y_OFFSET, 94, 30));
   text_layer_set_background_color(weather_layer_1_temp, GColorClear);
   text_layer_set_text_color(weather_layer_1_temp, textcolor);
   text_layer_set_text_alignment(weather_layer_1_temp, GTextAlignmentRight);
@@ -2576,7 +2575,7 @@ static void main_window_load(Window *window) {
 	layer_add_child(main_window_layer, text_layer_get_layer(weather_layer_1_temp));
   
   // Create location name Layer
-  weather_layer_3_location = text_layer_create(GRect(0, -1, 110, 17));
+  weather_layer_3_location = text_layer_create(GRect(0+X_OFFSET, -1+Y_OFFSET, 110, 17));
   text_layer_set_background_color(weather_layer_3_location, GColorClear);
   text_layer_set_text_color(weather_layer_3_location, textcolor);
   text_layer_set_text_alignment(weather_layer_3_location, GTextAlignmentCenter);
@@ -2585,7 +2584,7 @@ static void main_window_load(Window *window) {
 	layer_add_child(main_window_layer, text_layer_get_layer(weather_layer_3_location));
   
   // Create last updated Layer
-  weather_layer_4_last_update = text_layer_create(GRect(111, -1, 33, 17));
+  weather_layer_4_last_update = text_layer_create(GRect(111+X_OFFSET, -1+Y_OFFSET, 33, 17));
   text_layer_set_background_color(weather_layer_4_last_update, GColorClear);
   text_layer_set_text_color(weather_layer_4_last_update, textcolor);
   text_layer_set_text_alignment(weather_layer_4_last_update, GTextAlignmentCenter);
@@ -2594,7 +2593,7 @@ static void main_window_load(Window *window) {
 	layer_add_child(main_window_layer, text_layer_get_layer(weather_layer_4_last_update));
   
   // Create String_1 Layer
-  weather_layer_7_string_1 = text_layer_create(GRect(86, 54-15, 144-86-2, 30)); //TODO
+  weather_layer_7_string_1 = text_layer_create(GRect(86+X_OFFSET, 54-15+Y_OFFSET, 144-86-2, 30)); //TODO
   text_layer_set_background_color(weather_layer_7_string_1, GColorClear);
   text_layer_set_text_color(weather_layer_7_string_1, textcolor);
   text_layer_set_text_alignment(weather_layer_7_string_1, GTextAlignmentCenter);
@@ -2603,7 +2602,7 @@ static void main_window_load(Window *window) {
 	layer_add_child(main_window_layer, text_layer_get_layer(weather_layer_7_string_1));
   
   // Create String_2 Layer
-  weather_layer_7_string_2 = text_layer_create(GRect(0, 50, 84, 17)); //TODO
+  weather_layer_7_string_2 = text_layer_create(GRect(0+X_OFFSET, 50+Y_OFFSET, 84, 17)); //TODO
   text_layer_set_background_color(weather_layer_7_string_2, GColorClear);
   text_layer_set_text_color(weather_layer_7_string_2, textcolor);
   text_layer_set_text_alignment(weather_layer_7_string_2, GTextAlignmentCenter);
@@ -2612,7 +2611,7 @@ static void main_window_load(Window *window) {
 	layer_add_child(main_window_layer, text_layer_get_layer(weather_layer_7_string_2));
   
   // Create TimeZone Layer
-  text_TimeZone_layer = text_layer_create(GRect(5, 132, 100, 20)); //TODO
+  text_TimeZone_layer = text_layer_create(GRect(5+X_OFFSET, 132+Y_OFFSET, 100, 20)); //TODO
   text_layer_set_background_color(text_TimeZone_layer, GColorClear);
   text_layer_set_text_color(text_TimeZone_layer, textcolor);
   text_layer_set_text_alignment(text_TimeZone_layer, GTextAlignmentLeft);
@@ -2623,7 +2622,7 @@ static void main_window_load(Window *window) {
   // --- END ---
   
   #ifdef PBL_SDK_2
-    s_warning_color_battery = inverter_layer_create(GRect(0, 17, 47, 33));
+    s_warning_color_battery = inverter_layer_create(GRect(0+X_OFFSET, 17+Y_OFFSET, 47, 33));
     layer_set_hidden(inverter_layer_get_layer(s_warning_color_battery), true);
     layer_add_child(main_window_layer, inverter_layer_get_layer(s_warning_color_battery));
   #endif
