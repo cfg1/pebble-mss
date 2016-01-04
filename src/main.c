@@ -504,10 +504,18 @@ void DisplayData(void) {
   struct tm* sun_time = localtime(&sun_rise_unix_loc);
   static char sun_rise_text[10];
   static char sun_set_text[10];
-  strftime(sun_rise_text, sizeof(sun_rise_text), "%I:%M", sun_time);
+  if(clock_is_24h_style()) {
+    strftime(sun_rise_text, sizeof(sun_rise_text), "%H:%M", sun_time);
+  } else {
+    strftime(sun_rise_text, sizeof(sun_rise_text), "%I:%M", sun_time);
+  }
   text_layer_set_text(text_sunrise_layer, sun_rise_text);
   sun_time = localtime(&sun_set_unix_loc);
-  strftime(sun_set_text, sizeof(sun_set_text), "%I:%M", sun_time);
+  if(clock_is_24h_style()) {
+    strftime(sun_set_text, sizeof(sun_set_text), "%H:%M", sun_time);
+  } else {
+    strftime(sun_set_text, sizeof(sun_set_text), "%I:%M", sun_time);
+  }
   text_layer_set_text(text_sunset_layer, sun_set_text);
   
   
@@ -732,8 +740,10 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     char time_String[10];
     if(clock_is_24h_style() == true) {
       strftime(time_String, sizeof(time_String), "%H:%M:%S", &current_time_copy);
+      snprintf(hour_mode_str, sizeof(hour_mode_str), "%s", "24H");
     } else {
       strftime(time_String, sizeof(time_String), "%I:%M:%S", &current_time_copy);
+      strftime(hour_mode_str, sizeof(hour_mode_str), "%p", &current_time_copy);
     }
   #endif
   
