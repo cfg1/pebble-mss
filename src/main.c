@@ -798,7 +798,7 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     if (vibe_hour_old < 0) vibe_hour_old = current_time_copy.tm_hour;
     if (vibe_on_hour && (vibe_hour_old != current_time_copy.tm_hour)){
       // Vibe pattern: ON for 200ms, OFF for 100ms, ON for 400ms:
-      static const uint32_t const segments[] = { 300, 100, 300 };
+      static const uint32_t const segments[] = { 200, 100, 200 };
       VibePattern pat = {
         .durations = segments,
         .num_segments = ARRAY_LENGTH(segments),
@@ -1212,26 +1212,28 @@ static void handle_battery(BatteryChargeState charge_state) {
 
 
 static void handle_bluetooth(bool connected) {
-  if( !connected && initDone)
-  {
-    if (vibe_on_disconnect){
-      // Vibe pattern: ON for 200ms, OFF for 100ms, ON for 400ms:
-      static const uint32_t const segments[] = { 100, 50, 100, 50, 100 };
-      VibePattern pat = {
-        .durations = segments,
-        .num_segments = ARRAY_LENGTH(segments),
-      };
-      vibes_enqueue_custom_pattern(pat);
-    }
-  } else {
-    if (vibe_on_disconnect){ //could be vibe_on_connection
-      // Vibe pattern: ON for 200ms, OFF for 100ms, ON for 400ms:
-      static const uint32_t const segments[] = { 300, 50, 100, 50, 100 };
-      VibePattern pat = {
-        .durations = segments,
-        .num_segments = ARRAY_LENGTH(segments),
-      };
-      vibes_enqueue_custom_pattern(pat);
+  if (initDone){
+  if( !connected )
+    {
+      if (vibe_on_disconnect){
+        // Vibe pattern: ON for 200ms, OFF for 100ms, ON for 400ms:
+        static const uint32_t segments[] = { 200, 70, 200, 70, 200 };
+        VibePattern pat = {
+          .durations = segments,
+          .num_segments = ARRAY_LENGTH(segments),
+        };
+        vibes_enqueue_custom_pattern(pat);
+      }
+    } else {
+      if (vibe_on_disconnect){ //could be vibe_on_connection
+        // Vibe pattern: ON for 200ms, OFF for 100ms, ON for 400ms:
+        static const uint32_t segments[] = { 70, 70, 150, 150, 70, 70, 150, 150 };
+        VibePattern pat = {
+          .durations = segments,
+          .num_segments = ARRAY_LENGTH(segments),
+        };
+        vibes_enqueue_custom_pattern(pat);
+      }
     }
   }
   text_layer_set_text(connection_layer, connected ? "Bluetooth" : "---------");
