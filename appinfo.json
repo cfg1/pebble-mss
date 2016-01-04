@@ -57,15 +57,10 @@
         "configurable"
     ],
     "companyName": "fg",
-    "longName": "M7S_watchface_13_0",
+    "longName": "M7S_wf_14_2",
     "projectType": "native",
     "resources": {
         "media": [
-            {
-                "file": "images/background_image.png",
-                "name": "IMAGE_BACKGROUND",
-                "type": "png"
-            },
             {
                 "file": "fonts/Climacons.ttf",
                 "name": "FONT_CLIMACONS_32",
@@ -89,14 +84,14 @@
         ]
     },
     "sdkVersion": "3",
-    "shortName": "M7S_watchface_13_0",
+    "shortName": "M7S_wf_14_2",
     "targetPlatforms": [
         "aplite",
         "basalt",
         "chalk"
     ],
     "uuid": "03adc57a-569b-4669-9a80-b505eaea314d",
-    "versionLabel": "13.0",
+    "versionLabel": "14.2",
     "watchapp": {
         "watchface": true
     }
