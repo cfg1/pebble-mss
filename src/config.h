@@ -7,8 +7,8 @@
 #define TIMEZONE   +1
 
 // Translation for the calendar week (e.g. "CW%V")
-#define TRANSLATION_CW_DE "KW%V" 							
-#define TRANSLATION_CW_EN "CW%V" 							
+#define TRANSLATION_CW_DE "KW%V"
+#define TRANSLATION_CW_EN "CW%V"
 #define TRANSLATION_CW_FR "S.%V"
 
 //(un-)comment to change initial settings
@@ -32,7 +32,7 @@
 //#define ITERATE_TEMP
 
 // uncomment to use a different method to get HH:MM:SS:
-#define GET_TIME_FROM_STRING
+//#define GET_TIME_FROM_STRING
 
 #ifdef PBL_ROUND
   #define X_OFFSET ((180-144)/2)

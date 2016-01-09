@@ -145,6 +145,8 @@ static int WeatherUpdateReceived = 0;
 static int SecOnShakingOn = 1;
 static int SecondsTimeoutCounter = 0;
 
+static struct tm *tick_time; // must be global so that its content will not be overidden from other stuff.
+
 static int warning_color_last_update = 0;
 static int warning_color_location = 0;
 
@@ -518,8 +520,13 @@ void DisplayData(void) {
   }
   text_layer_set_text(text_sunset_layer, sun_set_text);
   
+  //reset the localtime internal variables to the current time, so that the tick_handler is getting the right ones.
+  //The handle_second_tick() might be executed after running localtime!
+  time_t now = time(NULL);
+  tick_time = localtime(&now);
   
-  DisplayLastUpdated(); 
+  DisplayLastUpdated();
+  
 }
 
 
@@ -709,6 +716,9 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
   static struct tm current_time_copy;
   current_time_copy = *current_time;
   
+    
+    
+    
   //units_changed = SECOND_UNIT | MINUTE_UNIT | HOUR_UNIT;
   
   
@@ -798,7 +808,7 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     if (vibe_hour_old < 0) vibe_hour_old = current_time_copy.tm_hour;
     if (vibe_on_hour && (vibe_hour_old != current_time_copy.tm_hour)){
       // Vibe pattern: ON for 200ms, OFF for 100ms, ON for 400ms:
-      static const uint32_t const segments[] = { 200, 100, 200 };
+      static const uint32_t segments[] = { 150, 70, 150 };
       VibePattern pat = {
         .durations = segments,
         .num_segments = ARRAY_LENGTH(segments),
@@ -1047,6 +1057,11 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     }
   }
   
+  
+  //reset the localtime internal variables to the current time, so that the tick_handler is getting the right ones.
+  //The handle_second_tick() might be executed after running localtime!
+  time_t now = time(NULL);
+  tick_time = localtime(&now);
   
 } // ---- end handle_second_tick() ----
 
@@ -1999,8 +2014,6 @@ static void apply_color_profile(void){
   
       background_color_lines       = GColorWhite;    
     }
-    
-    //layer_mark_dirty(background_paint_layer);
   #endif
     
   // --- Create Text-Layers:
@@ -2023,14 +2036,6 @@ static void apply_color_profile(void){
     textcolor_seconds     = textcolor;
     background_color_clock  = bkgcolor;
     background_color_lines = textcolor;
-  
-    /*
-    if (ColorProfile == 1)
-      bitmap_layer_set_compositing_mode(background_layer, GCompOpAssignInverted);
-    else
-      bitmap_layer_set_compositing_mode(background_layer, GCompOpAssign);
-    */
-    //layer_mark_dirty(background_paint_layer);
   #endif
   
   layer_mark_dirty(background_paint_layer);
@@ -2074,12 +2079,6 @@ static void apply_color_profile(void){
   #endif
   
   handle_battery(battery_state_service_peek());
-  /*
-  WeatherUpdateReceived = 1;
-  time_t now = time(NULL);
-  struct tm *tick_time = localtime(&now);
-  handle_second_tick(tick_time, SECOND_UNIT | MINUTE_UNIT | HOUR_UNIT);
-  */
   
   #ifdef PBL_COLOR
     DisplayData(); //set correct color of temperature
@@ -2111,7 +2110,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   
   int restart = 0;
   time_t now = time(NULL);
-  struct tm *tick_time = localtime(&now);
+  tick_time = localtime(&now);
   
   bool Settings_received = false;
 
@@ -2126,7 +2125,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       
     case KEY_LOCATION_NAME:
       snprintf(location_name, sizeof(location_name), "%s", t->value->cstring);
-      phone_last_updated = time(NULL);
+      phone_last_updated = time(NULL); // save the time the data arrived
       //APP_LOG(APP_LOG_LEVEL_INFO, "KEY_LOCATION_NAME updated last updated time.");
       break;
     case KEY_LOCATION_LAT:
@@ -2309,7 +2308,7 @@ static void tap_handler(AccelAxisType axis, int32_t direction) {
   SecondsTimeoutCounter = 0;
   tick_timer_service_unsubscribe();
   time_t now = time(NULL);
-  struct tm *tick_time = localtime(&now);
+  tick_time = localtime(&now);
   handle_second_tick(tick_time, SECOND_UNIT | MINUTE_UNIT | HOUR_UNIT);
   tick_timer_service_subscribe(SECOND_UNIT, &handle_second_tick);
 }
@@ -2400,7 +2399,7 @@ static void main_window_load(Window *window) {
   text_layer_set_text(battery_runtime_layer, "100%\n0:00 d");
   layer_add_child(main_window_layer, text_layer_get_layer(battery_runtime_layer));
   
-  #ifdef PBL_PLATFORM_APLITE //only on SDK 2.x
+  #ifdef PBL_PLATFORM_APLITE
     //fill battery with an InverterLayer
     s_battery_layer_fill = inverter_layer_create(GRect(3+X_OFFSET, 21+Y_OFFSET, 38, 11));
     layer_set_hidden(inverter_layer_get_layer(s_battery_layer_fill), true);
@@ -2503,7 +2502,7 @@ static void main_window_load(Window *window) {
   
   // Avoids a blank screen on watch start.
   time_t now = time(NULL);
-  struct tm *tick_time = localtime(&now);
+  tick_time = localtime(&now);
   handle_second_tick(tick_time, SECOND_UNIT | MINUTE_UNIT | HOUR_UNIT);
   handle_battery(battery_state_service_peek());
   handle_bluetooth(bluetooth_connection_service_peek());
