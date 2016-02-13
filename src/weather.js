@@ -755,7 +755,7 @@ Pebble.addEventListener("showConfiguration",
   function(e) {
     //Load the remote config page
     
-    /* --> */ Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_m7s_config_v14.2.html");
+    /* --> */ Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_m7s_config_v14.6.html");
     
     //TODO: send some usefull values to the settings page (e. g. location, battery staistics etc.) by adding ?xxx to the URL
   }
@@ -809,6 +809,7 @@ Pebble.addEventListener("webviewclosed",
           "KEY_SET_DATE_FORMAT": date_format_str,
           "KEY_WEATHER_UPDATE_INT": configuration.weatherUpdateInt,
           "KEY_SET_TZ_FORMAT": configuration.time_zone_info,
+          "KEY_SET_HEALTH": configuration.health_info,
           "KEY_SET_UPDATE_TIME": configuration.show_update_time,
           "KEY_SET_MOON_PHASE": configuration.moon_phase
         },

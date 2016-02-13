@@ -98,6 +98,9 @@ GColor textcolor_weather;
 GColor textcolor_location;
 GColor textcolor_last_update;
 GColor textcolor_tz;
+#ifndef PBL_PLATFORM_APLITE
+GColor textcolor_Steps;
+#endif
 
 GColor background_color_lines;
 GColor background_color_date;
@@ -123,6 +126,11 @@ static char date_format[20] = DATE_FORMAT;
 static int WeatherUpdateInterval = WEATHER_UPDATE_INTERVAL_MINUTE;
 static int ShowTimeSinceStationData = 0;
 static int TimeZoneFormat = 1;
+#ifdef PBL_PLATFORM_APLITE
+  static int HealthInfo = 0;
+#else
+  static int HealthInfo = 1;
+#endif
 static int AppFirstStart = 1;
 static int MoonPhase = 0;
 
@@ -309,6 +317,9 @@ void LoadData(void) {
   key = KEY_SET_TZ_FORMAT;
   if (persist_exists(key)) TimeZoneFormat = persist_read_int(key);
   
+  key = KEY_SET_HEALTH;
+  if (persist_exists(key)) HealthInfo = persist_read_int(key);
+  
   key = KEY_SET_UPDATE_TIME;
   if (persist_exists(key)) ShowTimeSinceStationData = persist_read_int(key);
   
@@ -358,6 +369,7 @@ void SaveData(void) {
   persist_write_int(KEY_SET_VIBE_FULL, vibe_on_charged_full);
   persist_write_int(KEY_SET_VIBE_HOUR, vibe_on_hour);
   persist_write_int(KEY_SET_TZ_FORMAT, TimeZoneFormat);
+  persist_write_int(KEY_SET_HEALTH, HealthInfo);
   persist_write_string(KEY_SET_DATE_FORMAT, date_format);
   persist_write_int(KEY_SET_UPDATE_TIME, ShowTimeSinceStationData);
     
@@ -643,7 +655,7 @@ static GColor get_weather_icon_bkgr_color(int nr){
     case 46: return GColorFromHEX(0x0055AA);
     case 47: return GColorFromHEX(0x000055);
     case 48: return GColorElectricBlue;
-    case 49: return GColorFromHEX(0x00AAFF);
+    case 49: return GColorFromHEX(0x0055FF);
     case 50: return GColorFromHEX(0x000055);
     case 51: return GColorFromHEX(0x0055AA); //hail (Hagel)
     case 52: return GColorBlack;
@@ -667,7 +679,7 @@ static GColor get_weather_icon_bkgr_color(int nr){
     case 70: return GColorFromHEX(0x555555);
     case 71: return GColorFromHEX(0x555555);
     case 72: return GColorBlack;
-    case 73: return GColorFromHEX(0x00AAFF);
+    case 73: return GColorFromHEX(0x0055FF);
     case 74: return GColorFromHEX(0x0055AA);
     case 75: return GColorFromHEX(0x0055AA);
     case 76: return GColorBlack;
@@ -986,7 +998,14 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     } else if (TimeZoneFormat == 2){
       snprintf(buffer_9, sizeof(buffer_9), "%s, %s", hour_mode_str, time_ZONE_NAME);
     }
-    text_layer_set_text(text_TimeZone_layer, buffer_9);
+    #ifndef PBL_PLATFORM_APLITE
+      if (HealthInfo < 2){
+        text_layer_set_text(text_TimeZone_layer, buffer_9);
+        text_layer_set_text_color(text_TimeZone_layer, textcolor_tz);
+      }
+    #else
+      text_layer_set_text(text_TimeZone_layer, buffer_9);
+    #endif
   }
   
   
@@ -1604,6 +1623,7 @@ static void apply_color_profile(void){
       textcolor_clock              = GColorBlack;
       textcolor_seconds            = GColorBlack;
       textcolor_tz                 = GColorBlack;
+      textcolor_Steps              = GColorBlack;
       textcolor_cal                = GColorBlack; //calendar week
       background_color_clock       = GColorWhite;
       
@@ -1626,11 +1646,12 @@ static void apply_color_profile(void){
       textcolor_last_update        = GColorBlack;
       background_color_last_update = GColorWhite;
   
-      background_color_lines       = GColorBlack;    
+      background_color_lines       = GColorBlack;
     } else if (ColorProfile == 5){ //Black Bkgr. and green clock
       textcolor_clock              = GColorFromHEX(0x00FF00);;
       textcolor_seconds            = GColorFromHEX(0x00AAAA);;
       textcolor_tz                 = GColorFromHEX(0x555555);; //OK
+      textcolor_Steps              = GColorWhite;
       textcolor_cal                = GColorFromHEX(0x00AAAA);;   //=GColorTiffanyBlue //calendar week
       background_color_clock       = GColorBlack;
       
@@ -1658,6 +1679,7 @@ static void apply_color_profile(void){
       textcolor_clock              = GColorFromRGB(0, 0, 85);
       textcolor_seconds            = GColorFromRGB(0, 170, 170);
       textcolor_tz                 = GColorFromRGB(85, 85, 85); //OK
+      textcolor_Steps              = GColorWhite;
       textcolor_cal                = GColorFromRGB(0, 170, 170);   //=GColorTiffanyBlue; //calendar week
       background_color_clock       = GColorFromHEX(0xFFFF55);
       
@@ -1685,6 +1707,7 @@ static void apply_color_profile(void){
       textcolor_clock              = GColorFromHEX(0x00FFFF);
       textcolor_seconds            = GColorFromHEX(0xFF5500);
       textcolor_tz                 = GColorFromHEX(0x555555); //OK
+      textcolor_Steps              = GColorWhite;
       textcolor_cal                = GColorFromHEX(0x00AAAA); //calendar week
       background_color_clock       = GColorFromHEX(0x000055);
       
@@ -1712,6 +1735,7 @@ static void apply_color_profile(void){
       textcolor_clock              = GColorFromHEX(0x0055FF);
       textcolor_seconds            = GColorFromHEX(0x00AAFF);
       textcolor_tz                 = GColorFromHEX(0x555555); //OK
+      textcolor_Steps              = GColorWhite;
       textcolor_cal                = GColorFromHEX(0x00AAAA); //calendar week
       background_color_clock       = GColorFromHEX(0x000000);
       
@@ -1739,6 +1763,7 @@ static void apply_color_profile(void){
       textcolor_clock              = GColorFromHEX(0xFF0000);
       textcolor_seconds            = GColorFromHEX(0xFF5500);
       textcolor_tz                 = GColorFromHEX(0x555555); //OK
+      textcolor_Steps              = GColorWhite;
       textcolor_cal                = GColorFromHEX(0xAA00AA); //calendar week
       background_color_clock       = GColorFromHEX(0x000000);
       
@@ -1766,6 +1791,7 @@ static void apply_color_profile(void){
       textcolor_clock              = GColorFromHEX(0xFFFF00);
       textcolor_seconds            = GColorFromHEX(0xFFFF00);
       textcolor_tz                 = GColorFromHEX(0xAAAAAA); //OK
+      textcolor_Steps              = GColorWhite;
       textcolor_cal                = GColorFromHEX(0xFFAA55); //calendar week
       background_color_clock       = GColorFromHEX(0x550000);
       
@@ -1801,6 +1827,7 @@ static void apply_color_profile(void){
       textcolor_clock              = GColorFromHEX(0xFFFF00);
       textcolor_seconds            = GColorFromHEX(0xFFFF00);
       textcolor_tz                 = GColorFromHEX(0xAAAAAA); //OK
+      textcolor_Steps              = GColorWhite;
       textcolor_cal                = GColorFromHEX(0xAAFF55); //calendar week
       background_color_clock       = GColorFromHEX(0x005500);
       
@@ -1828,6 +1855,7 @@ static void apply_color_profile(void){
       textcolor_clock              = GColorFromHEX(0x00FFFF);
       textcolor_seconds            = GColorFromHEX(0x00FFFF);
       textcolor_tz                 = GColorFromHEX(0x555555); //OK
+      textcolor_Steps              = GColorWhite;
       textcolor_cal                = GColorFromHEX(0xAAAAAA); //calendar week
       background_color_clock       = GColorFromHEX(0x000055);
       
@@ -1855,6 +1883,7 @@ static void apply_color_profile(void){
       textcolor_clock              = GColorFromHEX(0x550000);
       textcolor_seconds            = GColorFromHEX(0x550000);
       textcolor_tz                 = GColorFromHEX(0x555555); //OK
+      textcolor_Steps              = GColorWhite;
       textcolor_cal                = GColorFromHEX(0x550000); //calendar week
       background_color_clock       = GColorFromHEX(0xFFAA55);
       
@@ -1882,6 +1911,7 @@ static void apply_color_profile(void){
       textcolor_clock              = GColorFromHEX(0x000000);
       textcolor_seconds            = GColorFromHEX(0x000000);
       textcolor_tz                 = GColorFromHEX(0x555555); //OK
+      textcolor_Steps              = GColorWhite;
       textcolor_cal                = GColorFromHEX(0x005500); //calendar week
       background_color_clock       = GColorFromHEX(0x00FF00);
       
@@ -1909,6 +1939,7 @@ static void apply_color_profile(void){
       textcolor_clock              = GColorFromHEX(0x000000);
       textcolor_seconds            = GColorFromHEX(0x000000);
       textcolor_tz                 = GColorFromHEX(0xAAAAAA); //OK
+      textcolor_Steps              = GColorWhite;
       textcolor_cal                = GColorFromHEX(0xAAAAAA); //calendar week
       background_color_clock       = GColorFromHEX(0x00AAFF);
       
@@ -1936,6 +1967,7 @@ static void apply_color_profile(void){
       textcolor_clock              = GColorFromHEX(0xFFFFFF);
       textcolor_seconds            = GColorFromHEX(0xFFFFFF);
       textcolor_tz                 = GColorFromHEX(0x555555); //OK
+      textcolor_Steps              = GColorWhite;
       textcolor_cal                = GColorFromHEX(0xAAAAAA); //calendar week
       background_color_clock       = GColorFromHEX(0x000000);
       
@@ -1963,6 +1995,7 @@ static void apply_color_profile(void){
       textcolor_clock              = GColorFromHEX(0x000000);
       textcolor_seconds            = GColorFromHEX(0x000000);
       textcolor_tz                 = GColorFromHEX(0x555555); //OK
+      textcolor_Steps              = GColorWhite;
       textcolor_cal                = GColorFromHEX(0xAAAAAA); //calendar week
       background_color_clock       = GColorFromHEX(0xFFFFFF);
       
@@ -1990,6 +2023,7 @@ static void apply_color_profile(void){
       textcolor_clock              = GColorWhite;
       textcolor_seconds            = GColorWhite;
       textcolor_tz                 = GColorWhite;
+      textcolor_Steps              = GColorWhite;
       textcolor_cal                = GColorWhite; //calendar week
       background_color_clock       = GColorBlack;
       
@@ -2053,6 +2087,11 @@ static void apply_color_profile(void){
   text_layer_set_text_color(weather_layer_7_string_1, textcolor_weather);
   text_layer_set_text_color(weather_layer_7_string_2, textcolor_weather);
   text_layer_set_text_color(text_TimeZone_layer, textcolor_tz);
+  #ifndef PBL_PLATFORM_APLITE
+    if (HealthInfo > 1){
+      text_layer_set_text_color(text_TimeZone_layer, textcolor_Steps);
+    }
+  #endif
   
   #ifdef PBL_COLOR
     if (warning_color_location) text_layer_set_text_color(weather_layer_3_location, GColorWhite);
@@ -2088,7 +2127,7 @@ static void apply_color_profile(void){
   
 static void set_cwLayer_size(void){
   if (DisplaySeconds){
-    if (TimeZoneFormat == 1){
+    if ((TimeZoneFormat == 1) && (HealthInfo == 0)){
       text_layer_set_text_alignment(cwLayer, GTextAlignmentCenter);
       layer_set_frame(text_layer_get_layer(cwLayer), GRect(0+X_OFFSET, 135+Y_OFFSET, 144, 20));
     } else {
@@ -2099,6 +2138,93 @@ static void set_cwLayer_size(void){
     text_layer_set_text_alignment(cwLayer, GTextAlignmentRight); // this must be done before layer_set_frame for alignment on Aplite.
     layer_set_frame(text_layer_get_layer(cwLayer), GRect(72+X_OFFSET, 135+Y_OFFSET, 64, 20));
   }
+}
+
+#if defined(PBL_HEALTH)
+static void health_handler(HealthEventType event, void *context) {
+  if (HealthInfo == 0) return;
+  
+  static char steps_str[20];
+  static char sleep_str[15];
+  static char unit[7];
+  int do_update = 0;
+  
+  // Which type of event occured?
+  switch(event) {
+    case HealthEventSignificantUpdate:
+      //APP_LOG(APP_LOG_LEVEL_INFO, "New HealthService HealthEventSignificantUpdate event");
+      do_update = 1;
+      break;
+    case HealthEventMovementUpdate:
+      //APP_LOG(APP_LOG_LEVEL_INFO, "New HealthService HealthEventMovementUpdate event");
+      do_update = 2;
+      break;
+    case HealthEventSleepUpdate:
+      //APP_LOG(APP_LOG_LEVEL_INFO, "New HealthService HealthEventSleepUpdate event");
+      do_update = 3;
+      break;
+  }
+  
+  if (HealthInfo == 3) do_update = 2; // allays steps
+  if (HealthInfo == 4) do_update = 3; // allays sleep
+  
+  //do_update = 0;
+  
+  if (do_update > 0){
+    
+    HealthMetric metric = HealthMetricStepCount;
+    if (do_update < 3){
+      //show steps
+      metric = HealthMetricStepCount;
+      strcpy(unit, " steps");
+    } else if (do_update == 3){
+      //show sleep
+      metric = HealthMetricSleepSeconds;
+      strcpy(unit, " sleep");
+    }
+    time_t start = time_start_of_today();
+    time_t end = time(NULL); 
+    // Check the metric has data available for today
+    HealthServiceAccessibilityMask mask = health_service_metric_accessible(metric, start, end);
+    
+    if(mask & HealthServiceAccessibilityMaskAvailable) {
+      // Data is available!
+      //APP_LOG(APP_LOG_LEVEL_INFO, "Steps today: %d", (int)health_service_sum_today(metric));
+      if (do_update == 3){
+        print_time(sleep_str, sizeof(sleep_str), (time_t)health_service_sum_today(metric), 0);
+        snprintf(steps_str, sizeof(steps_str), "%s%s", sleep_str, unit);
+      } else {
+        snprintf(steps_str, sizeof(steps_str), "%d%s", (int)health_service_sum_today(metric), unit);
+      }
+    } else {
+      // No data recorded yet today
+      //APP_LOG(APP_LOG_LEVEL_ERROR, "Data unavailable!");
+      if (do_update == 3){
+        print_time(sleep_str, sizeof(sleep_str), (time_t)0, 0);
+        snprintf(steps_str, sizeof(steps_str), "%s%s", sleep_str, unit);
+      } else {
+        snprintf(steps_str, sizeof(steps_str), "%d%s", (int)0, unit);
+      }
+    }
+    
+    text_layer_set_text(text_TimeZone_layer, steps_str);
+    text_layer_set_text_color(text_TimeZone_layer, textcolor_Steps);
+  }
+}
+#endif
+
+static void tap_handler(AccelAxisType axis, int32_t direction) {
+  if (DisplaySeconds < 2) return;
+  SecOnShakingOn = 1;
+  SecondsTimeoutCounter = 0;
+  tick_timer_service_unsubscribe();
+  time_t now = time(NULL);
+  tick_time = localtime(&now);
+  handle_second_tick(tick_time, SECOND_UNIT | MINUTE_UNIT | HOUR_UNIT);
+  tick_timer_service_subscribe(SECOND_UNIT, &handle_second_tick);
+  #if defined(PBL_HEALTH)
+    health_handler(HealthEventSignificantUpdate, NULL);
+  #endif
 }
 
 
@@ -2227,6 +2353,15 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       Settings_received = true;
       set_cwLayer_size();
       break;
+    case KEY_SET_HEALTH:
+      HealthInfo = (int)t->value->int32;
+      Settings_received = true;
+      set_cwLayer_size();
+      #if defined(PBL_HEALTH)
+        health_handler(HealthEventSignificantUpdate, NULL);
+      #endif
+      break;
+      
       
     case KEY_SET_UPDATE_TIME:
       ShowTimeSinceStationData = (int)t->value->int32;
@@ -2301,18 +2436,6 @@ static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResul
 static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
   //APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
 }
-
-static void tap_handler(AccelAxisType axis, int32_t direction) {
-  if (DisplaySeconds < 2) return;
-  SecOnShakingOn = 1;
-  SecondsTimeoutCounter = 0;
-  tick_timer_service_unsubscribe();
-  time_t now = time(NULL);
-  tick_time = localtime(&now);
-  handle_second_tick(tick_time, SECOND_UNIT | MINUTE_UNIT | HOUR_UNIT);
-  tick_timer_service_subscribe(SECOND_UNIT, &handle_second_tick);
-}
-
 
 
 static void main_window_load(Window *window) {
@@ -2519,6 +2642,17 @@ static void main_window_load(Window *window) {
   battery_state_service_subscribe(&handle_battery);
   bluetooth_connection_service_subscribe(&handle_bluetooth);
   accel_tap_service_subscribe(tap_handler);
+  
+  
+  #if defined(PBL_HEALTH)
+    // Attempt to subscribe 
+    if(!health_service_events_subscribe(health_handler, NULL)) {
+      APP_LOG(APP_LOG_LEVEL_ERROR, "Health not available!");
+    }
+  #else
+    //APP_LOG(APP_LOG_LEVEL_ERROR, "Health not available!");
+  #endif
+  
   
   // Register callbacks
   app_message_register_inbox_received(inbox_received_callback);

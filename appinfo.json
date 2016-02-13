@@ -11,6 +11,7 @@
         "KEY_SET_DATE_FORMAT": 26,
         "KEY_SET_DEGREE_F": 25,
         "KEY_SET_DISPLAY_SEC": 21,
+        "KEY_SET_HEALTH": 30,
         "KEY_SET_INVERT_COLOR": 20,
         "KEY_SET_LABEL_INDEX_1": 31,
         "KEY_SET_LABEL_INDEX_2": 32,
@@ -20,7 +21,6 @@
         "KEY_SET_LABEL_INDEX_6": 36,
         "KEY_SET_LABEL_INDEX_7": 37,
         "KEY_SET_LABEL_INDEX_8": 38,
-        "KEY_SET_LANG_ID": 30,
         "KEY_SET_LIGHT_ON": 22,
         "KEY_SET_MOON_PHASE": 5,
         "KEY_SET_TZ_FORMAT": 27,
@@ -54,10 +54,12 @@
     },
     "capabilities": [
         "location",
-        "configurable"
+        "configurable",
+        "health"
     ],
     "companyName": "fg",
-    "longName": "M7S_wf_14_5",
+    "enableMultiJS": false,
+    "longName": "M7S_wf_14_6",
     "projectType": "native",
     "resources": {
         "media": [
@@ -84,14 +86,14 @@
         ]
     },
     "sdkVersion": "3",
-    "shortName": "M7S_wf_14_5",
+    "shortName": "M7S_wf_14_6",
     "targetPlatforms": [
         "aplite",
         "basalt",
         "chalk"
     ],
     "uuid": "03adc57a-569b-4669-9a80-b505eaea314d",
-    "versionLabel": "14.5",
+    "versionLabel": "14.6",
     "watchapp": {
         "watchface": true
     }

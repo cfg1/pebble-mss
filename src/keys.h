@@ -29,7 +29,7 @@
 #define KEY_SET_TZ_FORMAT      27
 #define KEY_SET_VIBE_HOUR      28
 #define KEY_SET_UPDATE_TIME    29
-#define KEY_SET_LANG_ID        30
+#define KEY_SET_HEALTH         30
 
 #define KEY_SET_LABEL_INDEX_1  31
 #define KEY_SET_LABEL_INDEX_2  32
