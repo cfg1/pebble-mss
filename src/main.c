@@ -1651,7 +1651,7 @@ static void apply_color_profile(void){
       textcolor_clock              = GColorFromHEX(0x00FF00);;
       textcolor_seconds            = GColorFromHEX(0x00AAAA);;
       textcolor_tz                 = GColorFromHEX(0x555555);; //OK
-      textcolor_Steps              = GColorWhite;
+      textcolor_Steps              = GColorFromHEX(0x55FF55);
       textcolor_cal                = GColorFromHEX(0x00AAAA);;   //=GColorTiffanyBlue //calendar week
       background_color_clock       = GColorBlack;
       
@@ -1679,7 +1679,7 @@ static void apply_color_profile(void){
       textcolor_clock              = GColorFromRGB(0, 0, 85);
       textcolor_seconds            = GColorFromRGB(0, 170, 170);
       textcolor_tz                 = GColorFromRGB(85, 85, 85); //OK
-      textcolor_Steps              = GColorWhite;
+      textcolor_Steps              = GColorFromHEX(0x000000);
       textcolor_cal                = GColorFromRGB(0, 170, 170);   //=GColorTiffanyBlue; //calendar week
       background_color_clock       = GColorFromHEX(0xFFFF55);
       
@@ -1707,7 +1707,7 @@ static void apply_color_profile(void){
       textcolor_clock              = GColorFromHEX(0x00FFFF);
       textcolor_seconds            = GColorFromHEX(0xFF5500);
       textcolor_tz                 = GColorFromHEX(0x555555); //OK
-      textcolor_Steps              = GColorWhite;
+      textcolor_Steps              = GColorFromHEX(0xFFFFFF);
       textcolor_cal                = GColorFromHEX(0x00AAAA); //calendar week
       background_color_clock       = GColorFromHEX(0x000055);
       
@@ -1735,7 +1735,7 @@ static void apply_color_profile(void){
       textcolor_clock              = GColorFromHEX(0x0055FF);
       textcolor_seconds            = GColorFromHEX(0x00AAFF);
       textcolor_tz                 = GColorFromHEX(0x555555); //OK
-      textcolor_Steps              = GColorWhite;
+      textcolor_Steps              = GColorFromHEX(0x5555FF);
       textcolor_cal                = GColorFromHEX(0x00AAAA); //calendar week
       background_color_clock       = GColorFromHEX(0x000000);
       
@@ -1763,7 +1763,7 @@ static void apply_color_profile(void){
       textcolor_clock              = GColorFromHEX(0xFF0000);
       textcolor_seconds            = GColorFromHEX(0xFF5500);
       textcolor_tz                 = GColorFromHEX(0x555555); //OK
-      textcolor_Steps              = GColorWhite;
+      textcolor_Steps              = GColorFromHEX(0xFF5555);
       textcolor_cal                = GColorFromHEX(0xAA00AA); //calendar week
       background_color_clock       = GColorFromHEX(0x000000);
       
@@ -1791,7 +1791,7 @@ static void apply_color_profile(void){
       textcolor_clock              = GColorFromHEX(0xFFFF00);
       textcolor_seconds            = GColorFromHEX(0xFFFF00);
       textcolor_tz                 = GColorFromHEX(0xAAAAAA); //OK
-      textcolor_Steps              = GColorWhite;
+      textcolor_Steps              = GColorFromHEX(0xFFAAAA);
       textcolor_cal                = GColorFromHEX(0xFFAA55); //calendar week
       background_color_clock       = GColorFromHEX(0x550000);
       
@@ -1827,7 +1827,7 @@ static void apply_color_profile(void){
       textcolor_clock              = GColorFromHEX(0xFFFF00);
       textcolor_seconds            = GColorFromHEX(0xFFFF00);
       textcolor_tz                 = GColorFromHEX(0xAAAAAA); //OK
-      textcolor_Steps              = GColorWhite;
+      textcolor_Steps              = GColorFromHEX(0xAAFFAA);
       textcolor_cal                = GColorFromHEX(0xAAFF55); //calendar week
       background_color_clock       = GColorFromHEX(0x005500);
       
@@ -1855,7 +1855,7 @@ static void apply_color_profile(void){
       textcolor_clock              = GColorFromHEX(0x00FFFF);
       textcolor_seconds            = GColorFromHEX(0x00FFFF);
       textcolor_tz                 = GColorFromHEX(0x555555); //OK
-      textcolor_Steps              = GColorWhite;
+      textcolor_Steps              = GColorFromHEX(0xAAAAFF);
       textcolor_cal                = GColorFromHEX(0xAAAAAA); //calendar week
       background_color_clock       = GColorFromHEX(0x000055);
       
@@ -1883,7 +1883,7 @@ static void apply_color_profile(void){
       textcolor_clock              = GColorFromHEX(0x550000);
       textcolor_seconds            = GColorFromHEX(0x550000);
       textcolor_tz                 = GColorFromHEX(0x555555); //OK
-      textcolor_Steps              = GColorWhite;
+      textcolor_Steps              = GColorFromHEX(0x000000);
       textcolor_cal                = GColorFromHEX(0x550000); //calendar week
       background_color_clock       = GColorFromHEX(0xFFAA55);
       
@@ -1911,7 +1911,7 @@ static void apply_color_profile(void){
       textcolor_clock              = GColorFromHEX(0x000000);
       textcolor_seconds            = GColorFromHEX(0x000000);
       textcolor_tz                 = GColorFromHEX(0x555555); //OK
-      textcolor_Steps              = GColorWhite;
+      textcolor_Steps              = GColorFromHEX(0x000000);
       textcolor_cal                = GColorFromHEX(0x005500); //calendar week
       background_color_clock       = GColorFromHEX(0x00FF00);
       
@@ -1939,7 +1939,7 @@ static void apply_color_profile(void){
       textcolor_clock              = GColorFromHEX(0x000000);
       textcolor_seconds            = GColorFromHEX(0x000000);
       textcolor_tz                 = GColorFromHEX(0xAAAAAA); //OK
-      textcolor_Steps              = GColorWhite;
+      textcolor_Steps              = GColorFromHEX(0x000000);
       textcolor_cal                = GColorFromHEX(0xAAAAAA); //calendar week
       background_color_clock       = GColorFromHEX(0x00AAFF);
       
@@ -1995,7 +1995,7 @@ static void apply_color_profile(void){
       textcolor_clock              = GColorFromHEX(0x000000);
       textcolor_seconds            = GColorFromHEX(0x000000);
       textcolor_tz                 = GColorFromHEX(0x555555); //OK
-      textcolor_Steps              = GColorWhite;
+      textcolor_Steps              = GColorFromHEX(0x000000);
       textcolor_cal                = GColorFromHEX(0xAAAAAA); //calendar week
       background_color_clock       = GColorFromHEX(0xFFFFFF);
       
