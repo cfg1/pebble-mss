@@ -988,11 +988,11 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
       time_t UTC_TIME_UNIX = time(NULL);
       struct tm* utc_time;
       utc_time = gmtime(&UTC_TIME_UNIX);
-      if(clock_is_24h_style() == true) {
+      //if(clock_is_24h_style() == true) {
         strftime(buffer_9, sizeof(buffer_9), "%R UTC", utc_time);
-      } else {
-        strftime(buffer_9, sizeof(buffer_9), "%I:%M UTC", utc_time);
-      }
+      //} else {
+      //  strftime(buffer_9, sizeof(buffer_9), "%I:%M UTC", utc_time);
+      //}
     } else if (TimeZoneFormat == 1){
       snprintf(buffer_9, sizeof(buffer_9), "%s", time_ZONE_NAME);
     } else if (TimeZoneFormat == 2){
