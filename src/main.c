@@ -166,7 +166,7 @@ static void apply_color_profile(void);
 
 void print_time(char *s, int size_s, time_t time_diff, int mode){
   
-  //mode = 0: 
+  //mode = 2: 
   //    7 s
   // 1:15 m
   //   10 m
@@ -176,7 +176,17 @@ void print_time(char *s, int size_s, time_t time_diff, int mode){
   //   10 d
   // 3000 d
   
-  //mode > 0: 
+  //mode = 0 (new): 
+  //    7 s
+  // 1m 15s
+  //   10 m
+  // 1h 05m
+  //   10 h
+  // 1d 03h
+  //   10 d
+  // 3000 d
+  
+  //mode = 1: 
   //    7 s
   //    1 m
   //   10 m
@@ -197,21 +207,30 @@ void print_time(char *s, int size_s, time_t time_diff, int mode){
       if (minutes == 0){
         snprintf(s, size_s, "%d s", seconds);
       } else {
-        if ((minutes < 10) && (mode == 0))
-          snprintf(s, size_s, "%d:%02d m", minutes, seconds);
-        else
+        if ((minutes < 10) && ((mode == 0) || (mode == 2))){
+          if (mode == 0)
+            snprintf(s, size_s, "%dm %ds", minutes, seconds);
+          else
+            snprintf(s, size_s, "%d:%02d m", minutes, seconds);
+        } else
           snprintf(s, size_s, "%d m", minutes);
       }
     } else {
-      if ((hours < 10)  && (mode == 0))
-        snprintf(s, size_s, "%d:%02d h", hours, minutes);
-      else
+      if ((hours < 10) && ((mode == 0) || (mode == 2))){
+        if (mode == 0)
+          snprintf(s, size_s, "%dh %dm", hours, minutes);
+        else
+          snprintf(s, size_s, "%d:%02d h", hours, minutes);
+      } else
         snprintf(s, size_s, "%d h", hours);
     }
   } else {
-    if ((days < 10) && (mode == 0))
-      snprintf(s, size_s, "%d:%02d d", days, hours);
-    else
+    if ((days < 10) && ((mode == 0) || (mode == 2))){
+      if (mode == 0)
+        snprintf(s, size_s, "%dd %dh", days, hours);
+      else
+        snprintf(s, size_s, "%d:%02d d", days, hours);
+    } else
       snprintf(s, size_s, "%d d", days);
   }
 }
@@ -1197,17 +1216,23 @@ static void handle_battery(BatteryChargeState charge_state) {
     layer_set_hidden(effect_layer_get_layer(s_battery_layer_fill), false);
     
     uint8_t variable_color = 0;
-    if (actual_battery_percent > 80){
-      variable_color = 0b11000100; // 90 % - 100 %
-    } else if (actual_battery_percent > 40){
-      variable_color = 0b11000100; // 50 % -  80 % 
-    } else if (actual_battery_percent > 30){
-      variable_color = 0b11000100; // 40 %          before setting 40 % to the color of 50-80%: light orange (GColorChromeYellow) 0b11111000
-    } else if (actual_battery_percent > 20){
-      variable_color = 0b11110100; // 30 %          dark orange (GColorOrange)
-    } else {
-      variable_color = 0b11110000; //  0 % -  20 %  red (GColorRed)
-    }
+    #ifdef PBL_PLATFORM_CHALK
+      if (actual_battery_percent > 30){
+        variable_color = 0b11000100; // 40-100 %          
+      } else if (actual_battery_percent > 20){
+        variable_color = 0b11110100; // 30 %          dark orange (GColorOrange)
+      } else {
+        variable_color = 0b11110000; //  0 % -  20 %  red (GColorRed)
+      }
+    #else
+      if (actual_battery_percent > 20){
+        variable_color = 0b11000100; // 30-100 %          
+      } else if (actual_battery_percent > 10){
+        variable_color = 0b11110100; // 20 %          dark orange (GColorOrange)
+      } else {
+        variable_color = 0b11110000; //  0 % -  10 %  red (GColorRed)
+      }
+    #endif
   
   
     if (ColorProfile == 0) {
@@ -2292,7 +2317,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       break;
     case KEY_TIME_ZONE_NAME:
       snprintf(time_ZONE_NAME, sizeof(time_ZONE_NAME), "%s", t->value->cstring);
-      Settings_received = true;
+      //Settings_received = true;
       break;
     case KEY_SET_MOON_PHASE:
       MoonPhase = (int)t->value->int32;
