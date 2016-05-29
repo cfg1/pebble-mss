@@ -99,7 +99,7 @@ GColor bkgrcolor_bat;
 uint8_t bkgrcolor_bat_uint8;
 GColor textcolor_date;
 GColor textcolor_cal;
-GColor textcolor_moon; //Its done almost only set through get_weather_icon_color(0);
+GColor textcolor_moon; //Its almost only set through get_weather_icon_color(0);
 GColor textcolor_weather;
 GColor textcolor_location;
 GColor textcolor_last_update;
