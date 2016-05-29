@@ -22,7 +22,7 @@
   graphics_draw_line(ctx, GPoint( 20,     69+Y_OFFSET), GPoint( 20,     90+Y_OFFSET));
   graphics_draw_line(ctx, GPoint(180-25,  69+Y_OFFSET), GPoint(180-25,  90+Y_OFFSET));
   
-  #ifdef PBL_COLOR
+  #ifndef PBL_PLATFORM_APLITE
     //draw background areas:
     graphics_context_set_fill_color(ctx, background_color_clock);
     graphics_context_set_stroke_color(ctx, background_color_clock);
@@ -47,9 +47,12 @@
     graphics_fill_rect(ctx, GRect(48+X_OFFSET, 17+Y_OFFSET, 37, 33), 0, 0);
   
   
-    if (warning_color_location){
+    if (warning_color_location == 1){
       graphics_context_set_fill_color(ctx, GColorRed);
       graphics_context_set_stroke_color(ctx, GColorRed);
+    } else if (warning_color_location == 2){
+      graphics_context_set_fill_color(ctx, GColorBlack);
+      graphics_context_set_stroke_color(ctx, GColorBlack);
     } else {
       graphics_context_set_fill_color(ctx, background_color_location);
       graphics_context_set_stroke_color(ctx, background_color_location);

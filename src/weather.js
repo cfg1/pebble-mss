@@ -224,6 +224,11 @@ var configuration = {
   OWM_API_KEY: OWM_DEFAULT_API_KEY
 };
 
+var last_detected_loc = {
+  lat: 0.0,
+  lon: 0.0
+}
+
 var ForecastDataJSON;
 var WeatherDataJSON;
 
@@ -238,6 +243,8 @@ var xhrRequest = function (url, type, callback) {
 
 function locationSuccess(pos) {
   console.log("locationSuccess Begin");
+  //TODO: save loc:
+  window.localStorage.last_location = JSON.stringify(last_detected_loc);
   SendToPebble(pos, 0);
 }
 
@@ -245,10 +252,31 @@ function locationError(err) {
   console.log("locationError Begin");
   console.log('location error (' + err.code + '): ' + err.message);
   console.log("Error requesting location! Using Default.");
-  var pos = {
-    coords: {latitude: 0, longitude: 0}
-  };
-  SendToPebble(pos, 1);
+  //TODO: load loc:
+  
+  if (window.localStorage.getItem("last_location")){
+    console.log("read last location start");
+    last_location = JSON.parse(window.localStorage.configuration);
+    //var test = JSON.parse(window.localStorage.configuration);
+    console.log("loaded last location = " + JSON.stringify(last_location, null, 2));
+    console.log("read last location finished");
+    last_detected_loc.lat = last_location.lat;
+    last_detected_loc.lon = last_location.lon;
+  } else {
+    console.log("error reading last location from localStorage");
+  }
+  
+  if ((last_detected_loc.lat === 0.0) && (last_detected_loc.lon === 0.0)){
+    var pos = {
+      coords: {latitude: 0, longitude: 0}
+    };
+    SendToPebble(pos, 1);
+  } else {
+    var pos = {
+      coords: {latitude: last_detected_loc.lat, longitude: last_detected_loc.lon}
+    };
+    SendToPebble(pos, 0);
+  }
 }
 
 function SendToPebble(pos, use_default) {
@@ -391,7 +419,7 @@ function SendToPebble(pos, use_default) {
             var location_name = WeatherDataJSON.name;
             var warn_location = 0;
             if ((configuration.autodetect_loc) && (use_default)){ //tried autodection of location, but could not get the lat long values from phone, so used default location set by the user.
-              warn_location = 1;
+              warn_location = 2;
               console.log("Tried autodection of location, but could not get the lat long values from phone.");
             } 
             if ((configuration.autodetect_loc === 0) && (use_default === 0)){ //detected location, but used user input
@@ -570,6 +598,8 @@ function SendToPebble(pos, use_default) {
               weather_string_2 = (weather_string_2.replace('°', '__')).replace('°', '__');
             }
             
+            if (configuration.autodetect_loc == 2) warn_location = 0;
+            
             // Assemble dictionary using our keys
             var dictionary = {
               "KEY_LOCATION_NAME": location_name,
@@ -722,11 +752,18 @@ function getWeather() {
     timeout: 10000,
     maximumAge: 0
   };
-  navigator.geolocation.getCurrentPosition(    //could also use navigator.geolocation.watchPosition() ?
-    locationSuccess,
-    locationError,
-    options
-  );
+  if (configuration.autodetect_loc == 2){
+    var pos = {
+      coords: {latitude: 0, longitude: 0}
+    };
+    SendToPebble(pos, 1);
+  } else {
+    navigator.geolocation.getCurrentPosition(    //could also use navigator.geolocation.watchPosition() ?
+      locationSuccess,
+      locationError,
+      options
+    );
+  }
   console.log("getWeather End");
 }
 

@@ -42,4 +42,4 @@
   #define Y_OFFSET 0  
 #endif
 
-#define MAX_NO_COLOR_PROFILES 14 //maximum static color profile index
+#define MAX_NO_COLOR_PROFILES 15 //maximum static color profile index

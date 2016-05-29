@@ -64,6 +64,25 @@
     "resources": {
         "media": [
             {
+                "file": "images/Soles-feet-30x35px.png",
+                "name": "IMAGE_HEALTH_STEPS",
+                "targetPlatforms": [
+                    "basalt",
+                    "chalk"
+                ],
+                "type": "bitmap"
+            },
+            {
+                "file": "images/Sleep_30x26.png",
+                "memoryFormat": "1Bit",
+                "name": "IMAGE_HEALTH_SLEEP",
+                "targetPlatforms": [
+                    "basalt",
+                    "chalk"
+                ],
+                "type": "bitmap"
+            },
+            {
                 "file": "fonts/Climacons.ttf",
                 "name": "FONT_CLIMACONS_32",
                 "type": "font"

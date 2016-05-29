@@ -63,6 +63,14 @@ static time_t last_battery_period_time = 0; // last duration of charging/dischar
   static EffectLayer *s_battery_layer_fill; //fill battery with an InverterLayer by an effect_invert_color (my own effect added to effect_layer type)
 #endif
 
+#ifndef PBL_PLATFORM_APLITE
+  static BitmapLayer *s_health_bmp_layer;
+  static GBitmap *s_health_bitmap_sleep;
+  static GBitmap *s_health_bitmap_steps;
+  static TextLayer *text_layer_health; //Steps/Sleep
+  static Layer *s_layer_health_up_down;
+#endif
+
 
 
 // Weather and other global variables:
@@ -76,8 +84,6 @@ static int  WeatherIcon         = (int)'I'; //sun
 static char weather_string_1[32]; //under actual temp.
 static char weather_string_2[32]; //string under moon/bat
 static char time_ZONE_NAME[10];
-//static char sun_rise[10] = "--:--";
-//static char sun_set[10] = "--:--";
 static time_t sun_rise_unix_loc = 0;
 static time_t sun_set_unix_loc  = 0;
 
@@ -93,13 +99,14 @@ GColor bkgrcolor_bat;
 uint8_t bkgrcolor_bat_uint8;
 GColor textcolor_date;
 GColor textcolor_cal;
-GColor textcolor_moon; //not used any more. Its done through get_weather_icon_color(0);
+GColor textcolor_moon; //Its done almost only set through get_weather_icon_color(0);
 GColor textcolor_weather;
 GColor textcolor_location;
 GColor textcolor_last_update;
 GColor textcolor_tz;
 #ifndef PBL_PLATFORM_APLITE
 GColor textcolor_Steps;
+GColor textcolor_Steps_actual;
 #endif
 
 GColor background_color_lines;
@@ -156,17 +163,18 @@ static int SecondsTimeoutCounter = 0;
 static struct tm *tick_time; // must be global so that its content will not be overidden from other stuff.
 
 static int warning_color_last_update = 0;
-static int warning_color_location = 0;
+static int warning_color_location = 0; //0: no warning, 1: red warning (GPS differed from setting), 2: black warning (no GPS)
 
-#ifdef PBL_COLOR
+#ifndef PBL_PLATFORM_APLITE
   static int cycle_color_profile = 0;
+  static int health_higher_lower_than_avg = 0; //0: equal, -1: lower that avg, 1: higher than avg
 #endif
 
 
 
 static void set_cwLayer_size(void);
 static void apply_color_profile(void);
-#ifdef PBL_COLOR
+#ifndef PBL_PLATFORM_APLITE
   static void timer_cycle_color_profile_callback(void *data);
 #endif
 
@@ -321,7 +329,7 @@ void LoadData(void) {
   
   key = KEY_SET_INVERT_COLOR;
   if (persist_exists(key)) ColorProfile = persist_read_int(key);
-  #ifdef PBL_COLOR
+  #ifndef PBL_PLATFORM_APLITE
     if (ColorProfile > MAX_NO_COLOR_PROFILES) cycle_color_profile = 1; else cycle_color_profile = 0;
     if (cycle_color_profile){
       ColorProfile = 0;
@@ -394,7 +402,7 @@ void SaveData(void) {
   persist_write_int    (KEY_SUN_RISE_UNIX,  (int)sun_rise_unix_loc);
   persist_write_int    (KEY_SUN_SET_UNIX,  (int)sun_set_unix_loc);
   
-  #ifdef PBL_COLOR
+  #ifndef PBL_PLATFORM_APLITE
     if (cycle_color_profile == 0)
       persist_write_int(KEY_SET_INVERT_COLOR, ColorProfile);
     else
@@ -446,22 +454,18 @@ void DisplayLastUpdated(void) {
     }
     //print_time(last_updated_buffer, sizeof(last_updated_buffer), time_since_last_update, 1);
     text_layer_set_text(weather_layer_4_last_update, last_updated_buffer);
-    //#ifdef PBL_COLOR
-      if (ShowTimeSinceStationData){
-        if (time_since_last_data >= 2*3600){ // >= 2h
-          warning_color_last_update = 1;
-        } else warning_color_last_update = 0;
-      } else {
-        if (time_since_last_update > (WeatherUpdateInterval*60)){
-          warning_color_last_update = 1;
-        } else warning_color_last_update = 0;
-      }
-    //#endif
+    if (ShowTimeSinceStationData){
+      if (time_since_last_data >= 2*3600){ // >= 2h
+        warning_color_last_update = 1;
+      } else warning_color_last_update = 0;
+    } else {
+      if (time_since_last_update > (WeatherUpdateInterval*60)){
+        warning_color_last_update = 1;
+      } else warning_color_last_update = 0;
+    }
   } else {
     text_layer_set_text(weather_layer_4_last_update, "--:--");
-    //#ifdef PBL_COLOR
-      warning_color_last_update = 1;
-    //#endif
+    warning_color_last_update = 1;
   }
   
   if (warning_color_last_update != warning_color_last_update_old){
@@ -508,7 +512,7 @@ void DisplayData(void) {
     snprintf(buffer_1, sizeof(buffer_1), "%d°C", weather_TEMP);
   text_layer_set_text(weather_layer_1_temp, buffer_1);
   
-  #ifdef PBL_COLOR
+  #ifndef PBL_PLATFORM_APLITE
   if (ColorProfile > 1){
     GColor textcolor_weather_int;
     if (weather_TEMP >= 40){
@@ -581,15 +585,10 @@ void DisplayData(void) {
 }
 
 
-
-
-
-
-#ifdef PBL_COLOR
 static GColor get_weather_icon_color(int nr){
   if (ColorProfile == 0) return GColorWhite;
-  if (ColorProfile == 1) return GColorBlack; //if (gcolor_equal(background_color_moon, GColorWhite)) return GColorBlack;
-  //if (ColorProfile == 1) return GColorWhite;
+  if (ColorProfile == 1) return GColorBlack;
+  #ifndef PBL_PLATFORM_APLITE
   if (nr < 33) return GColorWhite;
   if (nr > 106) return GColorWhite;
   switch (nr){
@@ -669,12 +668,15 @@ static GColor get_weather_icon_color(int nr){
     case 106: return GColorWhite;
   }
   return GColorBlue;
+  #else
+  return GColorWhite;
+  #endif
 }
 
 static GColor get_weather_icon_bkgr_color(int nr){
   if (ColorProfile == 0) return GColorBlack;
-  //if (gcolor_equal(background_color_moon, GColorWhite)) return GColorWhite;
   if (ColorProfile == 1) return GColorWhite;
+  #ifndef PBL_PLATFORM_APLITE
   if (nr < 33) return GColorBlack;
   if (nr > 106) return GColorBlack;
   switch (nr){
@@ -754,28 +756,21 @@ static GColor get_weather_icon_bkgr_color(int nr){
     case 106: return GColorBlack;
   }
   return GColorFromHEX(0x000055);
+  #else
+  return GColorWhite;
+  #endif
 }
-#endif
 
 
 
 
 
 // Called once per second of DisplaySeconds otherwise once per minute.
+// units_changed = SECOND_UNIT | MINUTE_UNIT | HOUR_UNIT;
 static void handle_second_tick(struct tm* current_time, TimeUnits units_changed) {
   
   static struct tm current_time_copy;
   current_time_copy = *current_time;
-  
-    
-    
-    
-  //units_changed = SECOND_UNIT | MINUTE_UNIT | HOUR_UNIT;
-  
-  
-  #ifdef PBL_COLOR
-    GColor background_color_moon_old = background_color_moon;
-  #endif
   
   if (LightOn == 3){
     if (LightIsOn){
@@ -889,121 +884,63 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     text_layer_set_text(Date_Layer, date_buffer);
   }
   
-  
-  //static char moon_buffer[7];
   static char moon[] = "m";
   static char weather_icon[] = "I";
-  #ifdef PBL_COLOR
-    GColor weather_icon_color = GColorWhite;
-  #endif
   static int NightModeOld = -1;
   
   //calculate NightMode:
   if (units_changed & MINUTE_UNIT){
-  //#ifdef PBL_SDK_3
-    
-    //sun_set_unix_loc = 1439406657+3600*2;
-    //APP_LOG(APP_LOG_LEVEL_INFO, "sun_rise_unix_loc = %d", (int)sun_rise_unix_loc);
-    //APP_LOG(APP_LOG_LEVEL_INFO, "sun_set_unix_loc = %d", (int)sun_set_unix_loc);
     struct tm* sun_rise_time = localtime(&sun_rise_unix_loc);
     struct tm  sun_rise_copy = *sun_rise_time;
     struct tm* sun_set_time  = localtime(&sun_set_unix_loc);
     struct tm  sun_set_copy  = *sun_set_time;
     NightMode = 0;
-    /*
-    APP_LOG(APP_LOG_LEVEL_INFO, "sun_rise_time->tm_hour = %d", sun_rise_copy.tm_hour);
-    APP_LOG(APP_LOG_LEVEL_INFO, "sun_rise_time->tm_min = %d", sun_rise_copy.tm_min);
-    APP_LOG(APP_LOG_LEVEL_INFO, "sun_set_time->tm_hour = %d", sun_set_copy.tm_hour);
-    APP_LOG(APP_LOG_LEVEL_INFO, "sun_set_time->tm_min = %d", sun_set_copy.tm_min);
-    APP_LOG(APP_LOG_LEVEL_INFO, "current_time_copy.tm_hour = %d", current_time_copy.tm_hour);
-    APP_LOG(APP_LOG_LEVEL_INFO, "current_time_copy.tm_min = %d", current_time_copy.tm_min);
-    */
     if (sun_rise_copy.tm_hour > current_time_copy.tm_hour) NightMode = 1;
     if ((sun_rise_copy.tm_hour == current_time_copy.tm_hour) && (sun_rise_copy.tm_min > current_time_copy.tm_min)) NightMode = 1;
     if (sun_set_copy.tm_hour < current_time_copy.tm_hour) NightMode = 1;
     if ((sun_set_copy.tm_hour == current_time_copy.tm_hour) && (sun_set_copy.tm_min <= current_time_copy.tm_min)) NightMode = 1;
-  /*
-    //if ((current_time_copy.tm_hour > 6) && (current_time_copy.tm_hour < 20) ) NightMode = 0; else NightMode = 1;
-  #else
-    if ((current_time_copy.tm_hour > 6) && (current_time_copy.tm_hour < 20) ) NightMode = 0; else NightMode = 1;
-  #endif
-  */
   }
   if (MoonPhase == 1) NightMode = 1; //moon is set to allways displayed
-  if (MoonPhase == 2) NightMode = 0; //moon is set to never displayed, allways display weather icon
-    
-  //APP_LOG(APP_LOG_LEVEL_INFO, "NightMode = %d", NightMode);
+  //int do_correct_weather_icon_night = 0;
+  if (MoonPhase == 2){
+    NightMode = 0; //moon is set to be never displayed, allways display weather icon
+    //do_correct_weather_icon_night = 1;
+  }
   
   #ifndef ITERATE_TEMP
     if ((WeatherUpdateReceived) || (units_changed & HOUR_UNIT) || (NightMode != NightModeOld)){
       WeatherUpdateReceived = 0;
       
       if (!NightMode){
-        //static int wi_counter = 33;
         text_layer_set_font(moonLayer_IMG, pFontClimacons);
         layer_set_frame(text_layer_get_layer(moonLayer_IMG), GRect(51+X_OFFSET, 15+Y_OFFSET, 33, 33));
-        
-        //wi_counter++; if (wi_counter>106) wi_counter = 33;
-        //wi_counter = WeatherIcon;
-        weather_icon[0] = (unsigned char)WeatherIcon;//wi_counter;
+        weather_icon[0] = (unsigned char)WeatherIcon;
         text_layer_set_text(moonLayer_IMG, weather_icon);
-        
-        #ifdef PBL_COLOR
-          weather_icon_color = get_weather_icon_color((int)weather_icon[0]);
-          background_color_moon = get_weather_icon_bkgr_color((int)weather_icon[0]);
-          text_layer_set_text_color(moonLayer_IMG, weather_icon_color);
-        #endif
+        apply_color_profile();
       }
     }
   #else
     text_layer_set_font(moonLayer_IMG, pFontClimacons);
     layer_set_frame(text_layer_get_layer(moonLayer_IMG), GRect(51+X_OFFSET, 15+Y_OFFSET, 33, 33));
-  
+    
     static int wi_counter = 33;
     wi_counter++; if (wi_counter>106) wi_counter = 33;
     weather_icon[0] = (unsigned char)wi_counter;
     text_layer_set_text(moonLayer_IMG, weather_icon);
-    
-    #ifdef PBL_COLOR
-      weather_icon_color = get_weather_icon_color((int)weather_icon[0]);
-      background_color_moon = get_weather_icon_bkgr_color((int)weather_icon[0]);
-      text_layer_set_text_color(moonLayer_IMG, weather_icon_color);
-    #endif
+    apply_color_profile();
   #endif
   
   if (NightMode) if ((units_changed & HOUR_UNIT) || (NightMode != NightModeOld)) {
-    // -------------------- Moon_phase
-		//static int moonphase_number = 0;
-    //moonphase_number += 1;
     int moonphase_number = 0;
     moonphase_number = calc_moonphase_number(location_latitude);
     moon[0] = (unsigned char)(moonphase_char_number(moonphase_number));
     
-    
     text_layer_set_font(moonLayer_IMG, pFontMoon);
     layer_set_frame(text_layer_get_layer(moonLayer_IMG), GRect(51+X_OFFSET, 21+Y_OFFSET, 33, 33));
     text_layer_set_text(moonLayer_IMG, moon);
-    #ifdef PBL_COLOR
-      weather_icon_color = get_weather_icon_color(0);
-      background_color_moon = get_weather_icon_bkgr_color(0);
-      text_layer_set_text_color(moonLayer_IMG, weather_icon_color);
-    #endif
-    
-    
-    /*
-    snprintf(moon_buffer, sizeof(moon_buffer), "(%d)", moonphase_number);
-    //text_layer_set_text(moonLayer, moon_buffer);
-    text_layer_set_text(moonLayer, " ");
-		//text_layer_set_text(moonLayer, MOONPHASE_NAME_LANGUAGE[moonphase_number]); 
-    */
-		// -------------------- Moon_phase	  
+    apply_color_profile();
   }
   NightModeOld = NightMode;
-  #ifdef PBL_COLOR
-    if (!gcolor_equal(background_color_moon, background_color_moon_old)){
-      layer_mark_dirty(background_paint_layer);
-    }
-  #endif
   
   
 	if (units_changed & HOUR_UNIT){
@@ -1037,14 +974,7 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     } else if (TimeZoneFormat == 2){
       snprintf(buffer_9, sizeof(buffer_9), "%s, %s", hour_mode_str, time_ZONE_NAME);
     }
-    #ifndef PBL_PLATFORM_APLITE
-      if (HealthInfo < 2){
-        text_layer_set_text(text_TimeZone_layer, buffer_9);
-        text_layer_set_text_color(text_TimeZone_layer, textcolor_tz);
-      }
-    #else
-      text_layer_set_text(text_TimeZone_layer, buffer_9);
-    #endif
+    text_layer_set_text(text_TimeZone_layer, buffer_9);
   }
   
   
@@ -1052,10 +982,6 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
   //Request weather data:
   if (initDone || doUpdateWeather){
     if ((units_changed & MINUTE_UNIT) || doUpdateWeather) {//MINUTE_UNIT, SECOND_UNIT
-      //APP_LOG(APP_LOG_LEVEL_INFO, "modulo = %d (tm_min = %d; update_interval = %d)", current_time->tm_min%WeatherUpdateInterval, current_time->tm_min, WeatherUpdateInterval);
-      //if ((current_time->tm_min%WeatherUpdateInterval == 0) || doUpdateWeather) { 
-      //APP_LOG(APP_LOG_LEVEL_INFO, "tslu = %d", (int)time_since_last_update);
-      //APP_LOG(APP_LOG_LEVEL_INFO, "wuis = %d", (int)(WeatherUpdateInterval));
       if (((int)time_since_last_update >= (WeatherUpdateInterval*60-60)) || doUpdateWeather) { 
         
         doUpdateWeather = false;
@@ -1069,16 +995,6 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
         
         // Send the message!
         app_message_outbox_send();
-        
-        //text_layer_set_text(weather_layer_2, "***");
-        //APP_LOG(APP_LOG_LEVEL_INFO, "Weather Update requested");
-        
-        /*
-        #ifdef PBL_COLOR
-          textcolor_last_update = GColorBlue;
-          text_layer_set_text_color(weather_layer_4_last_update, textcolor_last_update);
-        #endif
-        */
       }
     }
   }
@@ -1291,6 +1207,7 @@ static void handle_battery(BatteryChargeState charge_state) {
 
 
 static void handle_bluetooth(bool connected) {
+  static bool connected_last = (bool)0;
   if (initDone){
   if( !connected )
     {
@@ -1323,13 +1240,15 @@ static void handle_bluetooth(bool connected) {
   #ifdef PBL_COLOR
     if (!connected) text_layer_set_text_color(connection_layer, GColorRed); else text_layer_set_text_color(connection_layer, textcolor_con);
   #endif
-  if (connected && initDone){
-    #ifdef PBL_COLOR
+  if (connected && !connected_last && initDone){
+    #ifndef PBL_PLATFORM_APLITE
       if (cycle_color_profile == 0) doUpdateWeather = true;
     #else
       doUpdateWeather = true;
     #endif
   }
+  
+  connected_last = connected;
 }
 
 
@@ -1557,7 +1476,7 @@ static void apply_color_profile(void){
   #include "inc_color_profiles.h"
     
   // --- Create Text-Layers:
-  #ifndef PBL_COLOR
+  #ifdef PBL_PLATFORM_APLITE
     GColor textcolor = GColorWhite;
     if (ColorProfile) textcolor = GColorBlack;
     GColor bkgcolor = GColorBlack;
@@ -1578,6 +1497,11 @@ static void apply_color_profile(void){
     background_color_lines = textcolor;
   #endif
   
+  int req_WI = WeatherIcon;
+  if (NightMode) req_WI = 0; //At day, use this also for weather icon
+  textcolor_moon = get_weather_icon_color(req_WI);
+  background_color_moon = get_weather_icon_bkgr_color(req_WI);
+  
   layer_mark_dirty(background_paint_layer);
   
   text_layer_set_text_color(text_sunrise_layer, textcolor_sun);
@@ -1593,20 +1517,16 @@ static void apply_color_profile(void){
   text_layer_set_text_color(weather_layer_7_string_1, textcolor_weather);
   text_layer_set_text_color(weather_layer_7_string_2, textcolor_weather);
   text_layer_set_text_color(text_TimeZone_layer, textcolor_tz);
+  
   #ifndef PBL_PLATFORM_APLITE
-    if (HealthInfo > 1){
-      text_layer_set_text_color(text_TimeZone_layer, textcolor_Steps);
-    }
+    text_layer_set_text_color(text_layer_health, textcolor_Steps_actual);
+    bitmap_layer_set_background_color(s_health_bmp_layer, background_color_clock);
   #endif
   
-  #ifdef PBL_COLOR
+  #ifndef PBL_PLATFORM_APLITE
     if (warning_color_location) text_layer_set_text_color(weather_layer_3_location, GColorWhite);
     if (warning_color_last_update) text_layer_set_text_color(weather_layer_4_last_update, GColorWhite);
   #else
-    /*
-    layer_set_hidden(inverter_layer_get_layer(s_warning_color_location), (bool)!warning_color_location);
-    layer_set_hidden(inverter_layer_get_layer(s_warning_color_last_updated), (bool)!warning_color_last_update);
-    */
     GColor text = GColorBlack;
     GColor bkgr = GColorWhite;
     if (ColorProfile){
@@ -1626,7 +1546,7 @@ static void apply_color_profile(void){
   handle_battery(battery_state_service_peek());
   handle_bluetooth(bluetooth_connection_service_peek());
   
-  #ifdef PBL_COLOR
+  #ifndef PBL_PLATFORM_APLITE
     DisplayData(); //set correct color of temperature
   #endif
 }
@@ -1649,20 +1569,35 @@ static void set_cwLayer_size(void){
   #endif
 }
 
+#ifndef PBL_PLATFORM_APLITE
 #if defined(PBL_HEALTH)
 static void health_handler(HealthEventType event, void *context) {
-  if (HealthInfo == 0) return;
+  if (HealthInfo == 0){
+    layer_set_hidden(text_layer_get_layer(text_TimeZone_layer), false);
+    layer_set_hidden(text_layer_get_layer(text_layer_health), true);
+    layer_set_hidden(bitmap_layer_get_layer(s_health_bmp_layer), true);
+    layer_set_hidden(s_layer_health_up_down, true);
+    health_higher_lower_than_avg = 0;
+    layer_mark_dirty(s_layer_health_up_down);
+    return;
+  }
+  layer_set_hidden(text_layer_get_layer(text_TimeZone_layer), true);
+  layer_set_hidden(text_layer_get_layer(text_layer_health), false);
+  layer_set_hidden(bitmap_layer_get_layer(s_health_bmp_layer), false);
+  layer_set_hidden(s_layer_health_up_down, false);
+  
+  HealthServiceTimeScope scope = HealthServiceTimeScopeDailyWeekdayOrWeekend;
   
   static char steps_str[20];
   static char sleep_str[15];
   static char unit[7];
-  int do_update = 0;
+  static int do_update = 1;
   
   // Which type of event occured?
   switch(event) {
     case HealthEventSignificantUpdate:
       //APP_LOG(APP_LOG_LEVEL_INFO, "New HealthService HealthEventSignificantUpdate event");
-      do_update = 1;
+      //do_update = 1; // do not change the last display mode here (use last one)
       break;
     case HealthEventMovementUpdate:
       //APP_LOG(APP_LOG_LEVEL_INFO, "New HealthService HealthEventMovementUpdate event");
@@ -1679,32 +1614,64 @@ static void health_handler(HealthEventType event, void *context) {
   
   //do_update = 0;
   
+  health_higher_lower_than_avg = 0;
+  
   if (do_update > 0){
     
     HealthMetric metric = HealthMetricStepCount;
     if (do_update < 3){
       //show steps
       metric = HealthMetricStepCount;
-      strcpy(unit, " steps");
+      //strcpy(unit, " steps");
+      strcpy(unit, " ");
     } else if (do_update == 3){
       //show sleep
       metric = HealthMetricSleepSeconds;
-      strcpy(unit, " sleep");
+      //strcpy(unit, " sleep");
+      strcpy(unit, " ");
     }
     time_t start = time_start_of_today();
-    time_t end = time(NULL); 
+    time_t end = time(NULL);
     // Check the metric has data available for today
     HealthServiceAccessibilityMask mask = health_service_metric_accessible(metric, start, end);
     
-    if(mask & HealthServiceAccessibilityMaskAvailable) {
+    HealthServiceAccessibilityMask mask_avg = health_service_metric_averaged_accessible(metric, start, end, scope);
+    
+    if (mask & HealthServiceAccessibilityMaskAvailable) {
       // Data is available!
       //APP_LOG(APP_LOG_LEVEL_INFO, "Steps today: %d", (int)health_service_sum_today(metric));
-      if (do_update == 3){
-        print_time(sleep_str, sizeof(sleep_str), (time_t)health_service_sum_today(metric), 0);
-        snprintf(steps_str, sizeof(steps_str), "%s%s", sleep_str, unit);
-      } else {
-        snprintf(steps_str, sizeof(steps_str), "%d%s", (int)health_service_sum_today(metric), unit);
+      
+      HealthValue today = health_service_sum_today(metric);
+      HealthValue average = (HealthValue)0;
+      if (mask_avg & HealthServiceAccessibilityMaskAvailable) {
+        // Average is available, read it
+        average = health_service_sum_averaged(metric, start, end, scope);
       }
+      
+      if (do_update == 3){
+        print_time(sleep_str, sizeof(sleep_str), (time_t)today, 0);
+        snprintf(steps_str, sizeof(steps_str), "%s%s", sleep_str, unit);
+        bitmap_layer_set_bitmap(s_health_bmp_layer, s_health_bitmap_sleep);
+        //APP_LOG(APP_LOG_LEVEL_INFO, "SET HEALTH_BMP_SLEEP");
+      } else {
+        snprintf(steps_str, sizeof(steps_str), "%d%s", (int)today, unit);
+        bitmap_layer_set_bitmap(s_health_bmp_layer, s_health_bitmap_steps);
+        //APP_LOG(APP_LOG_LEVEL_INFO, "SET HEALTH_BMP_STEPS");
+      }
+      if (mask_avg & HealthServiceAccessibilityMaskAvailable) {
+        if ((int)today > (int) average) health_higher_lower_than_avg =  1;
+        if ((int)today < (int) average) health_higher_lower_than_avg = -1;
+      }
+      textcolor_Steps_actual = textcolor_Steps;
+      /*
+      if (health_higher_lower_than_avg > 0){
+        //TODO: paint arrow up
+        //textcolor_Steps_actual = GColorFromHEX(0x00FF00);
+      } else if (health_higher_lower_than_avg < 0){
+        //TODO: paint arrow down
+        //textcolor_Steps_actual = GColorFromHEX(0xFF0000);
+      }
+      */
     } else {
       // No data recorded yet today
       //APP_LOG(APP_LOG_LEVEL_ERROR, "Data unavailable!");
@@ -1716,8 +1683,30 @@ static void health_handler(HealthEventType event, void *context) {
       }
     }
     
-    text_layer_set_text(text_TimeZone_layer, steps_str);
-    text_layer_set_text_color(text_TimeZone_layer, textcolor_Steps);
+    text_layer_set_text(text_layer_health, steps_str);
+    text_layer_set_text_color(text_layer_health, textcolor_Steps_actual);
+  }
+  layer_mark_dirty(s_layer_health_up_down);
+}
+#endif
+
+static void layer_update_callback_health_up_down(Layer *layer, GContext* ctx){
+  graphics_context_set_fill_color(ctx, background_color_clock);
+  graphics_fill_rect(ctx, GRect(0, 0, 10, 10), 0, GCornerNone);
+  graphics_context_set_stroke_color(ctx, textcolor_Steps_actual);
+  
+  if (health_higher_lower_than_avg > 0){
+    //TODO: paint arrow up
+    graphics_context_set_stroke_color(ctx, GColorGreen);
+    for (int i=0; i<10; i++){
+      graphics_draw_line(ctx, GPoint( 0+i/2, 10-i), GPoint(10-i/2,10-i));
+    }
+  } else if (health_higher_lower_than_avg < 0){
+    //TODO: paint arrow down
+    graphics_context_set_stroke_color(ctx, GColorRed);
+    for (int i=0; i<10; i++){
+      graphics_draw_line(ctx, GPoint( 0+i/2, i), GPoint(10-i/2,i));
+    }
   }
 }
 #endif
@@ -1813,21 +1802,14 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       sun_set_unix_loc = (time_t)t->value->int32;
       break;
     case KEY_SET_INVERT_COLOR:
-      /*
-      #ifndef PBL_COLOR
-        if ((int32_t)ColorProfile != (int)t->value->int32) restart = 1;
-        if ((ColorProfile == 0) && ((int)t->value->int32) > 1) restart = 0;
-      #endif
-      */
       ColorProfile = (int)t->value->int32;
-      #ifdef PBL_COLOR
+      #ifndef PBL_PLATFORM_APLITE
         if (ColorProfile > MAX_NO_COLOR_PROFILES) cycle_color_profile = 1; else cycle_color_profile = 0;
         if (cycle_color_profile){
           ColorProfile = 0;
           timer_cycle_color_profile_callback(NULL);
         }
-      #endif
-      #ifndef PBL_COLOR
+      #else
         //reset all color schemes on aplite platform
         if (ColorProfile > 1) ColorProfile = 0;
       #endif
@@ -1953,7 +1935,7 @@ static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
   //APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
 }
 
-#ifdef PBL_COLOR
+#ifndef PBL_PLATFORM_APLITE
 static void timer_cycle_color_profile_callback(void *data){
     if (cycle_color_profile){
       
@@ -1989,7 +1971,12 @@ static void main_window_load(Window *window) {
   
   LoadData();
   
-  #ifndef PBL_COLOR
+  #ifndef PBL_PLATFORM_APLITE
+    s_health_bitmap_sleep = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_HEALTH_SLEEP);
+    s_health_bitmap_steps = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_HEALTH_STEPS);
+  #endif
+  
+  #ifdef PBL_PLATFORM_APLITE
     //reset all color schemes on aplite platform
     if (ColorProfile > 1) ColorProfile = 0;
   #endif
@@ -2011,7 +1998,7 @@ static void main_window_load(Window *window) {
   handle_battery(battery_state_service_peek());
   handle_bluetooth(bluetooth_connection_service_peek());
   
-  #ifdef PBL_COLOR
+  #ifndef PBL_PLATFORM_APLITE
     if (cycle_color_profile){
       ColorProfile = 0;
       timer_cycle_color_profile_callback(NULL);
@@ -2094,6 +2081,12 @@ static void main_window_unload(Window *window) {
     effect_layer_destroy(s_battery_layer_fill);
   #endif
   
+  #ifndef PBL_PLATFORM_APLITE
+    bitmap_layer_destroy(s_health_bmp_layer);
+    gbitmap_destroy(s_health_bitmap_sleep);
+    gbitmap_destroy(s_health_bitmap_steps);
+  #endif
+  
   
   text_layer_destroy(text_sunrise_layer);
   text_layer_destroy(text_sunset_layer);  
@@ -2112,6 +2105,9 @@ static void main_window_unload(Window *window) {
   text_layer_destroy(weather_layer_7_string_1);
   text_layer_destroy(weather_layer_7_string_2);
   text_layer_destroy(text_TimeZone_layer);
+  #ifndef PBL_PLATFORM_APLITE
+    text_layer_destroy(text_layer_health);
+  #endif
   
   // --- END ---
 }

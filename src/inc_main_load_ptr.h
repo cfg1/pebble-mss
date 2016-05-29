@@ -155,5 +155,24 @@
   text_layer_set_text(text_TimeZone_layer, " ");
   text_layer_set_font(text_TimeZone_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
 	layer_add_child(main_window_layer, text_layer_get_layer(text_TimeZone_layer));
+
+  // Create Health_BMP Layer:
+  #ifndef PBL_PLATFORM_APLITE
+    s_health_bmp_layer = bitmap_layer_create(GRect(35+0,122+Y_OFFSET,35, 30));
+    bitmap_layer_set_alignment(s_health_bmp_layer, GAlignBottomLeft);
+    layer_add_child(main_window_layer, bitmap_layer_get_layer(s_health_bmp_layer));
+
+    text_layer_health = text_layer_create(GRect(35+14+10, 132+Y_OFFSET, 100, 20)); //TODO
+    text_layer_set_background_color(text_layer_health, GColorClear);
+    text_layer_set_text_color(text_layer_health, textcolor);
+    text_layer_set_text_alignment(text_layer_health, GTextAlignmentLeft);
+    text_layer_set_text(text_layer_health, " ");
+    text_layer_set_font(text_layer_health, fonts_get_system_font(FONT_KEY_GOTHIC_18));
+  	layer_add_child(main_window_layer, text_layer_get_layer(text_layer_health));
+
+    s_layer_health_up_down = layer_create(GRect(35+14, 140+Y_OFFSET, 10, 10));
+    layer_set_update_proc(s_layer_health_up_down, layer_update_callback_health_up_down);
+    layer_add_child(main_window_layer, s_layer_health_up_down);
+  #endif
     
   // --- END ---
