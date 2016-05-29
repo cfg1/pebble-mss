@@ -1856,7 +1856,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       Settings_received = true;
       set_cwLayer_size();
       #if defined(PBL_HEALTH)
-        health_handler(HealthEventSignificantUpdate, NULL);
+        //health_handler(HealthEventSignificantUpdate, NULL);
       #endif
       break;
       
@@ -1917,7 +1917,12 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   
   WeatherUpdateReceived = 1; //this indicates that the weather icon should be displayed if not in night mode.
   
-  if (Settings_received) handle_second_tick(tick_time, SECOND_UNIT | MINUTE_UNIT | HOUR_UNIT);
+  if (Settings_received){
+    handle_second_tick(tick_time, SECOND_UNIT | MINUTE_UNIT | HOUR_UNIT);
+    #if defined(PBL_HEALTH)
+      health_handler(HealthEventSignificantUpdate, NULL);
+    #endif
+  }
   if (restart) window_stack_pop_all(true); //true means animated = slide out
   
   DisplayData();
