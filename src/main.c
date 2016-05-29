@@ -1519,7 +1519,7 @@ static void apply_color_profile(void){
   text_layer_set_text_color(text_TimeZone_layer, textcolor_tz);
   
   #ifndef PBL_PLATFORM_APLITE
-    text_layer_set_text_color(text_layer_health, textcolor_Steps_actual);
+    text_layer_set_text_color(text_layer_health, textcolor_Steps);
     bitmap_layer_set_background_color(s_health_bmp_layer, background_color_clock);
   #endif
   
