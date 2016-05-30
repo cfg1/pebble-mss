@@ -59,7 +59,7 @@
     ],
     "companyName": "fg",
     "enableMultiJS": false,
-    "longName": "M7S_wf_15_1",
+    "longName": "M7S_wf_15_2",
     "projectType": "native",
     "resources": {
         "media": [
@@ -105,14 +105,14 @@
         ]
     },
     "sdkVersion": "3",
-    "shortName": "M7S_wf_15_1",
+    "shortName": "M7S_wf_15_2",
     "targetPlatforms": [
         "aplite",
         "basalt",
         "chalk"
     ],
     "uuid": "03adc57a-569b-4669-9a80-b505eaea314d",
-    "versionLabel": "15.1",
+    "versionLabel": "15.2",
     "watchapp": {
         "watchface": true
     }

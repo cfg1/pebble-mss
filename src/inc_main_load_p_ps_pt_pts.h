@@ -17,12 +17,14 @@
   layer_set_update_proc(s_image_layer_minute_2, layer_update_callback_minute_2);
   layer_add_child(main_window_layer, s_image_layer_minute_2);
   
+#ifdef COMPILE_WITH_SECONDS
   s_image_layer_second_1 = layer_create(GRect(113, 137, 10, 15));
   layer_set_update_proc(s_image_layer_second_1, layer_update_callback_second_1);
   layer_add_child(main_window_layer, s_image_layer_second_1);
   s_image_layer_second_2 = layer_create(GRect(126, 137, 10, 15));
   layer_set_update_proc(s_image_layer_second_2, layer_update_callback_second_2);
   layer_add_child(main_window_layer, s_image_layer_second_2);
+#endif
   
   
   GColor textcolor = GColorWhite;

@@ -14,8 +14,10 @@ static Layer *s_image_layer_hour_1;
 static Layer *s_image_layer_hour_2;
 static Layer *s_image_layer_minute_1;
 static Layer *s_image_layer_minute_2;
-static Layer *s_image_layer_second_1;
-static Layer *s_image_layer_second_2;
+#ifdef COMPILE_WITH_SECONDS
+  static Layer *s_image_layer_second_1;
+  static Layer *s_image_layer_second_2;
+#endif
 
 
 static int digit_h_1 = 0;
@@ -123,20 +125,21 @@ GColor background_color_status;
 
 static int ColorProfile = INVERT_COLORS;
 static int LightOn = LIGHT_ON;
-static int DisplaySeconds = DISPLAY_SECONDS; //=2 means the seconds are only on after shaking
-static int DisplaySecondsTimeout = 5; //in seconds
+#ifdef COMPILE_WITH_SECONDS
+  static int DisplaySeconds = DISPLAY_SECONDS; //=2 means the seconds are only on after shaking
+  static int DisplaySecondsTimeout = 5; //in seconds
+#endif
 static int vibe_on_disconnect = VIBE_ON_DISC;
-static int vibe_on_charged_full = VIBE_ON_FULL;
 static int vibe_on_hour         = VIBE_ON_HOUR;
 static int degree_f = DEGREE_F;
 static char date_format[20] = DATE_FORMAT;
 static int WeatherUpdateInterval = WEATHER_UPDATE_INTERVAL_MINUTE;
 static int ShowTimeSinceStationData = 0;
-static int TimeZoneFormat = 1;
+static int TimeZoneFormat = 0;
 #ifdef PBL_PLATFORM_APLITE
   static int HealthInfo = 0;
 #else
-  static int HealthInfo = 1;
+  static int HealthInfo = 2;
 #endif
 static int AppFirstStart = 1;
 static int MoonPhase = 0;
@@ -342,14 +345,13 @@ void LoadData(void) {
   key = KEY_SET_LIGHT_ON;
   if (persist_exists(key)) LightOn = persist_read_int(key);
   
-  key = KEY_SET_DISPLAY_SEC;
-  if (persist_exists(key)) DisplaySeconds = persist_read_int(key);
+  #ifdef COMPILE_WITH_SECONDS
+    key = KEY_SET_DISPLAY_SEC;
+    if (persist_exists(key)) DisplaySeconds = persist_read_int(key);
+  #endif
   
   key = KEY_SET_VIBE_DISC;
   if (persist_exists(key)) vibe_on_disconnect = persist_read_int(key);
-  
-  key = KEY_SET_VIBE_FULL;
-  if (persist_exists(key)) vibe_on_charged_full = persist_read_int(key);
   
   key = KEY_SET_VIBE_HOUR;
   if (persist_exists(key)) vibe_on_hour = persist_read_int(key);
@@ -410,10 +412,11 @@ void SaveData(void) {
   #else
     persist_write_int(KEY_SET_INVERT_COLOR, ColorProfile);
   #endif
-  persist_write_int(KEY_SET_DISPLAY_SEC, DisplaySeconds);
+  #ifdef COMPILE_WITH_SECONDS
+    persist_write_int(KEY_SET_DISPLAY_SEC, DisplaySeconds);
+  #endif
   persist_write_int(KEY_SET_LIGHT_ON, LightOn);
   persist_write_int(KEY_SET_VIBE_DISC, vibe_on_disconnect);
-  persist_write_int(KEY_SET_VIBE_FULL, vibe_on_charged_full);
   persist_write_int(KEY_SET_VIBE_HOUR, vibe_on_hour);
   persist_write_int(KEY_SET_TZ_FORMAT, TimeZoneFormat);
   persist_write_int(KEY_SET_HEALTH, HealthInfo);
@@ -835,16 +838,19 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     #endif
   }
   
-  #ifdef GET_TIME_FROM_STRING
-    digit_s_1 = ((int)time_String[6]-48);
-    digit_s_2 = ((int)time_String[7]-48);
-  #else
-    digit_s_1 = current_time_copy.tm_sec/10;
-    digit_s_2 = current_time_copy.tm_sec%10;
+  #ifdef COMPILE_WITH_SECONDS
+    #ifdef GET_TIME_FROM_STRING
+      digit_s_1 = ((int)time_String[6]-48);
+      digit_s_2 = ((int)time_String[7]-48);
+    #else
+      digit_s_1 = current_time_copy.tm_sec/10;
+      digit_s_2 = current_time_copy.tm_sec%10;
+    #endif
   #endif
   
-  
-  static int digit_s_1_old = 10;
+  #ifdef COMPILE_WITH_SECONDS
+    static int digit_s_1_old = 10;
+  #endif
   //static int digit_s_2_old = 0;
   static int vibe_hour_old = -1;
   if (units_changed & HOUR_UNIT){
@@ -868,13 +874,15 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     layer_mark_dirty(s_image_layer_minute_1);
     layer_mark_dirty(s_image_layer_minute_2);
   }
-  if (DisplaySeconds){
-    if (digit_s_1_old != digit_s_1){ //should save energy
-      layer_mark_dirty(s_image_layer_second_1);
-      digit_s_1_old = digit_s_1;
+  #ifdef COMPILE_WITH_SECONDS
+    if (DisplaySeconds){
+      if (digit_s_1_old != digit_s_1){ //should save energy
+        layer_mark_dirty(s_image_layer_second_1);
+        digit_s_1_old = digit_s_1;
+      }
+      layer_mark_dirty(s_image_layer_second_2);
     }
-    layer_mark_dirty(s_image_layer_second_2);
-  }
+  #endif
   
   
   
@@ -1009,27 +1017,29 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     DisplayLastUpdated(); 
   }
   
-  if (DisplaySeconds >= 2){
-    if (SecOnShakingOn){
-      SecondsTimeoutCounter++;
-      //APP_LOG(APP_LOG_LEVEL_INFO, "SecondsTimeoutCounter = %d", SecondsTimeoutCounter);
-      switch (DisplaySeconds){
-        case 2: DisplaySecondsTimeout = 5; break;
-        case 3: DisplaySecondsTimeout = 15; break;
-        case 4: DisplaySecondsTimeout = 30; break;
-        case 5: DisplaySecondsTimeout = 60; break;
-        default: DisplaySecondsTimeout = 15; break;
-      }
-      if (SecondsTimeoutCounter > DisplaySecondsTimeout+1){
-        SecOnShakingOn = 0;
-        layer_mark_dirty(s_image_layer_second_1);
-        layer_mark_dirty(s_image_layer_second_2);
-        tick_timer_service_unsubscribe();
-        tick_timer_service_subscribe(MINUTE_UNIT, &handle_second_tick);
-        //APP_LOG(APP_LOG_LEVEL_INFO, "SecOnShakingOn = 0;");
+  #ifdef COMPILE_WITH_SECONDS
+    if (DisplaySeconds >= 2){
+      if (SecOnShakingOn){
+        SecondsTimeoutCounter++;
+        //APP_LOG(APP_LOG_LEVEL_INFO, "SecondsTimeoutCounter = %d", SecondsTimeoutCounter);
+        switch (DisplaySeconds){
+          case 2: DisplaySecondsTimeout = 5; break;
+          case 3: DisplaySecondsTimeout = 15; break;
+          case 4: DisplaySecondsTimeout = 30; break;
+          case 5: DisplaySecondsTimeout = 60; break;
+          default: DisplaySecondsTimeout = 15; break;
+        }
+        if (SecondsTimeoutCounter > DisplaySecondsTimeout+1){
+          SecOnShakingOn = 0;
+          layer_mark_dirty(s_image_layer_second_1);
+          layer_mark_dirty(s_image_layer_second_2);
+          tick_timer_service_unsubscribe();
+          tick_timer_service_subscribe(MINUTE_UNIT, &handle_second_tick);
+          //APP_LOG(APP_LOG_LEVEL_INFO, "SecOnShakingOn = 0;");
+        }
       }
     }
-  }
+  #endif
   
   
   //reset the localtime internal variables to the current time, so that the tick_handler is getting the right ones.
@@ -1100,16 +1110,6 @@ static void handle_battery(BatteryChargeState charge_state) {
     if (tdiff > 10*60) last_battery_period_time = tdiff; else last_battery_period_time += tdiff; //small values are added to old time (because after battery is full, it charges about 6 min. and gets this event a second time)
     last_battery_charged_time = time(NULL);
     last_battery_percent = charge_state.charge_percent;
-    
-    if (vibe_on_charged_full){
-      // Vibe pattern: ON for 200ms, OFF for 100ms, ON for 400ms:
-      static const uint32_t const segments[] = { 500 };
-      VibePattern pat = {
-        .durations = segments,
-        .num_segments = ARRAY_LENGTH(segments),
-      };
-      vibes_enqueue_custom_pattern(pat);
-    }
     
   } else if ((old_charge_state_int == 1) && (last_charge_state == 0)){ //charging --> discharging
     last_battery_period_time = tdiff;
@@ -1378,6 +1378,7 @@ static void layer_update_callback_minute_2(Layer *layer, GContext* ctx) {
   }
 }
 
+#ifdef COMPILE_WITH_SECONDS
 static void layer_update_callback_second_1(Layer *layer, GContext* ctx) {
   graphics_context_set_fill_color(ctx, background_color_clock);
   graphics_fill_rect(ctx, GRect(0, 0, 10, 15), 0, GCornerNone);
@@ -1460,6 +1461,7 @@ static void layer_update_callback_second_2(Layer *layer, GContext* ctx) {
     break;
   }
 }
+#endif
 
 
 static void layer_update_callback_background(Layer *layer, GContext* ctx){
@@ -1553,18 +1555,24 @@ static void apply_color_profile(void){
   
 static void set_cwLayer_size(void){
   #if defined(PBL_PLATFORM_APLITE) || defined(PBL_PLATFORM_BASALT)
-  if (DisplaySeconds){
-    if ((TimeZoneFormat == 1) && (HealthInfo == 0)){
-      text_layer_set_text_alignment(cwLayer, GTextAlignmentCenter);
-      layer_set_frame(text_layer_get_layer(cwLayer), GRect(0+X_OFFSET, 135+Y_OFFSET, 144, 20));
-    } else {
-      text_layer_set_text_alignment(cwLayer, GTextAlignmentLeft);
+    #ifdef COMPILE_WITH_SECONDS
+      if (DisplaySeconds){
+        if ((TimeZoneFormat == 1) && (HealthInfo == 0)){
+          text_layer_set_text_alignment(cwLayer, GTextAlignmentCenter);
+          layer_set_frame(text_layer_get_layer(cwLayer), GRect(0+X_OFFSET, 135+Y_OFFSET, 144, 20));
+        } else {
+          text_layer_set_text_alignment(cwLayer, GTextAlignmentLeft);
+          layer_set_frame(text_layer_get_layer(cwLayer), GRect(72+X_OFFSET, 135+Y_OFFSET, 64, 20));
+        }
+      } else {
+        text_layer_set_text_alignment(cwLayer, GTextAlignmentRight); // this must be done before layer_set_frame for alignment on Aplite.
+        layer_set_frame(text_layer_get_layer(cwLayer), GRect(72+X_OFFSET, 135+Y_OFFSET, 64, 20));
+      }
+    #endif
+    #ifndef COMPILE_WITH_SECONDS
+      text_layer_set_text_alignment(cwLayer, GTextAlignmentRight); // this must be done before layer_set_frame for alignment on Aplite.
       layer_set_frame(text_layer_get_layer(cwLayer), GRect(72+X_OFFSET, 135+Y_OFFSET, 64, 20));
-    }
-  } else {
-    text_layer_set_text_alignment(cwLayer, GTextAlignmentRight); // this must be done before layer_set_frame for alignment on Aplite.
-    layer_set_frame(text_layer_get_layer(cwLayer), GRect(72+X_OFFSET, 135+Y_OFFSET, 64, 20));
-  }
+    #endif
   #endif
 }
 
@@ -1710,6 +1718,7 @@ static void layer_update_callback_health_up_down(Layer *layer, GContext* ctx){
 }
 #endif
 
+#ifdef COMPILE_WITH_SECONDS
 static void tap_handler(AccelAxisType axis, int32_t direction) {
   if (DisplaySeconds < 2) return;
   SecOnShakingOn = 1;
@@ -1723,6 +1732,7 @@ static void tap_handler(AccelAxisType axis, int32_t direction) {
     health_handler(HealthEventSignificantUpdate, NULL);
   #endif
 }
+#endif
 
 
 
@@ -1818,6 +1828,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     case KEY_SET_LIGHT_ON:
       LightOn = (int)t->value->int32;
       break;
+    #ifdef COMPILE_WITH_SECONDS
     case KEY_SET_DISPLAY_SEC:
       DisplaySeconds = (int)t->value->int32;
       //APP_LOG(APP_LOG_LEVEL_INFO, "DisplaySeconds = %d", DisplaySeconds);
@@ -1834,12 +1845,10 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       else
         tick_timer_service_subscribe(MINUTE_UNIT, &handle_second_tick);
       break;
+    #endif
       
     case KEY_SET_VIBE_DISC:
       vibe_on_disconnect = (int)t->value->int32;
-      break;
-    case KEY_SET_VIBE_FULL:
-      vibe_on_charged_full = (int)t->value->int32;
       break;
     case KEY_SET_VIBE_HOUR:
       vibe_on_hour = (int)t->value->int32;
@@ -1850,6 +1859,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       Settings_received = true;
       set_cwLayer_size();
       break;
+    #ifndef PBL_PLATFORM_APLITE
     case KEY_SET_HEALTH:
       HealthInfo = (int)t->value->int32;
       Settings_received = true;
@@ -1858,6 +1868,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         //health_handler(HealthEventSignificantUpdate, NULL);
       #endif
       break;
+    #endif
       
       
     case KEY_SET_UPDATE_TIME:
@@ -2010,6 +2021,7 @@ static void main_window_load(Window *window) {
   #endif
   
   // --- Register Event Handlers ---
+  #ifdef COMPILE_WITH_SECONDS
   if (DisplaySeconds >= 2){
     SecOnShakingOn = 1;
     SecondsTimeoutCounter = 0;
@@ -2017,10 +2029,13 @@ static void main_window_load(Window *window) {
   if (DisplaySeconds)
     tick_timer_service_subscribe(SECOND_UNIT, &handle_second_tick);
   else
+  #endif
     tick_timer_service_subscribe(MINUTE_UNIT, &handle_second_tick);
   battery_state_service_subscribe(&handle_battery);
   bluetooth_connection_service_subscribe(&handle_bluetooth);
-  accel_tap_service_subscribe(tap_handler);
+  #ifdef COMPILE_WITH_SECONDS
+    accel_tap_service_subscribe(tap_handler);
+  #endif
   
   
   #if defined(PBL_HEALTH)
@@ -2035,9 +2050,11 @@ static void main_window_load(Window *window) {
   
   // Register callbacks
   app_message_register_inbox_received(inbox_received_callback);
-  app_message_register_inbox_dropped(inbox_dropped_callback);
-  app_message_register_outbox_failed(outbox_failed_callback);
-  app_message_register_outbox_sent(outbox_sent_callback);
+  #ifndef PBL_PLATFORM_APLITE
+    app_message_register_inbox_dropped(inbox_dropped_callback);
+    app_message_register_outbox_failed(outbox_failed_callback);
+    app_message_register_outbox_sent(outbox_sent_callback);
+  #endif
   
   // Open AppMessage
   //APP_LOG(APP_LOG_LEVEL_INFO, "app_message_inbox_size_maximum()  = %d", (int)app_message_inbox_size_maximum());
@@ -2075,8 +2092,10 @@ static void main_window_unload(Window *window) {
   layer_destroy(s_image_layer_hour_2);
   layer_destroy(s_image_layer_minute_1);
   layer_destroy(s_image_layer_minute_2);
-  layer_destroy(s_image_layer_second_1);
-  layer_destroy(s_image_layer_second_2);
+  #ifdef COMPILE_WITH_SECONDS
+    layer_destroy(s_image_layer_second_1);
+    layer_destroy(s_image_layer_second_2);
+  #endif
   
   
   #ifdef PBL_PLATFORM_APLITE //only on SDK 2.x

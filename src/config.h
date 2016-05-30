@@ -22,10 +22,13 @@
 #define VIBE_ON_FULL 0
 #define VIBE_ON_HOUR 0
 #define DEGREE_F     0
-#define DATE_FORMAT  "%a, %d.%m."
+#define DATE_FORMAT  "%a, %d.%m.%Y"
 
 #define WEATHER_UPDATE_INTERVAL_MINUTE 30
 
+//#ifndef PBL_PLATFORM_APLITE
+  #define COMPILE_WITH_SECONDS
+//#endif
 #define DISPLAY_SECONDS 5
   
 // uncomment this to show all colors of the temperature
@@ -39,7 +42,7 @@
   #define Y_OFFSET ((180-168)/2)
 #else
   #define X_OFFSET 0
-  #define Y_OFFSET 0  
+  #define Y_OFFSET 0
 #endif
 
 #define MAX_NO_COLOR_PROFILES 15 //maximum static color profile index
