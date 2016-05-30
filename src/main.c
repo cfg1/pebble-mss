@@ -1209,8 +1209,7 @@ static void handle_battery(BatteryChargeState charge_state) {
 static void handle_bluetooth(bool connected) {
   static bool connected_last = (bool)0;
   if (initDone){
-  if( !connected )
-    {
+    if (!connected && connected_last){
       if (vibe_on_disconnect){
         // Vibe pattern: ON for 200ms, OFF for 100ms, ON for 400ms:
         static const uint32_t segments[] = { 200, 70, 200, 70, 200 };
@@ -1220,7 +1219,7 @@ static void handle_bluetooth(bool connected) {
         };
         vibes_enqueue_custom_pattern(pat);
       }
-    } else {
+    } else if (connected && !connected_last){
       if (vibe_on_disconnect){ //could be vibe_on_connection
         // Vibe pattern: ON for 200ms, OFF for 100ms, ON for 400ms:
         static const uint32_t segments[] = { 70, 70, 150, 150, 70, 70, 150, 150 };
