@@ -196,6 +196,7 @@ var OWM_DEFAULT_API_KEY = "1b5b37a3117bb6acd583d662fdbb24c7";
 
 var configuration = {
   invert: 0,
+  colored_temp: 1,
   light: 1,
   display_sec: 1,
   date_format: "%a, %d.%m.%Y",
@@ -792,7 +793,7 @@ Pebble.addEventListener("showConfiguration",
   function(e) {
     //Load the remote config page
     
-    /* --> */ Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_m7s_config_v15.2.html");
+    /* --> */ Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_m7s_config_v15.3.html");
     
     //TODO: send some usefull values to the settings page (e. g. location, battery staistics etc.) by adding ?xxx to the URL
   }
@@ -840,7 +841,7 @@ Pebble.addEventListener("webviewclosed",
           "KEY_SET_LIGHT_ON": LightOn,
           "KEY_SET_DISPLAY_SEC": DisplaySeconds,
           "KEY_SET_VIBE_DISC": configuration.vibe_disconnect,
-          "KEY_SET_VIBE_FULL": configuration.vibe_full,
+          "KEY_SET_COLORED_TMP": configuration.colored_temp,
           "KEY_SET_VIBE_HOUR": configuration.vibe_hour,
           "KEY_SET_DEGREE_F": configuration.degree_f,
           "KEY_SET_DATE_FORMAT": date_format_str,

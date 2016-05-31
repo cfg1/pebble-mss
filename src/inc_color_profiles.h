@@ -58,11 +58,11 @@
   
       background_color_lines       = GColorWhite;
     } else if (ColorProfile == 13){ //colored high contrast (blue clock on yellow)
-      textcolor_clock              = GColorFromRGB(0, 0, 85);
-      textcolor_seconds            = GColorFromRGB(0, 170, 170);
-      textcolor_tz                 = GColorFromRGB(85, 85, 85); //OK
+      textcolor_clock              = GColorFromHEX(0x000055);
+      textcolor_seconds            = GColorFromHEX(0x005555);
+      textcolor_tz                 = GColorFromHEX(0x555555); //OK
       textcolor_Steps              = GColorFromHEX(0x000000);
-      textcolor_cal                = GColorFromRGB(0, 170, 170);   //=GColorTiffanyBlue; //calendar week
+      textcolor_cal                = GColorFromHEX(0x005555); //calendar week
       background_color_clock       = GColorFromHEX(0xFFFF55);
       
       textcolor_date               = GColorFromRGB(170, 0, 85); //= GColorJazzberryJam; ;

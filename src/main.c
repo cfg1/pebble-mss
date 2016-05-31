@@ -124,6 +124,9 @@ GColor background_color_status;
 // Settings variables (App Config):
 
 static int ColorProfile = INVERT_COLORS;
+#ifndef PBL_PLATFORM_APLITE
+  static int ColoredTemperature = 1;
+#endif
 static int LightOn = LIGHT_ON;
 #ifdef COMPILE_WITH_SECONDS
   static int DisplaySeconds = DISPLAY_SECONDS; //=2 means the seconds are only on after shaking
@@ -373,6 +376,11 @@ void LoadData(void) {
   
   key = KEY_DETECT_FIRST_START;
   if (persist_exists(key)) AppFirstStart = persist_read_int(key); else AppFirstStart = 1;
+  
+  #ifndef PBL_PLATFORM_APLITE
+    key = KEY_SET_COLORED_TMP;
+    if (persist_exists(key)) ColoredTemperature = persist_read_int(key);
+  #endif
 }
 
 void SaveData(void) {
@@ -426,6 +434,10 @@ void SaveData(void) {
   persist_write_int(KEY_WARN_LOCATION, warning_color_location);
   
   persist_write_int(KEY_SET_DEGREE_F, degree_f);
+  
+  #ifndef PBL_PLATFORM_APLITE
+    persist_write_int(KEY_SET_COLORED_TMP, ColoredTemperature);
+  #endif
   
 }
 
@@ -516,7 +528,7 @@ void DisplayData(void) {
   text_layer_set_text(weather_layer_1_temp, buffer_1);
   
   #ifndef PBL_PLATFORM_APLITE
-  if (ColorProfile > 1){
+  if ((ColorProfile > 1) && (ColoredTemperature)){
     GColor textcolor_weather_int;
     if (weather_TEMP >= 40){
       textcolor_weather_int = GColorRed;  // >= 40°C
@@ -550,6 +562,8 @@ void DisplayData(void) {
       textcolor_weather_int = GColorCobaltBlue;     // < -30°C
     }  
     text_layer_set_text_color(weather_layer_1_temp, textcolor_weather_int);
+  } else {
+    text_layer_set_text_color(weather_layer_1_temp, textcolor_weather);
   }
   #endif
   
@@ -634,7 +648,7 @@ static GColor get_weather_icon_color(int nr){
     case 69: return GColorWhite;
     case 70: return GColorRed;
     case 71: return GColorOrange;
-    case 72: return GColorWhite;
+    case 72: return GColorFromHEX(0x0055AA);
     case 73: return GColorYellow;
     case 74: return GColorOrange;
     case 75: return GColorOrange;
@@ -720,9 +734,9 @@ static GColor get_weather_icon_bkgr_color(int nr){
     case 67: return GColorBlack;
     case 68: return GColorBlack;
     case 69: return GColorBlack;
-    case 70: return GColorFromHEX(0x555555);
-    case 71: return GColorFromHEX(0x555555);
-    case 72: return GColorBlack;
+    case 70: return GColorFromHEX(0x000000);
+    case 71: return GColorFromHEX(0x000000);
+    case 72: return GColorFromHEX(0x000000);
     case 73: return GColorFromHEX(0x0055FF);
     case 74: return GColorFromHEX(0x0055AA);
     case 75: return GColorFromHEX(0x0055AA);
@@ -762,6 +776,45 @@ static GColor get_weather_icon_bkgr_color(int nr){
   #else
   return GColorWhite;
   #endif
+}
+
+static int get_weather_icon_night(int nr){
+  //change some of the day icons to the night icon index
+  
+  switch (nr){
+    case 34: 
+    case 37:
+    case 40:
+    case 43:
+    case 46:
+    case 49:
+    case 52:
+    case 55:
+    case 58:
+    case 61:
+    case 64:
+    case 68:
+    case 71: return nr+1;
+    case 73: 
+  #ifndef PBL_PLATFORM_APLITE
+    //each case needs 12 bytes. These 74 to 86 should not be returned by weather.js, so we ignore them here to save 13*12 = 156 bytes
+    case 74: 
+    case 75: 
+    case 76: 
+    case 77: 
+    case 78: 
+    case 79: 
+    case 80: 
+    case 81: 
+    case 82: 
+    case 83: 
+    case 84: 
+    case 85: 
+    case 86: 
+  #endif
+      return -1; //(sun and moon): Do not show an image icon but the moon instead.
+  }
+  return nr; //no change for not listet icons
 }
 
 
@@ -895,9 +948,12 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
   static char moon[] = "m";
   static char weather_icon[] = "I";
   static int NightModeOld = -1;
+  static int InternalNightMode = 0; // is only depending on relation between sun rise and sun set. NightMode will be switched depending on which icons are displayed.
+  
+  //WeatherIcon = 73;
   
   //calculate NightMode:
-  if (units_changed & MINUTE_UNIT){
+  if ((WeatherUpdateReceived) || (units_changed & MINUTE_UNIT)){
     struct tm* sun_rise_time = localtime(&sun_rise_unix_loc);
     struct tm  sun_rise_copy = *sun_rise_time;
     struct tm* sun_set_time  = localtime(&sun_set_unix_loc);
@@ -907,12 +963,16 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
     if ((sun_rise_copy.tm_hour == current_time_copy.tm_hour) && (sun_rise_copy.tm_min > current_time_copy.tm_min)) NightMode = 1;
     if (sun_set_copy.tm_hour < current_time_copy.tm_hour) NightMode = 1;
     if ((sun_set_copy.tm_hour == current_time_copy.tm_hour) && (sun_set_copy.tm_min <= current_time_copy.tm_min)) NightMode = 1;
+    InternalNightMode = NightMode;
   }
   if (MoonPhase == 1) NightMode = 1; //moon is set to allways displayed
-  //int do_correct_weather_icon_night = 0;
-  if (MoonPhase == 2){
-    NightMode = 0; //moon is set to be never displayed, allways display weather icon
-    //do_correct_weather_icon_night = 1;
+  int wi_day_and_night = WeatherIcon; //set normal for days
+  if ((InternalNightMode) && (MoonPhase == 2)){ //MoonPhase==2 means show weather also at night
+    wi_day_and_night = get_weather_icon_night(WeatherIcon); //override some day (with a sun in it) icons with night icons
+    if (wi_day_and_night < 0) 
+      NightMode = 1; //show moon phase instead of sun and moon icons
+    else
+      NightMode = 0; //moon is set to be never displayed, allways display weather icon which is now also corrected for the night
   }
   
   #ifndef ITERATE_TEMP
@@ -922,7 +982,8 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
       if (!NightMode){
         text_layer_set_font(moonLayer_IMG, pFontClimacons);
         layer_set_frame(text_layer_get_layer(moonLayer_IMG), GRect(51+X_OFFSET, 15+Y_OFFSET, 33, 33));
-        weather_icon[0] = (unsigned char)WeatherIcon;
+        
+        weather_icon[0] = (unsigned char)wi_day_and_night;
         text_layer_set_text(moonLayer_IMG, weather_icon);
         apply_color_profile();
       }
@@ -1860,6 +1921,9 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       set_cwLayer_size();
       break;
     #ifndef PBL_PLATFORM_APLITE
+    case KEY_SET_COLORED_TMP:
+      ColoredTemperature = (int)t->value->int32;
+      break;
     case KEY_SET_HEALTH:
       HealthInfo = (int)t->value->int32;
       Settings_received = true;
