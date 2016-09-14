@@ -1675,6 +1675,12 @@ static void health_handler(HealthEventType event, void *context) {
       //APP_LOG(APP_LOG_LEVEL_INFO, "New HealthService HealthEventSleepUpdate event");
       do_update = 3;
       break;
+    case HealthEventHeartRateUpdate:
+      //do_update = -1; //TODO
+      break;
+    case HealthEventMetricAlert:
+      //do_update = -1; //TODO
+      break;
   }
   
   if (HealthInfo == 3) do_update = 2; // allays steps

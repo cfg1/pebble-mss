@@ -1,0 +1,123 @@
+{
+    "author": "fg",
+    "dependencies": {},
+    "keywords": [],
+    "name": "m7s_wf_15_4",
+    "pebble": {
+        "capabilities": [
+            "location",
+            "configurable",
+            "health"
+        ],
+        "displayName": "M7S_wf_15_4",
+        "enableMultiJS": false,
+        "messageKeys": {
+            "KEY_BTY_LAST_CHARGED": 13,
+            "KEY_BTY_LAST_PERCENT": 14,
+            "KEY_BTY_LAST_PERIOD": 19,
+            "KEY_BTY_LAST_STATE": 18,
+            "KEY_BTY_PERCENT_EXIT": 15,
+            "KEY_LOCATION_LAT": 1,
+            "KEY_LOCATION_LON": 2,
+            "KEY_LOCATION_NAME": 0,
+            "KEY_SET_COLORED_TMP": 24,
+            "KEY_SET_DATE_FORMAT": 26,
+            "KEY_SET_DEGREE_F": 25,
+            "KEY_SET_DISPLAY_SEC": 21,
+            "KEY_SET_HEALTH": 30,
+            "KEY_SET_INVERT_COLOR": 20,
+            "KEY_SET_LABEL_INDEX_1": 31,
+            "KEY_SET_LABEL_INDEX_2": 32,
+            "KEY_SET_LABEL_INDEX_3": 33,
+            "KEY_SET_LABEL_INDEX_4": 34,
+            "KEY_SET_LABEL_INDEX_5": 35,
+            "KEY_SET_LABEL_INDEX_6": 36,
+            "KEY_SET_LABEL_INDEX_7": 37,
+            "KEY_SET_LABEL_INDEX_8": 38,
+            "KEY_SET_LIGHT_ON": 22,
+            "KEY_SET_MOON_PHASE": 5,
+            "KEY_SET_TZ_FORMAT": 27,
+            "KEY_SET_UPDATE_TIME": 29,
+            "KEY_SET_VIBE_DISC": 23,
+            "KEY_SET_VIBE_HOUR": 28,
+            "KEY_SUN_RISE": 16,
+            "KEY_SUN_RISE_UNIX": 40,
+            "KEY_SUN_SET": 17,
+            "KEY_SUN_SET_UNIX": 41,
+            "KEY_TIME_LAST_UPDATE": 11,
+            "KEY_TIME_UTC_OFFSET": 10,
+            "KEY_TIME_ZONE_NAME": 12,
+            "KEY_WARN_LOCATION": 50,
+            "KEY_WEATHER_AVWX_STRING_1": 101,
+            "KEY_WEATHER_AVWX_STRING_2": 102,
+            "KEY_WEATHER_AVWX_STRING_3": 103,
+            "KEY_WEATHER_AVWX_STRING_4": 104,
+            "KEY_WEATHER_AVWX_STRING_5": 105,
+            "KEY_WEATHER_AVWX_STRING_6": 106,
+            "KEY_WEATHER_AVWX_STRING_7": 107,
+            "KEY_WEATHER_AVWX_STRING_8": 108,
+            "KEY_WEATHER_AVWX_STRING_9": 109,
+            "KEY_WEATHER_DATA_TIME": 6,
+            "KEY_WEATHER_ICON": 4,
+            "KEY_WEATHER_STRING_1": 8,
+            "KEY_WEATHER_STRING_2": 9,
+            "KEY_WEATHER_TEMP": 3,
+            "KEY_WEATHER_UPDATE_INT": 7
+        },
+        "projectType": "native",
+        "resources": {
+            "media": [
+                {
+                    "file": "fonts/moon_phases.ttf",
+                    "name": "FONT_MOON_PHASES_SUBSET_30",
+                    "type": "font"
+                },
+                {
+                    "file": "fonts/moon_phases.ttf",
+                    "name": "FONT_MOON_PHASES_SUBSET_28",
+                    "type": "font"
+                },
+                {
+                    "file": "fonts/moon_phases.ttf",
+                    "name": "FONT_MOON_PHASES_SUBSET_24",
+                    "type": "font"
+                },
+                {
+                    "file": "fonts/Climacons.ttf",
+                    "name": "FONT_CLIMACONS_32",
+                    "type": "font"
+                },
+                {
+                    "file": "images/Sleep_30x26.png",
+                    "memoryFormat": "1Bit",
+                    "name": "IMAGE_HEALTH_SLEEP",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/Soles-feet-30x35px.png",
+                    "name": "IMAGE_HEALTH_STEPS",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk"
+                    ],
+                    "type": "bitmap"
+                }
+            ]
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "aplite",
+            "basalt",
+            "chalk"
+        ],
+        "uuid": "03adc57a-569b-4669-9a80-b505eaea314d",
+        "watchapp": {
+            "watchface": true
+        }
+    },
+    "version": "15.4.0"
+}
