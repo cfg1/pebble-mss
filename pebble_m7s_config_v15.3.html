@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Multifunctional 7 Segment Configuration</title>
+	<style>
+	  button {
+        color: #DF7401;
+        font-weight: bold;
+        font-size: 200%;
+        text-transform: uppercase;
+      }
+      hr { 
+	    width: 95%; 
+	    height: 5px; 
+        margin: 0 auto;
+	    color: blue;
+	    background: #dfac20;
+      }
+	</style>
+  </head>
+  <body>
+    <h1>Multifunctional<br>7 Segment (OWM)<br>Configuration</h1>
+    <p>Choose watchface settings</p>
+    
+    <hr>
+    <p>
+    <button type="button" style="height: 40px; width: 300;" id="save_button">Save</button>
+	<button type="button" style="height: 40px; width: 200;" id="cancel_button">Cancel</button>
+	<button type="button" style="height: 40px; width: 200;" id="defaults_button">Reset defaults</button>
+    </p>
+    <hr>
+    
+    <h2>Weather</h2>
+    
+    <p> OWM API KEY: <font color=”#FF0000”>[5]</font>: 
+    <br>(You can register on www.openweathermap.org, <br>otherwise a default key will be used. There is no benefit <br>using your own key at the moment.)<br>
+    <input id="api_key_edit" type="text" name="api_key" value="">
+    <!-- <br>Your own API key will not be used in v12.6. At the moment, default one will be used always. Maybe the limitations can be removed for my default key. Lets see.<br>
+    </p>-->
+    
+    <p> Default Location <font color=”#FF0000”>[5]</font>: 
+    <br>(refer to www.openweathermap.org, <br>e. g. London, Berlin, ...)<br>
+    <input id="default_loc_edit" type="text" name="default_loc" value="Berlin">
+    </p>
+    <p> Autodetect Location: <br>
+    <select id="autodetect_loc_select" size="3">
+      <option value="0">Off (with GPS on to detect diff. warning)</option>
+      <option selected value="1">On</option>
+      <option value="2">Off and GPS off</option>
+    </select>
+    </p>
+    <p> OWM Language String (e. g.: en (default), de, fr, uk, ru, ...) <br>
+    <input id="owm_lang_edit" type="text" name="owm_lang" value="">
+    </p>
+
+    
+    
+    <p> Show Update Time  <font color=”#FF0000”>[6]</font>:
+    <br>
+    <select id="show_update_time_select" size="2">
+      <option selected value="0">Time since last update of Phone</option>
+      <!-- <option value="1">Time since last update of AVWX data of the server</option> -->
+      <option value="2">Time since last update of OWM data of the server</option>
+    </select>
+    </p>
+    
+    <p> Moon Phase: <font color=”#FF0000”>[7]</font>:
+    <br>
+    <select id="show_moon_select" size="3">
+      <option selected value="0">Show moon between sun set and sun rise</option>
+      <option value="1">Always show moon phase</option>
+      <option value="2">Always show weather icon, no moon phase</option>
+    </select>
+    </p>
+    
+    <p>
+    <h2>Additional weather info</h2>
+    <img src="Screenshot_2015-08-11_17.00_annotation.png" alt="(Description of label positions)">
+    <br>Info 1 <font color=”#FF0000”>[1]</font>:<br>
+    <select id="add_weather_info_line_1_select" size="6">
+      <option value="0">Empty</option>
+      <option value="1">Conditions</option>
+      <option value="2">Wind speed [config]</option>
+      <option value="3">Humidity [%]</option>
+      <option value="4">Pressure [config]</option>
+      <option selected value="5">Temp. Max/Min</option>
+    </select>
+    <br>Info 2 <font color=”#FF0000”>[2]</font>:<br>
+    <select id="add_weather_info_line_2_select" size="6">
+      <option value="0">Empty</option>
+      <option value="1">Conditions</option>
+      <option selected value="2">Wind speed [config]</option>
+      <option value="3">Humidity [%]</option>
+      <option value="4">Pressure [config]</option>
+      <option value="5">Temp. Max/Min</option>
+    </select>
+    <br>Info 3 <font color=”#FF0000”>[3]</font>:<br>
+    <select id="add_weather_info_line_3_select" size="6">
+      <option value="0">Empty</option>
+      <option value="1">Conditions</option>
+      <option value="2">Wind speed [config]</option>
+      <option selected value="3">Humidity [%]</option>
+      <option value="4">Pressure [config]</option>
+      <option value="5">Temp. Max/Min</option>
+    </select>
+    <br>Info 4 <font color=”#FF0000”>[4]</font>:<br>
+    <select id="add_weather_info_line_4_select" size="6">
+      <option value="0">Empty</option>
+      <option value="1">Conditions</option>
+      <option value="2">Wind speed [config]</option>
+      <option value="3">Humidity [%]</option>
+      <option selected value="4">Pressure [config]</option>
+      <option value="5">Temp. Max/Min</option>
+    </select>
+    </p>
+    
+    <p>
+    <h3>Weather units</h3>
+    Tempertaure unit:<br>
+    <select id="temp_unit_select" size="2">
+      <option selected value="0">degree C</option>
+      <option value="1">degree F</option>
+    </select>
+    <br>Speed unit:<br>
+    <select id="speed_unit_select" size="3">
+      <option selected value="0">km/h</option>
+      <option value="1">mph</option>
+      <option value="2">m/s</option>
+    </select>
+    <br>Pressure unit:<br>
+    <select id="pressure_unit_select" size="3">
+      <option selected value="0">hPa (= mBar)</option>
+      <option value="1">mmHg</option>
+      <option value="2">inHg</option>
+    </select>
+    </p>
+    
+    <p>
+    <h4>Weather update interval</h4>
+    <select id="update_interval_select" size="10">
+      <option value="5">5 min.</option>
+      <option value="10">10 min.</option>
+      <option value="15">15 min.</option>
+      <option selected value="20">20 min.</option>
+      <option value="30">30 min.</option>
+      <option value="45">45 min.</option>
+      <option value="60">1 h</option>
+      <option value="120">2 h</option>
+      <option value="180">3 h</option>
+      <option value="720">6 h</option>
+    </select>
+    </p>
+    
+    <hr>
+    
+    <p><h3>Select color scheme:</h3>
+    <br>
+    On old pebble watches (Aplite platform), colored selection will fallback to white on black.
+    <div style="height:205px; overflow:auto;">
+    <img src="00_15_joined.png" alt="00_15_joined.png">
+    </div>
+    <br>
+    <select id="invert_select" size="16">
+      <option value="0">00: White on Black Background</option>
+      <option value="1">01: Black on White Background</option>
+      <option selected value="2">02: White on Black Background (with some colors)</option>
+      <option value="3">03: Black on White Background (with some colors)</option>
+      <option value="4">04: Red on Black Background</option>
+      <option value="5">05: Green on Black Background</option>
+      <option value="6">06: Blue on Black Background</option>
+      <option value="7">07: Light Red Clock with Red Background</option>
+      <option value="8">08: Light Green Clock with Green Background</option>
+      <option value="9">09: Light Blue Clock with Blue Background</option>
+      <option value="10">10: Light Red</option>
+      <option value="11">11: Light Green</option>
+      <option value="12">12: Light Blue</option>
+      <option value="13">13: High Contrast: Blue on Yellow clock</option>
+      <option value="14">14: Colorful with Blue clock</option>
+      <option value="15">15: Colorful with White Clock</option>
+      <option value="16">16: Cycle through all (3 sec./color, only on PT(S/R))</option>
+    </select>
+    </p>
+    <p>Colored Temperature (only watches with colored display):
+    <br>
+    <select id="color_temp_select" size="2">
+      <option value="0">Disabled</option>
+      <option selected value="1">Enabled</option>
+    </select>
+    <p>Background Light:
+    <br>
+    <select id="light_select" size="4">
+      <option value="0">Normal</option>
+      <option selected value="1">On if powered and full</option>
+      <option value="2">Always on</option>
+      <option value="3">Blinking (1 sec)</option>
+    </select>
+    </p>
+    <p>Display seconds:
+    <br>
+    <select id="display_seconds_select" size="3">
+      <option value="0">No</option>
+      <option value="1">Yes</option>
+      <option value="2">Only after shaking (5s)</option>
+      <option selected value="3">Only after shaking (15s)</option>
+      <option value="4">Only after shaking (30s)</option>
+      <option value="5">Only after shaking (60s)</option>
+    </select>
+    </p>
+    
+    <p>Date Format:
+    <br>
+    <select id="date_format_select" size="5">
+      <option value="_a, _d._m.">Weekday, DD.MM.</option>
+	  <option value="_a, _d._m._y">Weekday, DD.MM.YY</option>
+	  <option selected value="_a, _d._m._Y">Weekday, DD.MM.YYYY</option>
+	  <option value="_d._m._Y">DD.MM.YYYY</option>
+      <option value="_a, _d/_m">Weekday, DD/MM</option>
+	  <option value="_a, _d/_m/_y">Weekday, DD/MM/YY</option>
+	  <option value="_a, _d/_m/_Y">Weekday, DD/MM/YYYY</option>
+	  <option value="_d/_m/_Y">DD/MM/YYYY</option>
+      <option value="_a, _m/_d">Weekday, MM/DD</option>
+      <option value="_a, _m/_d/_y">Weekday, MM/DD/YY</option>
+      <option value="_a, _m/_d/_Y">Weekday, MM/DD/YYYY</option>
+      <option value="_m/_d/_Y">MM/DD/YYYY</option>
+	  <option value="_a, _Y-_m-_d">Weekday, YYYY-MM-DD (ISO)</option>
+	  <option value="_Y-_m-_d">YYYY-MM-DD (ISO)</option>
+	  <option value="_a">Weekday</option>
+	  <option value="_d _b">D Month</option>
+	  <option value="_a _d _b">Weekday D Month</option>
+    </select>
+    </p>
+    
+    <p>Time Zone Info:
+    <br>
+    <select id="time_zone_info_select" size="3">
+      <option value="0">Show UTC Time (e.g. 12:54 UTC)</option>
+      <option selected value="1">Show TZ Name (e.g. CEST)</option>
+      <option value="2">Show AM/PM/24H and TZ Name (e.g. AM, CEST)</option>
+    </select>
+    </p>
+    
+    <p>Health Info of today (instead of Time Zone Info):
+    <br>
+    <select id="health_info_select" size="5">
+      <option value="0">Show Time zone info (no health)</option>
+      <option value="1"> --- This option is not supported any more</option>
+      <option selected value="2">Always show actual health info</option>
+      <option value="3">Always show steps</option>
+      <option value="4">Always show sleep</option>
+    </select>
+    </p>
+    
+    <p>Vibrate on Buetooth <br>disconnect (longer 3 pulses) and <br>connect (2x short-long, 4 pulses):
+    <br>
+    <select id="vibe_dis_select" size="2">
+      <option selected value="0">No</option>
+      <option value="1">Yes</option>
+    </select>
+    </p>
+    
+    <p>Vibrate on Hour (double pulse):
+    <br>
+    <select id="vibe_hour_select" size="2">
+      <option selected value="0">No</option>
+      <option value="1">Yes</option>
+    </select>
+    </p>
+    
+    <hr>
+     <h3>Annotation:</h3>
+     <font color=”#FF0000”>[7]</font>: Weather condiction icon (data from openweathermap). At night, the moon phase is shown (calc. in watchface).<br>
+     <font color=”#FF0000”>[8]</font>: Battery information. The time under the battery indicates the runtime since unplugged, or if plugged the time from pugging in until battery was full.<br>
+     <font color=”#FF0000”>[9]</font>: Actual temperature (data from openweathermap). The color changes for different temperatures.<br>
+     <font color=”#FF0000”>[10]</font>: Sun rise and sun set (data from openweathermap)
+     <br><br>
+     <font color=”#FF0000”>[11]</font>: Calendar Week (english: CW, deutsch: KW, français: S.)
+     <br><br>
+    <hr>
+    
+    <h3> Donation: </h3>
+    Development and maintenance of this watchface costs much time and also some money. If you like this watchface, please consider donating a small amount. Please do NOT donate if you expect a new feature to be implemented and to push it. I have very limited time now for changing this watchface. The source code is available at http://github.com/cfg1. Please consider if changes can be made by your own. Maybe you like to have something a little bit differnt?
+    If you still want to donate, here is the PayPal button to do so:
+    <div align="center">
+    <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+<input type="hidden" name="cmd" value="_s-xclick">
+<input type="hidden" name="hosted_button_id" value="RZWG6NSNJPZH6">
+<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+<img alt="" border="0" src="https://www.paypalobjects.com/de_DE/i/scr/pixel.gif" width="1" height="1">
+    </form>
+    
+    </div>
+
+
+    
+    
+    <!-- <script type="text/javascript" src="jscolor/jscolor.js"></script>
+	Click here: <input class="color" value="66ff00"> 
+	-->
+
+    <!-- 
+    <p>
+    <button type="button" style="height: 40px; width: 300;" id="save_button">Save</button>
+	<button type="button" style="height: 40px; width: 200;" id="cancel_button">Cancel</button>
+	<button type="button" style="height: 40px; width: 200;" id="defaults_button">Reset defaults</button>
+    </p>
+    -->
+    
+
+    <script>
+    
+      var apikeyEdit = document.getElementById("api_key_edit");
+      var defaultlocEdit = document.getElementById("default_loc_edit");
+      var autodetlocSelect = document.getElementById("autodetect_loc_select");
+      var owmlangEdit = document.getElementById("owm_lang_edit");
+      var updateTimeSelect = document.getElementById("show_update_time_select");
+	  var invertSelect = document.getElementById("invert_select");
+	  var coloredTempSelect = document.getElementById("color_temp_select");
+	  var lightSelect = document.getElementById("light_select");
+	  var dsSelect = document.getElementById("display_seconds_select");
+	  var dfSelect = document.getElementById("date_format_select");
+	  var timeZoneSelect = document.getElementById("time_zone_info_select");
+	  var healthSelect = document.getElementById("health_info_select");
+	  var moonSelect = document.getElementById("show_moon_select");
+	  
+	  var vdSelect = document.getElementById("vibe_dis_select");
+	  var vhSelect = document.getElementById("vibe_hour_select");
+	  
+	  var tuSelect = document.getElementById("temp_unit_select");
+	  var suSelect = document.getElementById("speed_unit_select");
+	  var puSelect = document.getElementById("pressure_unit_select");
+	  
+	  var weatherLine1Select = document.getElementById("add_weather_info_line_1_select");
+	  var weatherLine2Select = document.getElementById("add_weather_info_line_2_select");
+	  var weatherLine3Select = document.getElementById("add_weather_info_line_3_select");
+	  var weatherLine4Select = document.getElementById("add_weather_info_line_4_select");
+	  var updIntSelect = document.getElementById("update_interval_select");
+	  
+	  // Something like this to get query variables.
+      function getQueryParam(variable, default_) {
+        var query = location.search.substring(1);
+        var vars = query.split('&');
+        for (var i = 0; i < vars.length; i++) {
+          var pair = vars[i].split('=');
+          if (pair[0] == variable)
+            return decodeURIComponent(pair[1]);
+        }
+        return default_ || false;
+      }
+	  
+	  
+      //Setup to allow easy adding more options later
+      function saveOptions() {
+        
+        var options = {
+          "invert": invertSelect.selectedIndex,
+          "colored_temp": coloredTempSelect.selectedIndex,
+          "light": light_select.selectedIndex,
+          "display_sec": dsSelect.selectedIndex,
+          "date_format": dfSelect.options[dfSelect.selectedIndex].value, //not working with %
+		  "date_format_index": dfSelect.selectedIndex, //only used for internal storage in browser
+          "time_zone_info": timeZoneSelect.selectedIndex,
+          "health_info": healthSelect.selectedIndex,
+          "vibe_disconnect": vdSelect.selectedIndex,
+          "vibe_hour": vhSelect.selectedIndex,
+          
+          "default_loc": defaultlocEdit.value,
+          "autodetect_loc": autodetlocSelect.selectedIndex,
+          "lang_id": owmlangEdit.value,
+          "show_update_time": updateTimeSelect.selectedIndex,
+          "moon_phase": moonSelect.selectedIndex,
+          "weatherLine1": weatherLine1Select.selectedIndex,
+          "weatherLine2": weatherLine2Select.selectedIndex,
+          "weatherLine3": weatherLine3Select.selectedIndex,
+          "weatherLine4": weatherLine4Select.selectedIndex,
+          "weatherUpdateInt": parseInt(updIntSelect.value),
+          
+          "degree_f": tuSelect.selectedIndex,
+          "speed_unit": suSelect.selectedIndex,
+          "pressure_unit": puSelect.selectedIndex,
+          "OWM_API_KEY": apikeyEdit.value
+        }
+        
+        return options;
+      };
+      var submitButton = document.getElementById("save_button");
+	  var cancelButton = document.getElementById("cancel_button");
+	  var defaultsButton = document.getElementById("defaults_button");
+      
+      submitButton.addEventListener("click", 
+        function() {
+          console.log("Submit");
+          var options = saveOptions();
+          
+          console.log(JSON.stringify(options));
+		  var return_to = getQueryParam('return_to', 'pebblejs://close#');
+          //var location = "pebblejs://close#" + encodeURIComponent(JSON.stringify(options));
+		  var location = return_to + encodeURIComponent(JSON.stringify(options));
+		
+          //save settings to local storage of the browser:		
+		  if (typeof window.localStorage !== "undefined") {
+            window.localStorage.pebble_mms_options = JSON.stringify(options);
+          }
+          
+		  console.log(location);
+		  
+          document.location = location;
+        }, 
+      false);
+	  
+	  cancelButton.addEventListener("click", 
+        function() {
+          console.log("Cancel");
+          //var options = saveOptions();
+          //console.log(JSON.stringify(options));
+          var location = "pebblejs://close";
+          
+          document.location = location;
+        }, 
+      false);
+	  
+	  defaultsButton.addEventListener("click", 
+        function() {
+          console.log("Reset defaults");
+		  if (typeof window.localStorage !== "undefined") window.localStorage.pebble_mms_options_reload = 1;
+          document.location = document.location;
+		  console.log("DEBUG: exec. after exit");
+        }, 
+      false);
+	  
+	  
+	  
+	  console.log("params = "+location.search);
+	  
+	  //read settings from local storage of the browser:
+	  //init_options = JSON.parse(decodeURIComponent(location.search.replace('?', '')));
+	  if (typeof window.localStorage !== "undefined") {
+	    if (window.localStorage.pebble_mms_options_reload != 1) {
+		  if (window.localStorage.pebble_mms_options) {
+				  
+            var init_options = JSON.parse(window.localStorage.pebble_mms_options);
+		    console.log('init_options = '+JSON.stringify(init_options));
+		  
+		    if (init_options.invert !== "undefined"){
+  		      invertSelect.selectedIndex = init_options.invert;
+			  console.log('invertSelect set to '+init_options.invert);
+		    }
+		    if (init_options.colored_temp !== "undefined"){
+  		      coloredTempSelect.selectedIndex = init_options.colored_temp;
+			  console.log('coloredTempSelect set to '+init_options.colored_temp);
+		    } else coloredTempSelect.selectedIndex = 1;
+		    if (init_options.light !== "undefined"){
+    		  lightSelect.selectedIndex = init_options.light;
+	  		  console.log('lightSelect set to '+init_options.light);
+		    }
+		    if (init_options.display_sec !== "undefined"){
+  		      dsSelect.selectedIndex = init_options.display_sec;
+			  console.log('dsSelect set to '+init_options.display_sec);
+		    }
+		    if (init_options.date_format_index !== "undefined"){
+    		  dfSelect.selectedIndex = init_options.date_format_index;
+	  		  console.log('dfSelect set to '+init_options.date_format_index);
+		    }
+		    if (init_options.time_zone_info !== "undefined"){
+  		      timeZoneSelect.selectedIndex = init_options.time_zone_info;
+			  console.log('timeZoneSelect set to '+init_options.time_zone_info);
+		    }
+		    if (init_options.health_info !== "undefined"){
+  		      healthSelect.selectedIndex = init_options.health_info;
+			  console.log('healthSelect set to '+init_options.health_info);
+		    }
+		    
+            if (init_options.vibe_disconnect !== "undefined"){
+  		      vdSelect.selectedIndex = init_options.vibe_disconnect;
+			  console.log('vdSelect set to '+init_options.vibe_disconnect);
+		    }
+		    if (init_options.vibe_hour !== "undefined"){
+  		      vhSelect.selectedIndex = init_options.vibe_hour;
+			  console.log('vhSelect set to '+init_options.vibe_hour);
+		    }
+		    
+		    
+		    //apikeyEdit.value = "default";
+		    if (typeof init_options.OWM_API_KEY === 'string' || init_options.OWM_API_KEY instanceof String){
+		      // it's a string
+		      if (String(init_options.OWM_API_KEY).length > 10){
+      		    apikeyEdit.value = init_options.OWM_API_KEY;
+    		    console.log('apikeyEdit set to '+init_options.OWM_API_KEY);
+    		  } else {
+    		    apikeyEdit.value = "default";
+    		    console.log('apikeyEdit set to '+init_options.OWM_API_KEY);
+    		  }
+		    } else {
+		      // it's something else
+		      apikeyEdit.value = "default";
+    		  console.log('apikeyEdit set to '+init_options.OWM_API_KEY);
+		    }
+		    //apikeyEdit.value = "TESTSTRING";
+		    
+		    
+		    if (init_options.default_loc !== "undefined"){
+  		      defaultlocEdit.value = init_options.default_loc;
+			  console.log('defaultlocEdit set to '+init_options.default_loc);
+		    } else {
+		      defaultlocEdit.value = "Berlin";
+			  console.log('defaultlocEdit set to '+init_options.default_loc);
+		    }
+		    if (init_options.autodetect_loc !== "undefined"){
+  		      autodetlocSelect.selectedIndex = init_options.autodetect_loc;
+			  console.log('autodetlocSelect set to '+init_options.autodetect_loc);
+		    }
+		    if (init_options.lang_id !== "undefined"){
+  		      owmlangEdit.value = init_options.lang_id;
+			  console.log('owmlangEdit set to '+init_options.lang_id);
+		    } else {
+		      owm_lang.value = "en";
+			  console.log('owmlangEdit set to '+init_options.lang_id);
+		    }
+		    if (init_options.show_update_time !== "undefined"){
+  		      updateTimeSelect.selectedIndex = init_options.show_update_time;
+			  console.log('updateTimeSelect set to '+init_options.show_update_time);
+		    }
+		    if (init_options.moon_phase !== "undefined"){
+  		      moonSelect.selectedIndex = init_options.moon_phase;
+			  console.log('moonSelect set to '+init_options.moon_phase);
+		    }
+		    
+		    
+		    if (init_options.weatherLine1 !== "undefined"){
+  		      weatherLine1Select.selectedIndex = init_options.weatherLine1;
+			  console.log('weatherLine1Select set to '+init_options.weatherLine1);
+		    }
+		    if (init_options.weatherLine2 !== "undefined"){
+  		      weatherLine2Select.selectedIndex = init_options.weatherLine2;
+			  console.log('weatherLine2Select set to '+init_options.weatherLine2);
+		    }
+		    if (init_options.weatherLine3 !== "undefined"){
+  		      weatherLine3Select.selectedIndex = init_options.weatherLine3;
+			  console.log('weatherLine3Select set to '+init_options.weatherLine3);
+		    }
+		    if (init_options.weatherLine4 !== "undefined"){
+  		      weatherLine4Select.selectedIndex = init_options.weatherLine4;
+			  console.log('weatherLine4Select set to '+init_options.weatherLine4);
+		    }
+		    
+		    console.log((typeof init_options.weatherUpdateInt));
+            if((typeof init_options.weatherUpdateInt) === 'number'){
+              if (parseInt(init_options.weatherUpdateInt) < 1){
+                init_options.weatherUpdateInt = 1;
+                console.log("init_options.weatherUpdateInt = 1;");
+    	      } else if (parseInt(init_options.weatherUpdateInt) >720){
+    	        init_options.weatherUpdateInt = 720;
+    	        console.log("init_options.weatherUpdateInt = 720;");
+    	      }
+    	    } else {
+    	      init_options.weatherUpdateInt = 20;
+    	      console.log("init_options.weatherUpdateInt = 20;");
+    	    }
+    	    updIntSelect.value = init_options.weatherUpdateInt;
+		    console.log('updIntSelect set to '+init_options.weatherUpdateInt);
+		    
+		    
+		    if (init_options.degree_f !== "undefined"){
+  		      tuSelect.selectedIndex = init_options.degree_f;
+			  console.log('tuSelect set to '+init_options.degree_f);
+		    }
+		    if (init_options.speed_unit !== "undefined"){
+  		      suSelect.selectedIndex = init_options.speed_unit;
+			  console.log('suSelect set to '+init_options.speed_unit);
+		    }
+		    if (init_options.pressure_unit !== "undefined"){
+  		      puSelect.selectedIndex = init_options.pressure_unit;
+			  console.log('puSelect set to '+init_options.pressure_unit);
+		    }
+		    
+		    
+		  } 
+	    } else {
+		  window.localStorage.pebble_mms_options_reload = 0;
+		  console.log("using default values.");
+		}
+	  }
+	  
+	  //if (location.search == "?1") invertSelect.value = 1; 
+	  
+    </script>
+  </body>
+</html>
