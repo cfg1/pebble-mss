@@ -1,6 +1,6 @@
 
-
-  #ifdef PBL_COLOR
+  #if defined(PBL_COLOR) || defined(PBL_PLATFORM_DIORITE)
+  //#ifdef PBL_COLOR
     if (ColorProfile == 1){ //Black on White
       textcolor_clock              = GColorBlack;
       textcolor_seconds            = GColorBlack;

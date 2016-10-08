@@ -2,14 +2,14 @@
     "author": "fg",
     "dependencies": {},
     "keywords": [],
-    "name": "m7s_wf_15_4",
+    "name": "m7s_wf_15_5",
     "pebble": {
         "capabilities": [
             "location",
             "configurable",
             "health"
         ],
-        "displayName": "M7S_wf_15_4",
+        "displayName": "M7S_wf_15_5",
         "enableMultiJS": false,
         "messageKeys": {
             "KEY_BTY_LAST_CHARGED": 13,
@@ -68,8 +68,34 @@
         "resources": {
             "media": [
                 {
+                    "file": "images/Soles-feet-30x35px.png",
+                    "name": "IMAGE_HEALTH_STEPS",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk",
+                        "diorite"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/Sleep_30x26.png",
+                    "memoryFormat": "1Bit",
+                    "name": "IMAGE_HEALTH_SLEEP",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk",
+                        "diorite"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "fonts/Climacons.ttf",
+                    "name": "FONT_CLIMACONS_32",
+                    "type": "font"
+                },
+                {
                     "file": "fonts/moon_phases.ttf",
-                    "name": "FONT_MOON_PHASES_SUBSET_30",
+                    "name": "FONT_MOON_PHASES_SUBSET_24",
                     "type": "font"
                 },
                 {
@@ -79,32 +105,8 @@
                 },
                 {
                     "file": "fonts/moon_phases.ttf",
-                    "name": "FONT_MOON_PHASES_SUBSET_24",
+                    "name": "FONT_MOON_PHASES_SUBSET_30",
                     "type": "font"
-                },
-                {
-                    "file": "fonts/Climacons.ttf",
-                    "name": "FONT_CLIMACONS_32",
-                    "type": "font"
-                },
-                {
-                    "file": "images/Sleep_30x26.png",
-                    "memoryFormat": "1Bit",
-                    "name": "IMAGE_HEALTH_SLEEP",
-                    "targetPlatforms": [
-                        "basalt",
-                        "chalk"
-                    ],
-                    "type": "bitmap"
-                },
-                {
-                    "file": "images/Soles-feet-30x35px.png",
-                    "name": "IMAGE_HEALTH_STEPS",
-                    "targetPlatforms": [
-                        "basalt",
-                        "chalk"
-                    ],
-                    "type": "bitmap"
                 }
             ]
         },
@@ -112,12 +114,13 @@
         "targetPlatforms": [
             "aplite",
             "basalt",
-            "chalk"
+            "chalk",
+            "diorite"
         ],
         "uuid": "03adc57a-569b-4669-9a80-b505eaea314d",
         "watchapp": {
             "watchface": true
         }
     },
-    "version": "15.4.0"
+    "version": "15.5.0"
 }
