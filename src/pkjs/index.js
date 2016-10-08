@@ -487,15 +487,15 @@ function SendToPebble(pos, use_default) {
                   weather_Line_1 = " --/-- ";
                 } else {
                   if (configuration.degree_f){
-                    weather_Line_1 = Math.round((Forecast.TempMax-273.15)*1.8+32) + "Â°/" + Math.round((Forecast.TempMin-273.15)*1.8+32) + "Â°F";
+                    weather_Line_1 = Math.round((Forecast.TempMax-273.15)*1.8+32) + "°/" + Math.round((Forecast.TempMin-273.15)*1.8+32) + "°F";
                   } else {
-                    weather_Line_1 = Math.round((Forecast.TempMax-273.15)) + "Â°/" + Math.round((Forecast.TempMin-273.15)) + "Â°C";
+                    weather_Line_1 = Math.round((Forecast.TempMax-273.15)) + "°/" + Math.round((Forecast.TempMin-273.15)) + "°C";
                     //weather_Line_1 = Math.round((Forecast.TempMax-273.15)) + "/" + Math.round((Forecast.TempMin-273.15)) + "C";
                   }
                 }
                 break;
             }
-            console.log("weather_Line_1 = " + (weather_Line_1.replace('Â°', ' ')).replace('Â°', ' '));
+            console.log("weather_Line_1 = " + (weather_Line_1.replace('°', ' ')).replace('°', ' '));
             
             
             
@@ -517,14 +517,14 @@ function SendToPebble(pos, use_default) {
                   weather_Line_2 = " --/-- ";
                 } else {
                   if (configuration.degree_f){
-                    weather_Line_2 = Math.round((Forecast.TempMax-273.15)*1.8+32) + "Â°/" + Math.round((Forecast.TempMin-273.15)*1.8+32) + "Â°F";
+                    weather_Line_2 = Math.round((Forecast.TempMax-273.15)*1.8+32) + "°/" + Math.round((Forecast.TempMin-273.15)*1.8+32) + "°F";
                   } else {
-                    weather_Line_2 = Math.round((Forecast.TempMax-273.15)) + "Â°/" + Math.round((Forecast.TempMin-273.15)) + "Â°C";
+                    weather_Line_2 = Math.round((Forecast.TempMax-273.15)) + "°/" + Math.round((Forecast.TempMin-273.15)) + "°C";
                   }
                 }
                 break;
             }
-            console.log("weather_Line_2 = " + (weather_Line_2.replace('Â°', ' ')).replace('Â°', ' '));
+            console.log("weather_Line_2 = " + (weather_Line_2.replace('°', ' ')).replace('°', ' '));
             
             
             
@@ -546,14 +546,14 @@ function SendToPebble(pos, use_default) {
                   weather_Line_3 = " --/-- ";
                 } else {
                   if (configuration.degree_f){
-                    weather_Line_3 = Math.round((Forecast.TempMax-273.15)*1.8+32) + "Â°/" + Math.round((Forecast.TempMin-273.15)*1.8+32) + "Â°F";
+                    weather_Line_3 = Math.round((Forecast.TempMax-273.15)*1.8+32) + "°/" + Math.round((Forecast.TempMin-273.15)*1.8+32) + "°F";
                   } else {
-                    weather_Line_3 = Math.round((Forecast.TempMax-273.15)) + "Â°/" + Math.round((Forecast.TempMin-273.15)) + "Â°C";
+                    weather_Line_3 = Math.round((Forecast.TempMax-273.15)) + "°/" + Math.round((Forecast.TempMin-273.15)) + "°C";
                   }
                 }
                 break;
             }
-            console.log("weather_Line_3 = " + (weather_Line_3.replace('Â°', ' ')).replace('Â°', ' '));
+            console.log("weather_Line_3 = " + (weather_Line_3.replace('°', ' ')).replace('°', ' '));
             
             
             
@@ -575,28 +575,28 @@ function SendToPebble(pos, use_default) {
                   weather_Line_4 = " --/-- ";
                 } else {
                   if (configuration.degree_f){
-                    weather_Line_4 = Math.round((Forecast.TempMax-273.15)*1.8+32) + "Â°/" + Math.round((Forecast.TempMin-273.15)*1.8+32) + "Â°F";
+                    weather_Line_4 = Math.round((Forecast.TempMax-273.15)*1.8+32) + "°/" + Math.round((Forecast.TempMin-273.15)*1.8+32) + "°F";
                   } else {
-                    weather_Line_4 = Math.round((Forecast.TempMax-273.15)) + "Â°/" + Math.round((Forecast.TempMin-273.15)) + "Â°C";
+                    weather_Line_4 = Math.round((Forecast.TempMax-273.15)) + "°/" + Math.round((Forecast.TempMin-273.15)) + "°C";
                   }
                 }
                 break;
             }
-            console.log("weather_Line_4 = " + (weather_Line_4.replace('Â°', ' ')).replace('Â°', ' '));
+            console.log("weather_Line_4 = " + (weather_Line_4.replace('°', ' ')).replace('°', ' '));
             
             
             
           
             var weather_string_1 = weather_Line_1 + "\n" + weather_Line_2;
-            console.log("weather_string_1 is: \n" + (weather_string_1.replace('Â°', ' ')).replace('Â°', ' ') +'\n');
+            console.log("weather_string_1 is: \n" + (weather_string_1.replace('°', ' ')).replace('°', ' ') +'\n');
             var weather_string_2 = weather_Line_3 + " / " + weather_Line_4; //TODO: what should be on this string?
             if (configuration.weatherLine3 === 0) weather_string_2 = weather_Line_4;
             if (configuration.weatherLine4 === 0) weather_string_2 = weather_Line_3;
-            console.log("weather_string_2 is: \n" + (weather_string_2.replace('Â°', ' ')).replace('Â°', ' ') +'\n');
+            console.log("weather_string_2 is: \n" + (weather_string_2.replace('°', ' ')).replace('°', ' ') +'\n');
           
             if (CLOUDPEBBLE) {
-              weather_string_1 = (weather_string_1.replace('Â°', '__')).replace('Â°', '__');
-              weather_string_2 = (weather_string_2.replace('Â°', '__')).replace('Â°', '__');
+              weather_string_1 = (weather_string_1.replace('°', '__')).replace('°', '__');
+              weather_string_2 = (weather_string_2.replace('°', '__')).replace('°', '__');
             }
             
             if (configuration.autodetect_loc == 2) warn_location = 0;
@@ -793,10 +793,8 @@ Pebble.addEventListener("showConfiguration",
   function(e) {
     //Load the remote config page
     
-    //Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_m7s_config_v15.3.html");
-    //Pebble.openURL("https://raw.githubusercontent.com/cfg1/pebble-mss/master/pebble_m7s_config_v15.3.html");
-    //Pebble.openURL("https://raw.githubusercontent.com/");
-    Pebble.openURL("https://rawgit.com/cfg1/pebble-mss/master/pebble_m7s_config_v15.5.html");
+    // Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_m7s_config_v15.3.html");
+	  Pebble.openURL("https://rawgit.com/cfg1/pebble-mss/master/pebble_m7s_config_v15.5.html");
     
     //TODO: send some usefull values to the settings page (e. g. location, battery staistics etc.) by adding ?xxx to the URL
   }
