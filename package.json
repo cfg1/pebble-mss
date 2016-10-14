@@ -2,15 +2,15 @@
     "author": "fg",
     "dependencies": {},
     "keywords": [],
-    "name": "m7s_wf_15_5",
+    "name": "m7s_wf_15_6",
     "pebble": {
         "capabilities": [
             "location",
             "configurable",
             "health"
         ],
-        "displayName": "M7S_wf_15_5",
-        "enableMultiJS": false,
+        "displayName": "M7S_wf_15_6",
+        "enableMultiJS": true,
         "messageKeys": {
             "KEY_BTY_LAST_CHARGED": 13,
             "KEY_BTY_LAST_PERCENT": 14,
@@ -122,5 +122,5 @@
             "watchface": true
         }
     },
-    "version": "15.5.0"
+    "version": "15.6.0"
 }
