@@ -1242,10 +1242,19 @@ static void handle_battery(BatteryChargeState charge_state) {
           textcolor_bat_uint8 = 0b11111111;
           bkgrcolor_bat_uint8 = variable_color;
         }
-    //On all Profiles, make battery white on red if <= 20%:
+        
+  //On all Profiles (except 0 and 1), make battery white on red if <= 20%:
     if (actual_battery_percent <= 20){
-      textcolor_bat_uint8 = 0b11111111;
-      bkgrcolor_bat_uint8 = variable_color;
+      if (ColorProfile == 0) {
+        textcolor_bat_uint8 = 0b11000000; //black
+        bkgrcolor_bat_uint8 = 0b11111111; //white
+      } else if (ColorProfile == 1) {
+        textcolor_bat_uint8 = 0b11111111; //white
+        bkgrcolor_bat_uint8 = 0b11000000; //black
+      } else {
+        textcolor_bat_uint8 = 0b11111111; //white
+        bkgrcolor_bat_uint8 = variable_color;
+      }
     }
   
     #ifdef PBL_PLATFORM_DIORITE
@@ -1263,7 +1272,6 @@ static void handle_battery(BatteryChargeState charge_state) {
         }
       }
     #endif
-  
   
   
     GlobalInverterColor = textcolor_bat_uint8 & 0b00111111;
