@@ -1,19 +1,24 @@
+#ifndef PBL_PLATFORM_APLITE
+  time_pos_tiny = 72;
+  time_pos_normal = 94;
+  update_time_pos();
+#endif
 
   background_paint_layer = layer_create(GRect(0, 0, 144, 168));
   layer_set_update_proc(background_paint_layer, layer_update_callback_background);
   layer_add_child(main_window_layer, background_paint_layer);
   
-  s_image_layer_hour_1 = layer_create(GRect(4, 94, 26, 41));
+  s_image_layer_hour_1 = layer_create(GRect(4, TIME_POS(), 26, 41));
   layer_set_update_proc(s_image_layer_hour_1, layer_update_callback_hour_1);
   layer_add_child(main_window_layer, s_image_layer_hour_1);
-  s_image_layer_hour_2 = layer_create(GRect(37, 94, 26, 41));
+  s_image_layer_hour_2 = layer_create(GRect(37, TIME_POS(), 26, 41));
   layer_set_update_proc(s_image_layer_hour_2, layer_update_callback_hour_2);
   layer_add_child(main_window_layer, s_image_layer_hour_2);
   
-  s_image_layer_minute_1 = layer_create(GRect(80, 94, 26, 41));
+  s_image_layer_minute_1 = layer_create(GRect(80, TIME_POS(), 26, 41));
   layer_set_update_proc(s_image_layer_minute_1, layer_update_callback_minute_1);
   layer_add_child(main_window_layer, s_image_layer_minute_1);
-  s_image_layer_minute_2 = layer_create(GRect(111, 94, 26, 41));
+  s_image_layer_minute_2 = layer_create(GRect(111, TIME_POS(), 26, 41));
   layer_set_update_proc(s_image_layer_minute_2, layer_update_callback_minute_2);
   layer_add_child(main_window_layer, s_image_layer_minute_2);
   
@@ -82,6 +87,9 @@
   text_layer_set_font(Date_Layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
   text_layer_set_text_alignment(Date_Layer, GTextAlignmentCenter);
   layer_add_child(main_window_layer, text_layer_get_layer(Date_Layer));
+  #ifndef PBL_PLATFORM_APLITE
+    layer_set_hidden(text_layer_get_layer(Date_Layer), is_tiny_view);
+  #endif
   
   // Calendar Week
   cwLayer = text_layer_create(GRect(72, 135, 64, 20)); //64 = label_width = 144-72-2*4 = display_width - display_width/2 - 2*Space

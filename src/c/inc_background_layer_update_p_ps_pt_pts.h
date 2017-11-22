@@ -17,7 +17,7 @@
   graphics_draw_line(ctx, GPoint( 85,  17), GPoint( 85,  68));
   graphics_draw_line(ctx, GPoint(  0,  50), GPoint( 84,  50));
   graphics_draw_line(ctx, GPoint(  0,  69), GPoint(168,  69));
-  graphics_draw_line(ctx, GPoint(  0,  90), GPoint(168,  90));
+  graphics_draw_line(ctx, GPoint(  0, TIME_POS()-4), GPoint(168,  90));
   graphics_draw_line(ctx, GPoint(  0, 154), GPoint(168, 154));
   
   #ifndef PBL_PLATFORM_APLITE
@@ -70,8 +70,8 @@
   //draw dots of time:
   graphics_context_set_fill_color(ctx, textcolor_clock);
   graphics_context_set_stroke_color(ctx, textcolor_clock);
-  graphics_fill_rect(ctx, GRect(69, 102, 7, 7), 0, 0);
-  graphics_fill_rect(ctx, GRect(69, 124, 7, 7), 0, 0);
+  graphics_fill_rect(ctx, GRect(69, TIME_POS()+6, 7, 7), 0, 0);
+  graphics_fill_rect(ctx, GRect(69, TIME_POS()+32, 7, 7), 0, 0);
   
   //draw arrows of sun rise/set:
   graphics_context_set_fill_color(ctx, GColorClear);

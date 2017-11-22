@@ -119,7 +119,15 @@ GColor background_color_location;
 GColor background_color_last_update;
 GColor background_color_status;
 
-
+#ifdef PBL_PLATFORM_APLITE
+  #define TIME_POS() 94
+#else
+  #define TIME_POS() time_pos
+  int time_pos_tiny = 0;
+  int time_pos_normal = 0;
+  int time_pos = 0;
+  int is_tiny_view = 0;
+#endif
 
 // Settings variables (App Config):
 
@@ -2050,8 +2058,37 @@ static void timer_cycle_color_profile_callback(void *data){
       app_timer_register(3000, timer_cycle_color_profile_callback, NULL);
     }
 }
-#endif
 
+int max(int a, int b){
+  return (a>b) ? a : b;
+}
+void update_time_pos(){
+  Layer *main_window_layer = window_get_root_layer(s_main_window);
+  GRect fullscreen = layer_get_bounds(main_window_layer);
+  GRect bounds = layer_get_unobstructed_bounds(main_window_layer);
+  int diff = fullscreen.size.h - bounds.size.h;
+  is_tiny_view = diff != 0;
+  time_pos = is_tiny_view ? max(time_pos_tiny, time_pos_normal-diff) : time_pos_normal;
+}
+
+void update_window_size(){
+  update_time_pos();
+  Layer *layers[] = {s_image_layer_hour_1, s_image_layer_hour_2, s_image_layer_minute_1, s_image_layer_minute_2};
+  for(unsigned int i=0; i<(sizeof(layers)/sizeof(layers[0])); i++){
+    Layer* layer = layers[i];
+    GRect frame = layer_get_frame(layer);
+      frame.origin.y = time_pos;
+      layer_set_frame(layer, frame);
+  }
+    layer_set_hidden(text_layer_get_layer(Date_Layer), is_tiny_view);
+}
+void update_window_size_during_change(AnimationProgress progress, void * xx_main_window_layer){
+  update_window_size();
+}
+void update_window_size_after_change(void * xx_main_window_layer){
+  update_window_size();
+}
+#endif
 
 static void main_window_load(Window *window) {
   
@@ -2087,7 +2124,13 @@ static void main_window_load(Window *window) {
   #else
     #include "inc_main_load_p_ps_pt_pts.h"
   #endif
-  
+  #ifndef PBL_PLATFORM_APLITE
+    UnobstructedAreaHandlers handlers = {
+      .change = update_window_size_during_change,
+      .did_change = update_window_size_after_change
+    };
+    unobstructed_area_service_subscribe(handlers, NULL);
+  #endif
   apply_color_profile();
   
   DisplayData();
