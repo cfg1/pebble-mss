@@ -1,19 +1,20 @@
+  time_pos = time_pos_normal = time_pos_tiny = 94+Y_OFFSET; // quick view not supported there
 
   background_paint_layer = layer_create(GRect(0, 0, 180, 180));
   layer_set_update_proc(background_paint_layer, layer_update_callback_background);
   layer_add_child(main_window_layer, background_paint_layer);
   
-  s_image_layer_hour_1 = layer_create(GRect(4+X_OFFSET-5, 94+Y_OFFSET, 26, 41));
+  s_image_layer_hour_1 = layer_create(GRect(4+X_OFFSET-5, TIME_POS(), 26, 41));
   layer_set_update_proc(s_image_layer_hour_1, layer_update_callback_hour_1);
   layer_add_child(main_window_layer, s_image_layer_hour_1);
-  s_image_layer_hour_2 = layer_create(GRect(37+X_OFFSET-5, 94+Y_OFFSET, 26, 41));
+  s_image_layer_hour_2 = layer_create(GRect(37+X_OFFSET-5, TIME_POS(), 26, 41));
   layer_set_update_proc(s_image_layer_hour_2, layer_update_callback_hour_2);
   layer_add_child(main_window_layer, s_image_layer_hour_2);
   
-  s_image_layer_minute_1 = layer_create(GRect(80+X_OFFSET-5, 94+Y_OFFSET, 26, 41));
+  s_image_layer_minute_1 = layer_create(GRect(80+X_OFFSET-5, TIME_POS(), 26, 41));
   layer_set_update_proc(s_image_layer_minute_1, layer_update_callback_minute_1);
   layer_add_child(main_window_layer, s_image_layer_minute_1);
-  s_image_layer_minute_2 = layer_create(GRect(111+X_OFFSET-5, 94+Y_OFFSET, 26, 41));
+  s_image_layer_minute_2 = layer_create(GRect(111+X_OFFSET-5, TIME_POS(), 26, 41));
   layer_set_update_proc(s_image_layer_minute_2, layer_update_callback_minute_2);
   layer_add_child(main_window_layer, s_image_layer_minute_2);
   
