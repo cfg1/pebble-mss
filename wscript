@@ -58,5 +58,5 @@ def build(ctx):
             binaries.append({'platform': p, 'app_elf': app_elf})
 
     ctx.set_group('bundle')
-    ctx.pbl_bundle(binaries=binaries, js='pebble-js-app.js' if has_js else [])
+    ctx.pbl_bundle(binaries=binaries, js_entry_file='pebble-js-app.js' if has_js else [])
     
