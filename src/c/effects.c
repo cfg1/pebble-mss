@@ -316,10 +316,9 @@ void effect_lens(GContext* ctx,  GRect position, void* param){
   float focal =   (int32_t)param >>8 & 0xFF;// focal point of lens
   float obj_dis = (int32_t)param & 0xFF;//distance of object from focal point.
   
-  for (int y = r; y >= 0; --y)
-    for (int x = r; x >= 0; --x)
-      if (x*x+y*y < r*r)
-      {
+  for (int y = r; y >= 0; --y) {
+    for (int x = r; x >= 0; --x) {
+      if (x*x+y*y < r*r) {
         int Y1= my_tan(my_asin(y/focal))*obj_dis;
         int X1= my_tan(my_asin(x/focal))*obj_dis;
         set_pixel(bd,bpr, yCn +y, xCn +x, get_pixel(bd,bpr, yCn +Y1, xCn +X1)); 
@@ -327,7 +326,9 @@ void effect_lens(GContext* ctx,  GRect position, void* param){
         set_pixel(bd,bpr, yCn -y, xCn +x, get_pixel(bd,bpr, yCn -Y1, xCn +X1));
         set_pixel(bd,bpr, yCn -y, xCn -x, get_pixel(bd,bpr, yCn -Y1, xCn -X1));
       }
-    graphics_release_frame_buffer(ctx, fb);
+    }
+  }
+  graphics_release_frame_buffer(ctx, fb);
 //Todo: Change to lock-up arcsin table in the future. (Currently using floating point math library that is relatively big & slow)
 }
   
@@ -374,7 +375,7 @@ void effect_mask(GContext* ctx, GRect position, void* param) {
 
 void effect_fps(GContext* ctx, GRect position, void* param) {
   static GFont font = NULL;
-  static char buff[16];
+  static char buff[18];
   time_t tt;
   uint16_t ms;
   

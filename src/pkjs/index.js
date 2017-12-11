@@ -1,3 +1,5 @@
+// Ignore "...is better written in dot notation" warning
+// jshint -W069
 /*
 var options = {
   "invert": invertSelect.selectedIndex,
@@ -228,7 +230,7 @@ var configuration = {
 var last_detected_loc = {
   lat: 0.0,
   lon: 0.0
-}
+};
 
 var ForecastDataJSON;
 var WeatherDataJSON;
@@ -267,13 +269,14 @@ function locationError(err) {
     console.log("error reading last location from localStorage");
   }
   
+  var pos;
   if ((last_detected_loc.lat === 0.0) && (last_detected_loc.lon === 0.0)){
-    var pos = {
+    pos = {
       coords: {latitude: 0, longitude: 0}
     };
     SendToPebble(pos, 1);
   } else {
-    var pos = {
+    pos = {
       coords: {latitude: last_detected_loc.lat, longitude: last_detected_loc.lon}
     };
     SendToPebble(pos, 0);
@@ -658,21 +661,21 @@ function SendToPebble(pos, use_default) {
               */                   
           } else { //end: if (!WeatherDataJSON_error)
             
-            var weather_string_1 = WeatherDataJSON_error_str;
-            var weather_string_2 = "E01: OWM Data error.";
+            var weather_string_1a = WeatherDataJSON_error_str;
+            var weather_string_2a = "E01: OWM Data error.";
             
             // Assemble dictionary using our keys
-            var dictionary = {
-              "KEY_WEATHER_STRING_1": weather_string_1,
-              "KEY_WEATHER_STRING_2": weather_string_2,
+            var dictionary2 = {
+              "KEY_WEATHER_STRING_1": weather_string_1a,
+              "KEY_WEATHER_STRING_2": weather_string_2a,
               "KEY_TIME_UTC_OFFSET": utc_offset,
               "KEY_TIME_ZONE_NAME": getTimeZone()
             };
             
             console.log("Sending Error Message to Pebble:");
-            console.log("  "+weather_string_2+":");
-            console.log("  '"+weather_string_1+"'");
-            Pebble.sendAppMessage(dictionary,
+            console.log("  "+weather_string_2a+":");
+            console.log("  '"+weather_string_1a+"'");
+            Pebble.sendAppMessage(dictionary2,
                                   function(e) {
                                     console.log("Error message sent to Pebble successfully!");
                                   },

@@ -2,14 +2,14 @@
     "author": "fg",
     "dependencies": {},
     "keywords": [],
-    "name": "m7s_wf_15_7",
+    "name": "m7s_wf_16_0",
     "pebble": {
         "capabilities": [
             "location",
             "configurable",
             "health"
         ],
-        "displayName": "M7S_wf_15_7",
+        "displayName": "M7S_16_0",
         "enableMultiJS": true,
         "messageKeys": {
             "KEY_BTY_LAST_CHARGED": 13,
@@ -89,13 +89,8 @@
                     "type": "bitmap"
                 },
                 {
-                    "file": "fonts/Climacons.ttf",
-                    "name": "FONT_CLIMACONS_32",
-                    "type": "font"
-                },
-                {
                     "file": "fonts/moon_phases.ttf",
-                    "name": "FONT_MOON_PHASES_SUBSET_24",
+                    "name": "FONT_MOON_PHASES_SUBSET_30",
                     "type": "font"
                 },
                 {
@@ -105,7 +100,12 @@
                 },
                 {
                     "file": "fonts/moon_phases.ttf",
-                    "name": "FONT_MOON_PHASES_SUBSET_30",
+                    "name": "FONT_MOON_PHASES_SUBSET_24",
+                    "type": "font"
+                },
+                {
+                    "file": "fonts/Climacons.ttf",
+                    "name": "FONT_CLIMACONS_32",
                     "type": "font"
                 }
             ]
@@ -117,10 +117,10 @@
             "chalk",
             "diorite"
         ],
-        "uuid": "03adc57a-569b-4669-9a80-b505eaea314d",
+        "uuid": "03adc57a-569b-4669-9a80-b505eaea314e",
         "watchapp": {
             "watchface": true
         }
     },
-    "version": "15.7.0"
+    "version": "16.0.0"
 }
