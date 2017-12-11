@@ -922,7 +922,7 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
 		layer_mark_dirty(s_image_layer_hour_2);
 
 		if (vibe_hour_old < 0) vibe_hour_old = current_time_copy.tm_hour;
-		if (vibe_on_hour && (vibe_hour_old != current_time_copy.tm_hour)){
+		if (vibe_on_hour && (vibe_hour_old != current_time_copy.tm_hour)  && !quiet_time_is_active()){
 			// Vibe pattern: ON for 200ms, OFF for 100ms, ON for 400ms:
 			static const uint32_t segments[] = { 150, 70, 150 };
 			VibePattern pat = {

@@ -2,14 +2,14 @@
     "author": "fg",
     "dependencies": {},
     "keywords": [],
-    "name": "m7s_wf_16_0",
+    "name": "m7s_wf_16_1",
     "pebble": {
         "capabilities": [
             "location",
             "configurable",
             "health"
         ],
-        "displayName": "M7S_16_0",
+        "displayName": "M7S_16_1",
         "enableMultiJS": true,
         "messageKeys": {
             "KEY_BTY_LAST_CHARGED": 13,
@@ -122,5 +122,5 @@
             "watchface": true
         }
     },
-    "version": "16.0.0"
+    "version": "16.1.0"
 }
