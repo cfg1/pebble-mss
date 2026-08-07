@@ -797,7 +797,10 @@ Pebble.addEventListener("showConfiguration",
     //Load the remote config page
     
     // Pebble.openURL("https://googledrive.com/host/0B3ivuMdwFLKzfnRGRFRHaXdJbGVRd0FsUElteEVybVZhSHBjM3YzQWRwa0loYUVqaG1JaWM/pebble_m7s_config_v15.3.html");
-	  Pebble.openURL("https://rawgit.com/cfg1/pebble-mss/master/pebble_m7s_config_v15.5.html");
+	  // Pebble.openURL("https://rawgit.com/cfg1/pebble-mss/master/pebble_m7s_config_v15.5.html");
+    
+    // Update during release: v16.1 commit
+    Pebble.openURL("https://rawcdn.githack.com/cfg1/pebble-mss/73372cac04a65ca23195e02581a6528bc80dcccc/pebble_m7s_config_v15.5.html");
     
     //TODO: send some usefull values to the settings page (e. g. location, battery staistics etc.) by adding ?xxx to the URL
   }
